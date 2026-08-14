@@ -1,0 +1,7 @@
+# Only publish the single-file master guide.
+# Everything else inside master_guide (software/, electronics/, merged html files)
+# and anything above is intentionally excluded.
+
+*
+!index.html
+!.gitignore

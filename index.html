@@ -2288,6 +2288,9 @@ count += run*(run+1L)/2;</code></pre>
 <div class="qablock"><b>Stuck &gt;20 min on one problem?</b><p>Submit whatever compiles (even brute force), then move on. Revisit with fresh eyes — sometimes the "trick" is trivial once relaxed.</p></div>
 </div>
 
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+
 <section class="page" id="page-sw11" data-title="Low-Level Design (LLD)" data-group="Software">
 <div class="page-head">
   <div class="pn">11</div>
@@ -3169,9 +3172,6 @@ READ path (online): GET /suggest?q="ap" -> server's in-memory trie
 
 <!-- ================= ELECTRONICS ================= -->
 
-
-<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
-</section>
 <section class="page" id="page-el1" data-title="Digital + Analog + Signals & Systems" data-group="Electronics">
 <div class="page-head">
   <div class="pn">1</div>
@@ -4822,7 +4822,7 @@ MEMORY:      .text/.data/.bss/stack/heap | cache | MMU/MPU | DMA flush/invalidat
 
   // Build sidebar nav
   const swIds = order.slice(1, 13);
-  const elIds = order.slice(11);
+  const elIds = order.slice(13);
   const buildGroup = (label, ids) => {
     let h = `<div class="grp-title">${label}</div>`;
     ids.forEach(id => {

@@ -76,6 +76,7 @@
   .track-card b{font-size:1.2rem;display:block;margin-bottom:8px;}
   .track-card.so b{color:var(--acc);}
   .track-card.el b{color:var(--orange);}
+  .track-card.ai b{color:var(--green);}
   .track-card p{color:var(--muted);font-size:.86rem;line-height:1.6;}
   .track-card .go{margin-top:14px;display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;color:var(--acc);}
   .track-card .chip{position:absolute;top:16px;right:16px;font-size:.68rem;padding:4px 10px;border-radius:20px;background:var(--card3);border:1px solid var(--line);color:var(--muted);}
@@ -148,7 +149,7 @@
   <button class="burger" id="burgerBtn" aria-label="Menu">☰</button>
   <div class="bar-title">Master<i>Guide</i></div>
   <div class="bar-progress"><span id="progBar"></span></div>
-  <div class="bar-count" id="barCount">Software · 12 pages</div>
+  <div class="bar-count" id="barCount">Master Guide · Software + Electronics + AI/ML</div>
 </div>
 
 <button class="topbtn" id="topBtn" title="Back to top">↑</button>
@@ -157,7 +158,7 @@
 <main class="main">
 <header>
 <h1>MASTER INTERVIEW PREPARATION GUIDE</h1>
-<div class="sub">Software + Electronics · everything embedded in one offline file</div>
+<div class="sub">Software + Electronics + AI/ML · everything embedded in one offline file</div>
 <div class="pill">Choose a topic below · <b>only one is shown at a time</b> · use <b>← →</b> keys or the page buttons to navigate</div>
 </header>
 
@@ -177,6 +178,13 @@
     <b>Electronics / ECE / Embedded</b>
     <p>Digital+Analog · C Language · RISC-V+MIPS+Verilog · Memory Mastery · Embedded+RTOS · OS+Linux · Networking · Aptitude+Verbal · OA Strategy</p>
     <span class="go">Start Electronics →</span>
+  </div>
+  <div class="track-card ai" data-go="ai1">
+    <span class="chip">8 topics</span>
+    <div class="ico">🤖</div>
+    <b>AI / ML / GenAI</b>
+    <p>Foundations+Math · Classical ML · Ensembles+Unsupervised · Deep Learning · NLP+Transformers+LLMs · ML System Design+MLOps · Interview Q&amp;A+Coding · Career Roadmap</p>
+    <span class="go">Start AI / ML →</span>
   </div>
 </div>
 </section>
@@ -4795,7 +4803,736 @@ MEMORY:      .text/.data/.bss/stack/heap | cache | MMU/MPU | DMA flush/invalidat
 
 <div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
 </section>
-<footer>Master Interview Preparation Guide · Software + Electronics · Works offline on any device</footer>
+<!-- ================= AI / ML ================= -->
+
+<section class="page" id="page-ai1" data-title="AI Foundations + Math Refresher" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">1</div>
+  <div><div class="tag">AI / ML</div><h2>AI Foundations + Math Refresher</h2></div>
+</div>
+
+<div class="card">
+<h3>1. AI / ML / DL / LLM — who is who</h3>
+<table><tr><th>Term</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><b>AI</b></td><td>any machine that does "smart" things (umbrella)</td><td>chatbots, vision, planning</td></tr>
+<tr><td><b>ML</b></td><td>learns patterns from data instead of explicit rules</td><td>fraud classifier</td></tr>
+<tr><td><b>DL</b></td><td>ML on large neural networks (more data, bigger nets)</td><td>image recognition CNN</td></tr>
+<tr><td><b>GenAI</b></td><td>models that generate new content (text/image/audio)</td><td>ChatGPT, Midjourney</td></tr>
+<tr><td><b>LLM</b></td><td>DL model trained on massive text to predict the next token</td><td>GPT, Llama, Gemini</td></tr>
+</table>
+<p>Analogy: AI = vehicle · ML = car · DL = electric car · LLM = one specific Tesla.</p>
+<p class="note"><b>AI roles today are mostly LLM-shaped:</b> ~60-70% of new AI roles ask for tokens/transformers/RAG/agents. Still master classical ML first — interviews test it hard.</p>
+</div>
+<div class="card">
+<h3>2. The From-Scratch Roadmap (study order)</h3>
+<ol>
+<li>Math: linear algebra → calculus → probability &amp; statistics (2-3 weeks)</li>
+<li>Python + NumPy + Pandas (1-2 weeks, while doing math)</li>
+<li>Classical ML: regression → classification → trees → ensembles (3-4 weeks)</li>
+<li>Evaluation, bias-variance, cross-validation (weekly, forever)</li>
+<li>Deep Learning: NNs → backprop → optimizers → CNN/RNN (3-4 weeks)</li>
+<li>NLP → Transformers → LLMs → RAG/fine-tuning (4 weeks, most interview weight now)</li>
+<li>ML System Design + MLOps (2-3 weeks)</li>
+<li>Projects, Kaggle, interview questions, mock interviews (ongoing)</li>
+</ol>
+
+<p class="note">Rule of thumb for time: <b>50% build projects, 30% interview prep, 20% absorbing theory.</b> Interviewers hire what you can talk about hands-on, not just recognize.</p>
+</div>
+<div class="card">
+<h3>3. Linear Algebra you actually need</h3>
+<ul>
+<li><b>Vector:</b> list of numbers = a point/embedding. <b>Matrix:</b> grid = a linear transform (or a batch of rows).</li>
+<li><b>Dot product</b> A·B = Σaᵢbᵢ = measures alignment/projection. <b>Norm:</b> |A| = √(A·A).</li>
+<li><b>Cosine similarity</b> = (A·B)/(|A||B|) ∈ [−1,1] — the core of "embedding search" / RAG retrieval.</li>
+<li><b>Matrix-vector product</b> W·x = weighted sums → this is literally a neural net layer: <b>z = W·x + b</b>.</li>
+<li><b>Transpose</b> Aᵀ flips axes (shape (n,m)→(m,n)). <b>Identity</b> I keeps things unchanged. <b>Inverse</b> A⁻¹ "undoes" A (rarely needed in modern ML).</li>
+<li><b>Eigenvector/eigenvalue:</b> A·v = λ·v — the direction v that A only scales, by λ. PCA = top eigenvectors of the covariance matrix; λ = variance along that direction.</li>
+<li><b>Rank / singularity:</b> dependent columns → singular → no inverse → multicollinearity problem in regression.</li>
+</ul>
+</div>
+<div class="card">
+<h3>4. Calculus &amp; Optimization (the heart of training)</h3>
+<ul>
+<li><b>Derivative</b> = slope = how fast output changes when input changes. Partial derivative = slope along one variable.</li>
+<li><b>Chain rule:</b> d/dx f(g(x)) = f′(g(x))·g′(x) — the ONLY math behind backpropagation / reverse-mode autodiff.</li>
+<li><b>Gradient</b> = vector of all partial derivatives → points uphill. <b>Gradient descent:</b> w ← w − lr·∇loss(w).</li>
+<li><b>Learning rate (lr):</b> too small = slow/gets stuck; too large = overshoots/diverge. Typical 1e-3 to 1e-1; use schedules + Adam.</li>
+<li><b>Loss as a landscape:</b> we're finding the lowest valley. Convex (linear/logistic regression) = one valley, easy. Neural nets = rough, many valleys — local minima matter less than we feared in practice.</li>
+<li><b>Second derivative (Hessian)</b> = curvature — used in Newton/2nd-order methods; understand concept, don't memorize.</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. Probability &amp; Statistics in 60 seconds (full version in SW §9)</h3>
+<ul>
+<li>P(A∪B)=P(A)+P(B)−P(A∩B). Independent: P(A∩B)=P(A)P(B). Bayes: P(A|B)=P(B|A)P(A)/P(B).</li>
+<li><b>Classic:</b> 1% disease, 99% sens &amp; spec → P(disease|positive) = <b>0.50</b>. Ask for P(A|B), think base rate!</li>
+<li>Mean vs median (outlier-robust). Variance (divide by n−1 for sample). z-score=(x−μ)/σ. IQR outliers: Q1−1.5·IQR / Q3+1.5·IQR.</li>
+<li>Correlation r∈[−1,1], unit-free; r=0 ⇒ no LINEAR relationship, NOT independence. Correlation ≠ causation.</li>
+<li>Distributions: Binomial(np, np(1−p)) · Poisson(λ, λ) · Normal(μ,σ²) · Uniform · Exponential(1/λ, 1/λ², memoryless).</li>
+<li>CLT: sample mean ≈ Normal(μ, σ/√n). 68-95-99.7. SE = σ/√n.</li>
+<li>Hypothesis testing: p-value = P(data | H0). Type I (α)=false alarm, Type II (β)=miss, power=1−β. t-test (σ unknown, df=n−1), chi-square (categorical), ANOVA (3+ means), Mann-Whitney (non-normal).</li>
+<li>AUC = P(random positive ranked above random negative): 0.5 random, 1.0 perfect.</li>
+</ul>
+</div>
+<div class="card">
+<h3>6. Python + Library Setup (do this once)</h3>
+<pre><code>python -m venv .venv &amp;&amp; .venv/Scripts/activate   # Windows
+pip install numpy pandas scikit-learn matplotlib seaborn torch transformers datasets
+import numpy as np, pandas as pd
+import matplotlib.pyplot as plt, seaborn as sns
+from sklearn.model_selection import train_test_split
+np.random.seed(42)          # reproducibility — always seed
+import torch; torch.manual_seed(42)</code></pre>
+<ul>
+<li><b>NumPy essentials:</b> array shapes, reshape, broadcasting (x - mean works across rows), np.where, np.clip, np.linalg.norm, np.argmax(axis=1), np.percentile, np.dot.</li>
+<li><b>Pandas essentials:</b> df.info/describe/isnull, df.groupby().agg(), merge(how='left'), fillna, transform (keeps index), rank for row numbering.</li>
+<li><b>Realistic expectation:</b> 30-50% of AI/ML OAs are NumPy+Pandas data munging. Practice <i>exactly</i> those ops above until instant.</li>
+</ul>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai2" data-title="Classical Machine Learning (ML100)" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">2</div>
+  <div><div class="tag">AI / ML</div><h2>Classical Machine Learning (ML100)</h2></div>
+</div>
+
+<div class="card">
+<h3>1. Types of ML + the pipeline</h3>
+<table><tr><th>Type</th><th>Learns from</th><th>Example</th></tr>
+<tr><td>Supervised</td><td>inputs + labels</td><td>predict churn yes/no</td></tr>
+<tr><td>Unsupervised</td><td>inputs only</td><td>cluster customers</td></tr>
+<tr><td>Reinforcement</td><td>rewards/punishments</td><td>game agent</td></tr>
+<tr><td>Self-supervised</td><td>inputs, labels auto-derived</td><td>masked-language modeling (BERT)</td></tr>
+</table>
+<p>Regression predicts a number; classification predicts a category (binary vs multi-class vs multi-label).</p>
+<p>Pipeline order (memorize): business→ML framing → collect → clean (missing/outliers/dtypes/leakage) → feature engineering → train/val/test split → model + tuning (validate only) → evaluate → deploy → monitor.</p>
+<p class="attention"><b>Leakage:</b> fitting scaler/encoder/imputer BEFORE splitting leaks test information. Split first, then fit transforms on train only, apply to test — or production model is silently broken.</p>
+</div>
+<div class="card">
+<h3>2. Data prep cookbook</h3>
+<ul>
+<li><b>Missing values:</b> drop if few &amp; random; mean/median/mode if MCAR; KNN/regression impute if MAR; add a "was_missing" flag when informative.</li>
+<li><b>Outliers:</b> IQR +1.5 rule, z &gt; 3, or DBSCAN. Handle: drop, winsorize/cap, or log-transform skewed features (income, amounts).</li>
+<li><b>Encoding:</b> One-hot for low-cardinality categoricals; ordinal for ordered; target/mean encoding for high-cardinality; embeddings for text/high-card.</li>
+<li><b>Scaling:</b> StandardScaler (z-score) for regression/linear/logistic/KNN/SVM/PCA; MinMaxScaler when bounds matter. Tree models do NOT need scaling.</li>
+<li><b>Split:</b> 60/20/20 or 70/15/15. <b>Stratified</b> for classification (keeps class ratio). Time-series → chronological split, no shuffle.</li>
+</ul>
+</div>
+<div class="card">
+<h3>3. Linear regression — know it cold</h3>
+<ul>
+<li>Goal: find w,b minimizing MSE = (1/n)Σ(yᵢ − (w·xᵢ+b))². Closed form: w = (XᵀX)⁻¹Xᵀy (Normal equation). Gradient descent also works.</li>
+<li>Assumptions: linearity, independence, constant variance (homoscedasticity), normality of errors → interpret coefficients only if you check.</li>
+<li>Interpretation: <b>βⱼ = change in y for +1 unit of xⱼ, holding others fixed</b> (ceteris paribus).</li>
+<li><b>R²</b> = fraction of variance explained (1 − SS_res/SS_tot). <b>Adjusted R²</b> penalizes extra features.</li>
+<li>Overfitting signs: R² train ≫ R² val. Multicollinearity → inflated SEs; fix with Ridge or drop correlated columns.</li>
+</ul>
+<h4>Gradient descent by hand (will be asked)</h4>
+<pre><code># y = wx + b, MSE loss, lr = alpha
+for epoch in range(iters):
+    grad_w = (2/n) * (X.T @ (X @ w + b - y))          # dL/dw
+    grad_b = (2/n) * np.sum(X @ w + b - y)            # dL/db
+    w -= alpha * grad_w
+    b -= alpha * grad_b</code></pre>
+</div>
+<div class="card">
+<h3>4. Logistic regression (binary classification workhorse)</h3>
+<ul>
+<li>Linear score z = w·x + b → <b>sigmoid σ(z) = 1/(1+e⁻ᶻ)</b> → probability p. Predict 1 if p ≥ threshold (default 0.5).</li>
+<li>Loss = <b>binary cross-entropy</b>: −[y·log(p) + (1−y)·log(1−p)]. No MSE for classification — it's non-convex &amp; punishes confident-wrong less wisely.</li>
+<li><b>Decision boundary is linear</b> in feature space (or with kernels in SVM). It's a classifier, not "linear regression on probabilities" — do not feed p into MSE.</li>
+<li>Output interpreted as probability only if calibrated; check calibration curve; use isotonic/Platt scaling if needed.</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. Metrics — the interview meat</h3>
+<table><tr><th>Metric</th><th>Meaning</th><th>Formula</th></tr>
+<tr><td>Accuracy</td><td>all correct / all</td><td>(TP+TN)/(all)</td></tr>
+<tr><td>Precision</td><td>predicted positive actually positive</td><td>TP/(TP+FP)</td></tr>
+<tr><td>Recall / Sensitivity</td><td>actual positive got caught</td><td>TP/(TP+FN)</td></tr>
+<tr><td>Specificity</td><td>actual negative stayed negative</td><td>TN/(TN+FP)</td></tr>
+<tr><td>F1</td><td>balanced P &amp; R</td><td>2·P·R/(P+R)</td></tr>
+</table>
+<ul>
+<li><b>Threshold trade:</b> lower threshold → more positives caught (↑recall, ↑FP, ↓precision). Fraud: misclassifying fraud is cheap? lower. Penalizing innocent users? raise. Optimize threshold on the business cost, not 0.5.</li>
+<li><b>Imbalanced data:</b> NEVER use accuracy. Use PR-AUC (better than ROC-AUC when positives are rare), F1, or cost-weighted scoring.</li>
+<li><b>ROC:</b> TPR vs FPR over thresholds; AUC summarizes ranking. <b>PR:</b> Precision vs Recall.</li>
+<li>Regression metrics: MAE (robust), MSE (punishes big errors), RMSE (same units as y), R², MAPE for relative error.</li>
+</ul>
+</div>
+<div class="card">
+<h3>6. Bias-variance + cross-validation + tuning</h3>
+<ul>
+<li><b>High bias (underfit):</b> simple model, poor on train+test. Fix: more features, more complex model, lower regularization, longer training.</li>
+<li><b>High variance (overfit):</b> great train, poor test. Fix: more data, regularization, fewer features / simpler model, CV, ensembles, early stopping, dropout.</li>
+<li><b>k-fold CV:</b> split data into k parts, train on k−1, validate on 1, rotate → average score. Stratified for classification. Time-series → TimeSeriesSplit (no shuffle).</li>
+<li><b>Hyperparameter tuning:</b> GridSearchCV (exhaustive, small), RandomSearchCV (better for many params), Optuna (Bayesian). Always tune on train/val, NEVER on test. Final eval happens on a single untouched test split.</li>
+</ul>
+</div>
+<div class="card">
+<h3>7. End-to-end scikit-learn workflow (write this from memory)</h3>
+<pre><code>from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import classification_report, roc_auc_score
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
+                                                    stratify=y, random_state=42)
+
+pre = ColumnTransformer([
+    ('num', StandardScaler(), num_cols),
+    ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)])
+model = Pipeline([('pre', pre), ('clf', LogisticRegression(max_iter=1000))])
+scores = cross_val_score(model, X_train, y_train, cv=5)   # sanity before fitting
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+print(classification_report(y_test, y_pred))
+print('AUC:', roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]))</code></pre>
+<p class="note">Pipeline prevents leakage (transforms fit inside CV folds) — always recompose models with Pipeline in interviews.</p>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai3" data-title="Trees, Ensembles & Unsupervised" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">3</div>
+  <div><div class="tag">AI / ML</div><h2>Trees, Ensembles &amp; Unsupervised</h2></div>
+</div>
+
+<div class="card">
+<h3>1. Decision trees</h3>
+<ul>
+<li>Recursively split data to make leaves pure. Split criterion: <b>Gini impurity</b> = 1 − Σpⱼ² (fast, default) or <b>entropy</b> = −Σpⱼlog pⱼ (slower, similar results).</li>
+<li>Pick the split maximizing information gain = impurity(parent) − weighted impurity(children).</li>
+<li><b>Strengths:</b> no scaling, handle categories + missing, interpretable ("if income &gt; 50k and age &lt; 28 → churn"). <b>Weakness:</b> high variance, overfits → cap depth, min_samples_split/leaf, prune.</li>
+</ul>
+</div>
+<div class="card">
+<h3>2. Ensembles — the models that actually win tabular data</h3>
+<table><tr><th>Method</th><th>How</th><th>Reduces</th><th>Example</th></tr>
+<tr><td>Bagging</td><td>parallel trees on bootstrap samples + random features, average/vote</td><td><b>variance</b></td><td>Random Forest</td></tr>
+<tr><td>Boosting</td><td>sequential trees fit the residuals/errors of previous</td><td><b>bias</b></td><td>AdaBoost, GBM, <b>XGBoost, LightGBM, CatBoost</b></td></tr>
+<tr><td>Stacking</td><td>train base models, meta-model learned on their outputs</td><td>both</td><td>Top Kaggle solutions</td></tr>
+</table>
+<ul>
+<li><b>Random Forest:</b> bootstrap sampling (row) + random feature subset (column) → decorrelated trees. n_estimators ↑ usually plateaus; more is rarely harmful.</li>
+<li><b>XGBoost/LightGBM:</b> add trees to fit negative gradients, regularized, handles missing, extreme speed. Has both L1 and L2 regularization — more = less overfit. LightGBM uses leaf-wise growth (faster, watch overfit), XGBoost is level-wise.</li>
+<li><b>Feature importance:</b> trees give impurity-based importance (biased toward high-cardinality) or permutation importance (more reliable — shuffle a feature, measure score drop).</li>
+</ul>
+</div>
+<div class="card">
+<h3>3. SVM · KNN · Naive Bayes</h3>
+<ul>
+<li><b>SVM:</b> finds max-margin hyperplane; only support vectors (closest points) matter. <b>Kernel trick</b>: RBF/polynomial map data into higher dims without computing the transform → linearly separable. Great on small/medium clean datasets, struggles at scale. Needs scaling.</li>
+<li><b>KNN:</b> lazy learner — no training, predict by majority vote of k nearest neighbours. Needs scaling badly (Euclidean distance). <b>Curse of dimensionality:</b> in high dims all points become equidistant → meaningless. Choose k odd; tune.</li>
+<li><b>Naive Bayes:</b> Bayes with conditional independence assumption. Fast, tiny data, amazing baseline for text/spam. "Naive" because independence rarely holds, yet it often performs surprisingly well.</li>
+</ul>
+</div>
+<div class="card">
+<h3>4. Clustering &amp; anomaly detection</h3>
+<ul>
+<li><b>k-means:</b> pick k centres → assign nearest → recompute mean → repeat. Needs scaling, sensitive to init (k-means++). <b>Choosing k:</b> elbow (inertia vs k) or silhouette score (higher better, range −1..1). Suppose convex blobs only.</li>
+<li><b>Hierarchical:</b> dendrogram, no k needed, expensive O(n²). <b>DBSCAN:</b> density-based, finds arbitrary shapes + marks noise/outliers, needs eps &amp; min_samples — good for anomaly detection.</li>
+<li>Clustering evaluation: no labels → <b>silhouette, Davies-Bouldin, within-cluster SSE</b>. With ground truth → homogeneity, NMI, ARI.</li>
+<li>Anomaly detection: Isolation Forest, One-Class SVM, z-score/IQR on metrics, autoencoder reconstruction error (DL).</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. Dimensionality reduction</h3>
+<ul>
+<li><b>PCA:</b> decorrelate + keep directions of max variance. Steps: center data → covariance matrix → eigenvectors (principal components) → project. Eigenvalue = variance explained. Pick k components by cumulative explained variance (e.g. ≥95%) or elbow of scree plot. Needs scaling. Linear only.</li>
+<li><b>t-SNE / UMAP:</b> for <b>visualization</b> only — preserve local structure, not distances; results unstable across runs; never feed into downstream models.</li>
+<li>Uses: compress features, speed training, remove multicollinearity, visualize embeddings from LLMs (2D).</li>
+</ul>
+</div>
+<div class="card">
+<h3>6. Imbalanced data + feature-engineering pro tips</h3>
+<h4>Imbalance toolbelt (use in order of safety)</h4>
+<ul>
+<li>Use proper metric (PR-AUC / F1 / top-k precision) and cost-weighted loss.</li>
+<li><b>Class weights</b> (sklearn class_weight='balanced') — penalize minority mistakes harder.</li>
+<li>Resampling: <b>SMOTE</b> (synthetic minority samples between neighbours) for train only, <b>undersample</b> majority for very large data. Never resample the test set.</li>
+<li>Threshold tuning on validation → pick operating point by business cost curve.</li>
+</ul>
+<h4>Feature engineering</h4>
+<ul>
+<li>Domain aggregations (user_avg_amount, last_3_day_count), ratios, time features (hour, weekday) catch cyclical TOT data better than raw timestamps (<code>sin/cos</code> of hour for smoothness).</li>
+<li>Log-transform heavy-tailed targets/features; bin continuous values when trees prefer groups; interaction features.</li>
+<li>Validate every feature with leakage in mind — recently engineered columns from "future" leakage are #1 silent killer in production.</li>
+</ul>
+</div>
+<div class="card">
+<h3>7. Which model when?</h3>
+<table><tr><th>Situation</th><th>Pick</th><th>Why</th></tr>
+<tr><td>Tabular + accuracy is king</td><td>LightGBM/XGBoost</td><td>best loss, handles skew/missing</td></tr>
+<tr><td>Need explainability/rules</td><td>Decision tree / Logistic</td><td>directly interpretable</td></tr>
+<tr><td>Small clean datasets, high-dim</td><td>SVM (RBF)</td><td>kernel trick</td></tr>
+<tr><td>Text / spam baseline</td><td>Naive Bayes</td><td>fast, robust start</td></tr>
+<tr><td>Images / audio / seq / language</td><td>Deep nets (CNN/Transformer)</td><td>raw signals &gt; hand features</td></tr>
+<tr><td>No labels</td><td>k-means / DBSCAN / PCA</td><td>unsupervised</td></tr>
+<tr><td>Across many slightly different problems</td><td>AutoML (TPOT, H2O)</td><td>baseline generator</td></tr>
+</table>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai4" data-title="Deep Learning Fundamentals" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">4</div>
+  <div><div class="tag">AI / ML</div><h2>Deep Learning Fundamentals</h2></div>
+</div>
+
+<div class="card">
+<h3>1. Perceptron → MLP</h3>
+<ul>
+<li><b>Neuron:</b> z = w·x + b, output a = activation(z). One layer of many neurons = <b>fully-connected (dense) layer</b>.</li>
+<li><b>MLP</b> = input layer → hidden layers (activation non-linear) → output layer. Non-linear activations are REQUIRED: stacking linear layers ≡ one linear layer.</li>
+<li>Hidden layers learn increasingly abstract features (edges → parts → objects). Universal-approximation: a big enough MLP can fit any function (noise too!).</li>
+</ul>
+<h4>Mini backprop with numbers</h4>
+<pre><code># y = w*x + b, target t=1, x=2, w=1, b=0, MSE loss
+# forward:  yhat = 1*2+0 = 2 ; L = (2-1)^2 = 1
+# dL/dyhat = 2*(yhat-t) = 2 ; dL/dw = (dL/dyhat)*x = 4 ; dL/db = 2*1 = 2
+# update (lr=0.1): w <- 1 - 0.1*4 = 0.6 ; b <- 0 - 0.1*2 = -0.2
+# Repeat. This is exactly what autodiff/backprop does automatically.</code></pre>
+</div>
+<div class="card">
+<h3>2. Activations, losses, initialization</h3>
+<table><tr><th>Activation</th><th>Range</th><th>Use</th></tr>
+<tr><td>ReLU</td><td>[0, ∞)</td><td>default hidden layer</td></tr>
+<tr><td>LeakyReLU</td><td>(−∞, ∞)</td><td>fix dying ReLU</td></tr>
+<tr><td>Sigmoid</td><td>(0,1)</td><td>binary output, gates</td></tr>
+<tr><td>Tanh</td><td>(−1,1)</td><td>centered, old RNNs</td></tr>
+<tr><td>Softmax</td><td>sums to 1</td><td>multi-class output</td></tr>
+<tr><td>GELU/SiLU</td><td>(−∞,∞)</td><td>modern transformers</td></tr>
+</table>
+<ul>
+<li>Losses: regression → <b>MSE/MAE</b>; binary classification → <b>BCE</b>; multi-class → <b>cross-entropy</b>; LLMs → <b>next-token cross-entropy</b>.</li>
+<li>Init: xavier/he (PyTorch default). Never init zeros — symmetry breaks learning.</li>
+<li>Numerical stability: softmax + CE implemented together (<code>CrossEntropyLoss</code>) to avoid log(0).</li>
+</ul>
+</div>
+<div class="card">
+<h3>3. Optimizers</h3>
+<ul>
+<li><b>SGD:</b> w ← w − lr·∇L. Simple but slow, sensitive to lr.</li>
+<li><b>Momentum:</b> keeps velocity across steps → faster, smooths zig-zag, escapes flat regions.</li>
+<li><b>Adam</b> = momentum + adaptive per-parameter learning rate + bias correction. Default choice in DL (lr ~1e-3 for Transformers, 1e-4 for AdamW in LLM fine-tuning). <b>AdamW</b> decouples weight decay → better for Transformers.</li>
+<li><b>Vanishing/exploding gradients:</b> ReLU (vs sigmoid/tanh saturating), xavier/he init, batch norm, residual/skip connections (ResNet, Transformer), gradient clipping (LLMs), LSTMs' gates.</li>
+<li>Batch size trade-off: bigger → faster wall-clock, noisier generalization loss; smaller → noisier gradient = sometimes better generalization, slower. LR schedule (warmup + decay) matters a lot.</li>
+</ul>
+</div>
+<div class="card">
+<h3>4. DL regularization</h3>
+<ul>
+<li><b>Dropout:</b> randomly zero neurons in training (keeps others "more responsible"); multiplications by p keep expected sum; only active in train mode (net.eval() disables).</li>
+<li><b>BatchNorm:</b> normalize activations per mini-batch (μ,σ) + learnable scale/shift. Accelerates training, mild regularization, enables higher lr. Stats are per-channel; use eval() mode correctly at inference.</li>
+<li><b>Early stopping:</b> watch validation loss, roll back to best checkpoint. <b>Data augmentation:</b> flips/rotations/crop for vision; synonym/back-translation for text. <b>Weight decay (L2)</b> in optimizer.</li>
+<li><b>Overfit signals:</b> train loss → 0, val loss rising; low dropout + big capacity + small data + no augmentation → classic.</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. CNN (vision)</h3>
+<ul>
+<li>Conv layer: small filters stride over image → feature maps; weight sharing = translation invariance + few params. <b>Stride</b> (step), <b>padding</b> (keep size), <b>filters</b> = learned feature detectors.</li>
+<li>Max-pooling: downsample, keeps strongest activation, adds invariance. Flatten → dense → softmax.</li>
+<li>Famous: VGG (deep small convs), ResNet (skip/shortcut connections fix vanishing gradient → very deep), Inception, EfficientNet. <b>Transfer learning:</b> reuse ImageNet-pretrained weights, freeze backbone, retrain head → best practice for small data.</li>
+<li>Output size formula: (W − F + 2P)/S + 1.</li>
+</ul>
+</div>
+<div class="card">
+<h3>6. RNN / LSTM / GRU (sequence baselines)</h3>
+<ul>
+<li><b>RNN:</b> hidden state carried across time steps → handles sequences. Suffers vanishing gradients over long sequences → short memory.</li>
+<li><b>LSTM</b> adds input/forget/output gates + cell state → learns what to remember/forget → long memory. <b>GRU</b> = simpler 2-gate variant, similar performance, fewer params.</li>
+<li>Sequential → painful parallelization &amp; long-range limits are exactly why <b>Transformers replaced them</b>. RNN relevant for interview history + simple time-series. Time-series notes: don't shuffle, use walk-forward validation.</li>
+</ul>
+</div>
+<div class="card">
+<h3>7. PyTorch training loop (reproduce cold)</h3>
+<pre><code>import torch, torch.nn as nn
+model = nn.Sequential(nn.Linear(784,128), nn.ReLU(), nn.Linear(128,10))
+loss_fn = nn.CrossEntropyLoss()
+opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+for epoch in range(10):
+    model.train()
+    for xb, yb in train_loader:
+        opt.zero_grad()
+        out = model(xb)
+        loss = loss_fn(out, yb)
+        loss.backward()          # autodiff = chain rule everywhere
+        opt.step()
+    model.eval()
+    with torch.no_grad():
+        val_acc = ...            # never take grad in eval</code></pre>
+<p class="note">Keywords to say in interviews: forward pass → loss → <code>backward()</code> → optimizer <code>step()</code> → zero_grad each iteration; autodiff is reverse-mode chain rule. That's ~80% of a DL coding round.</p>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai5" data-title="NLP, Transformers & LLMs" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">5</div>
+  <div><div class="tag">AI / ML</div><h2>NLP, Transformers &amp; LLMs</h2></div>
+</div>
+
+<div class="card">
+<h3>1. NLP pipeline &amp; tokenization</h3>
+<ul>
+<li>Text → tokens (words or subwords) → ids via a vocabulary map → model → back to text.</li>
+<li><b>Tokenizers:</b> WordPiece/BPE/SentencePiece split rare words into subwords so every token is in vocab and no OOV crash. BPE = greedily merge frequent character pairs.</li>
+<li>Hands-on check: ask "how would you handle out-of-vocabulary words in bootstrap POS/brand lists?" → token merge, sequence matcher (fuzzy), waitlist bills normalizer.</li>
+</ul>
+</div>
+<div class="card">
+<h3>2. Embeddings — meaning as vectors</h3>
+<ul>
+<li><b>One-hot</b>: sparse, no similarity. <b>Dense embeddings</b> (word2vec/Glove): nearby words share context → cosine similarity ≈ semantic similarity. king − man + woman ≈ queen.</li>
+<li><b>Contextual embeddings:</b> BERT/GPT give different vectors per context ("bank" in finance vs river). That's their superpower over static word2vec.</li>
+<li>Use: retrieval (RAG), recommendation clusters, model input features.</li>
+</ul>
+</div>
+<div class="card">
+<h3>3. Attention &amp; self-attention (the core idea)</h3>
+<ul>
+<li>Problem with RNN: must compress whole context into one vector, sequential, long-range loss. <b>Attention:</b> let each output decide "which inputs to focus on" via weighted sum of value vectors, weights from similarity of query &amp; key.</li>
+<li><b>Self-attention:</b> tokens (via Q, K, V projections) attend to all tokens in the same sequence. Query = "what am I looking for", Key = "what I offer", Value = "my content". Output = Σ softmax(Q·Kᵀ/√d) · V.</li>
+<li><b>Multi-head:</b> run attention in parallel subspaces → learn different relationship types (syntax, coreference, negation…). <b>Positional encoding</b> injects order since attention itself is order-agnostic (no recurrence/convolution).</li>
+<li>Complexity O(n²) in context length n → this is why long-context is expensive and why KV-cache &amp; sparse/local attention exist. Also the reason for memory pressure in LLM serving.</li>
+</ul>
+</div>
+<div class="card">
+<h3>4. Transformers: encoder vs decoder</h3>
+<table><tr><th>Arch</th><th>Attention</th><th>Trained to…</th><th>Models</th></tr>
+<tr><td>Encoder-only</td><td>bidirectional</td><td>fill the mask (understand)</td><td>BERT, RoBERTa</td></tr>
+<tr><td>Decoder-only</td><td>causal (masked left)</td><td>predict next token (generate)</td><td>GPT, Llama, Mistral</td></tr>
+<tr><td>Encoder-Decoder</td><td>both</td><td>transform input → output</td><td>T5, BART, translation</td></tr>
+</table>
+<ul>
+<li><b>BERT-style</b> = embeddings for tasks. <b>GPT-style</b> = generative chat, agent backbones. Modern practice: decoder-only + fine-tune or RAG for everything.</li>
+<li>Stacked blocks: each = multi-head self-attention + FFN + residual connections + layer-norm. ~the whole model.</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. LLM internals &amp; generation</h3>
+<ul>
+<li>LLM training objective: predict next token → logits → softmax over vocab → cross-entropy. Generation = feed tokens, sample the next, append, repeat (autoregressive).</li>
+<li><b>Temperature:</b> scales logits before softmax; low = confident/repetitive beam, high = creative/random. <b>Top-k</b>: sample only from top k tokens. <b>Top-p (nucleus):</b> sample from the smallest set whose cumulative probability ≥ p. These 3 = "sampling strategy".</li>
+<li><b>Context window</b> = max tokens the model can see; everything beyond is lost (or truncated). <b>KV cache:</b> caches previous attention K/V at inference → huge speedup, big memory cost — cornerstone of LLM serving.</li>
+<li><b>Hallucination:</b> plausible but wrong output — the model is a probability machine, not a database. Mitigate: RAG grounding, citations, constrained decoding, refusal prompts, eval with factual QA.</li>
+</ul>
+</div>
+<div class="card">
+<h3>6. Training phases</h3>
+<ol>
+<li><b>Pretraining:</b> next-token prediction on trillions of tokens (huge compute) → general knowledge + language skill. "The weights are the model."</li>
+<li><b>Supervised Fine-Tuning (SFT):</b> instruction→response pairs → teach formats/tasks.</li>
+<li><b>RLHF:</b> human preference → reward model → RL (PPO) to maximize reward → aligned assistant. <b>DPO</b>: preference learning without RL, simpler, modern default. <b>LoRA/QLoRA</b>: train small adapters on top of frozen base → cheap fine-tuning at 1-5% cost.</li>
+<li>Eval the model you ship: <b>Refusal rate, Hallucination gate, Adversarial safety, Human-Eval, and user-task metrics</b> — not just loss.</li>
+</ol>
+</div>
+<div class="card">
+<h3>7. RAG · Prompting · Agents (the "AI engineer" stack)</h3>
+<h4>RAG (Retrieval-Augmented Generation)</h4>
+<pre><code># 1) Ingest:  chunk docs -> embed (embedding model) -> vector DB
+# 2) Query:   embed user question -> top-k similar chunks (cosine) 
+# 3) Generate: prompt = question + retrieved chunks -> LLM answer
+#    (optionally with reranker, citations, filtering by metadata)</code></pre>
+<ul>
+<li>Fix hallucination + allow fresh/private knowledge. <b>Chunking trade-off:</b> chunk size, overlap, embedding model (bge/m3e), vector DB (FAISS, Chroma, Qdrant, Pinecone), reranker (cross-encoder).</li>
+<li>Must know failures: retrieval misses (bad chunks), context window overflow, citation leakage, freshness decay, and <b>evaluation</b> (retrieval hit-rate + answer faithfulness).</li>
+</ul>
+<h4>Prompting ladder</h4>
+<ul>
+<li>zero-shot → few-shot (add 3-5 examples) → chain-of-thought ("think step by step" / reasoning) → self-consistency (sample multiple + vote) → structured output (JSON/program by example), tool-calling schemas.</li>
+</ul>
+<h4>Agents</h4>
+<ul>
+<li>Agent = LLM + tools (functions/APIs) + memory + loop (plan → act → observe → repeat). <b>Function/tool calling</b> = LLM outputs structured args, your code executes the tool. Frameworks: LangChain/LangGraph, LlamaIndex, CrewAI, AutoGen. <b>Guardrails</b>: input/output validation, jailbreak resistance, PII redaction, human-in-the-loop for risky actions.</li>
+</ul>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai6" data-title="ML System Design & MLOps" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">6</div>
+  <div><div class="tag">AI / ML</div><h2>ML System Design &amp; MLOps</h2></div>
+</div>
+
+<div class="card">
+<h3>1. The design framework (answer in this order)</h3>
+<ol>
+<li><b>Clarify goals:</b> problem (short answer: "design a fraud/recsys/chatbot system"), users, scale (QPS, data volume), latency budget, offline vs online.</li>
+<li><b>Metrics &amp; loss:</b> primary + secondary offline metrics; business/online metric. Choose labels or success signals (proxy labels with cost).</li>
+<li><b>Data:</b> sources, collection, labels, class imbalance, leakage, privacy/PII/gdpr.</li>
+<li><b>Features:</b> raw → engineered, embeddings vs discrete, online/offline featurization, feature store.</li>
+<li><b>Model:</b> baseline → candidate (start LightGBM, move DL if the data demands), split strategy, training infra.</li>
+<li><b>Serving:</b> batch vs online, latency/throughput, model versioning, fallbacks.</li>
+<li><b>Evaluation &amp; rollout:</b> offline eval, shadow/A/B, monitoring, drift detection, retraining loop.</li>
+</ol>
+<p class="note"><b>Answer pattern that interviews reward:</b> constraints-first → trade-off justifications ("we chose X over Y because latency budget…") → state assumptions explicitly → mention failure modes unprompted.</p>
+</div>
+<div class="card">
+<h3>2. Training vs serving</h3>
+<table><tr><th></th><th>Batch</th><th>Online (real-time)</th></tr>
+<tr><td>When</td><td>nightly/hourly jobs</td><td>per request</td></tr>
+<tr><td>Latency needed</td><td>minutes-hours</td><td>ms</td></tr>
+<tr><td>Examples</td><td>daily recommendations, churn report</td><td>fraud screen, autocomplete, real-time ads</td></tr>
+<tr><td>Stack</td><td>Airflow/Spark, notebooks</td><td>REST/gRPC, model server (TorchServe, Triton, vLLM), feature store fetch</td></tr>
+</table>
+<ul>
+<li>Reduce latency: smaller model/warmup/quantization (int8), model caching, batch inference, Fallback to a heuristic, CDN for static parts. Budget: e.g. ≤150 ms p95 for a checkout fraud check.</li>
+<li>Throughput = requests/s served; a checkpoint at one single inference for the whole grid saves real money; KV cache for LLM tokens.</li>
+</ul>
+</div>
+<div class="card">
+<h3>3. Feature store &amp; training-serving skew</h3>
+<ul>
+<li><b>Feature store</b> = single source of truth for features: offline (training) + online (serving) dual tables, consistent definitions, versioning, freshness. Avoids teams re-implementing the same fi.</li>
+<li><b>Training-serving skew:</b> model trains on data that differs from what it sees live → silent degraded perf. Causes: different featurization code, timestamp leakage, changing distributions, online/offline divergence.</li>
+<li>Mitigate: use the same feature code (feature store templates/SDK), log serving features for replay, validate online vs offline distributions (PSI over features), and drift tests in CI.</li>
+</ul>
+</div>
+<div class="card">
+<h3>4. Monitoring &amp; drift</h3>
+<ul>
+<li><b>Data drift:</b> input distribution shifted (PSI, KS-test, KL on features). <b>Concept drift:</b> P(y|x) itself changed (fraudsters adapt!) — needs label feedback/retraining, harder to detect without fresh labels.</li>
+<li>Monitor model outputs too: score distribution, predicted-positive rate, calibration, latency, error rates. Log serving inputs → ground truth (look-back with delayed labels: e.g. credit default known after 90 days).</li>
+<li>Alerts: thresholds + on-call; <b>retraining cadence</b>: scheduled (daily/weekly) vs event/feedback-driven (concept drift alarm). Guardrails &amp; rollback strategy: canary deploy, feature flags, fallback model.</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. A/B testing an ML system</h3>
+<ul>
+<li>Go offline metric → then online A/B. Randomize users 50/50, fix metric + significance level before launching, compute sample size with (baseline conversion, MDL, α=0.05, power=0.8).</li>
+<li>Pitfalls: peeking at p-values, novelty effect (users respond to "new" not "better"), Simpson's paradox (slice by cohort before concluding), carryover effects, multiple metrics inflation (Bonferroni/FDR).</li>
+<li>Alternatives when A/B is slow: offline replay on logged data, bandits (multi-armed) for exploration, canary by business segment.</li>
+</ul>
+</div>
+<div class="card">
+<h3>6. Case study — Recommendation System</h3>
+<ul>
+<li>Goal: maximize CTR/engagement (transaction-relevance). Pipeline: retrieval (candidate generation: collaborative filtering, two-tower embeddings: user-emb · item-emb) → ranking (features + LightGBM/DL → click score) → post-rank (diversity, freshness, business constraints).</li>
+<li>Cold-start: new users → popularity baseline; new items → item embeddings warm-start. Bias: popularity bias, position bias (models learn rank position) → correct with position features &amp; unbiased CTR estimators.</li>
+<li>Online metrics: CTR, # orders/uplift; offline: AUC, nDCG (ranking quality), recall@k. Both together before shipping.</li>
+</ul>
+</div>
+<div class="card">
+<h3>7. Case studies — Fraud &amp; Search/churn</h3>
+<div class="qablock"><b>Fraud detection system:</b><p>Real-time transaction score at checkout. Features: amount deviation vs user history, velocity (count in last hour/day), device/IP entropy, merchant risk, embedding of recipient. Model: LightGBM or online GBDT; latency ≤100-150ms. Imbalance: class weights + threshold tuned by $ cost (FN=chargeback, FP=lost good order). Evals: recall@k &amp; $ saved vs FPR; online A/B against rule engine. Monitoring: PSI on features, score distribution, delayed-label reconciliation (chargeback look-back), periodic retrain + active-learning label queue. Guardrails: block only high-score, waterfall to manual review queue, appeal path.</p></div>
+<div class="qablock"><b>Churn prediction:</b><p>Goals: who is about to churn in next 30d → retention actions. Features: usage trends (drops), payment behavior, support tickets, engagement decay rates. Data leakage trap: computing "days since last activity" with future info. Label: churn = no activity for N days &amp; window alignment. Model: GBDT; threshold tuned on cost of outreach vs saved LTV. Serving: weekly batch → CRM/notification system. Metrics: recall@k on the cohort we actually contact, uplift/lift of actions (compare to control), not raw AUC alone.</p></div>
+<div class="qablock"><b>Search ranking / autocomplete:</b><p>Query → document candidates (BM25/lexical + embedding hybrid) → ranker (GBDT/DL on query-doc features: click-through, language match, recency) → diversify. Position bias correction; log search-result clicks for training. Offline: nDCG, MAP, recall@k. Online: CTR, p50/p90 latency, zero-result rate.</p></div>
+<div class="qablock"><b>MLOps tooling to mention:</b><p>Experiments: MLflow / W&amp;B. Orchestration: Airflow, Prefect. Feature store: Feast/Amplitude FeatureBase. Serving: TorchServe, NVIDIA Triton, vLLM (LLM), Ray Serve. CI/CD for models: DVC + model registry + drift tests in pipeline, canary &amp; shadow deploy.</p></div>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai7" data-title="AI/ML Interview Q&A + Coding" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">7</div>
+  <div><div class="tag">AI / ML</div><h2>AI/ML Interview Q&amp;A + Coding</h2></div>
+</div>
+
+<div class="card">
+<h3>1. Classic ML Q&amp;A (fire these off daily)</h3>
+<div class="qablock"><b>Bias vs variance in plain words?</b><p>Bias = model too simple to capture pattern (underfit, fails train too). Variance = model too sensitive to which data it saw (great train, bad test). Trade-off managed by model complexity, regularization, ensembling.</p></div>
+<div class="qablock"><b>Overfitting vs underfitting — how to detect &amp; fix?</b><p>Train−val gap big = overfit (add data, regularize, simplify, dropout, early stop). Both poor = underfit (more features, stronger model, less regularization). Check the curve, not guesses.</p></div>
+<div class="qablock"><b>Why is accuracy bad on imbalanced data?</b><p>A model can be 99.99% accurate by never predicting the rare class. Judge rare-class performance with precision/recall/F1 and PR-AUC; use class weights/SMOTE and tune threshold by cost.</p></div>
+<div class="qablock"><b>Bagging vs boosting?</b><p>Bagging: parallel trees on bootstraps + random features, average/vote → cuts variance (Random Forest). Boosting: sequential trees fixing previous residuals → cuts bias (XGBoost/LightGBM).</p></div>
+<div class="qablock"><b>Why scale features before ML?</b><p>Distance/similarity + gradient descent: L1/L2 regularization &amp; algorithms using distances (KNN, SVM, PCA, k-means, GD) become dominated by large-magnitude features. Trees are scale-invariant.</p></div>
+<div class="qablock"><b>How do you pick the model for a tabular problem?</b><p>Baseline: logistic/linear for interpretability or LightGBM for accuracy. Then Cross-validate vs random baseline (AUC, F1, RMSE) and iterate feature work; only move to DNN when data is raw/high-dim/unstructured and baselines saturate.</p></div>
+<div class="qablock"><b>What is data leakage &amp; why dangerous?</b><p>Test/future data reaches training (e.g., scaling before split, target-derived features, future timestamp). Model scores impossibly well in eval and fails in production. Split → fit transforms on train → apply to test.</p></div>
+<div class="qablock"><b>Regularization intuition?</b><p>Adds penalty on weights. L1/Lasso shrinks some weights exactly to 0 → feature selection. L2/Ridge shrinks them toward 0 → handles collinearity. Both fight overfit.</p></div>
+</div>
+<div class="card">
+<h3>2. Math &amp; stats Q&amp;A</h3>
+<div class="qablock"><b>Bayes' theorem &amp; the classic disease example?</b><p>P(A|B)=P(B|A)P(A)/P(B). 1% prevalence, 99% sensitivity &amp; specificity → P(disease|positive)=0.5. Base rate dominates.</p></div>
+<div class="qablock"><b>p-value interpretation?</b><p>P(data as extreme as seen | H0 true). NOT P(H0 true). p&lt;0.05 → evidence against H0. Type I = false positive (reject true H0), Type II = false negative, power = 1−β.</p></div>
+<div class="qablock"><b>Correlation vs causation?</b><p>r measures linear association only, unit-free [−1,1]. r=0 ≠ independence. Correlation never implies causation — confounders, reverse causality, selection bias.</p></div>
+<div class="qablock"><b>What does AUC actually measure?</b><p>P(random positive scored above random negative) = ranking quality, [0.5→1]. Threshold-independent, but the wrong metric for imbalanced precision needs — use PR-AUC.</p></div>
+<div class="qablock"><b>Central limit theorem to a junior?</b><p>Averages of many iid samples are ~Normal(μ, σ/√n) whatever the source distribution (n ~30+). Basis for z/t-tests and CI. SE = σ/√n.</p></div>
+<div class="qablock"><b>Eigenvalues / PCA?</b><p>A·v = λ·v: v is a direction A only stretches by λ. PCA → eigenvectors of covariance; top-λ directions capture most variance; eigenvalue = variance explained. Scale features first; linear only.</p></div>
+</div>
+<div class="card">
+<h3>3. DL &amp; LLM Q&amp;A</h3>
+<div class="qablock"><b>Why does a stack of linear layers collapse?</b><p>Composition of linear maps is linear. Non-linear activations (ReLU…) between layers are what give NNs their expressiveness.</p></div>
+<div class="qablock"><b>Explain backpropagation in 30s?</b><p>Forward pass computes loss; reverse-mode autodiff applies the chain rule layer-by-layer to compute dL/dw for every parameter; update w −= lr·grad.<code>backward()</code> does this automatically.</p></div>
+<div class="qablock"><b>What problem do skip/residual connections solve?</b><p>Vanishing gradients in deep nets: gradient flows directly along identity path → lets networks be ~100s of layers (ResNet, every Transformer block has one).</p></div>
+<div class="qablock"><b>Why Transformers over RNNs?</b><p>Self-attention looks at every token → long-range dependencies + fully parallel training. Cost O(n²) context vs RNN O(n) sequential steps. RNN vanishes long memory; attention doesn't.</p></div>
+<div class="qablock"><b>What is temperature / top-p?</b><p>Generation knobs. Temperature scales logits (low = focused, high = creative). Top-p = sample from the set whose cumulative prob ≥ p (nucleus). Use temperature + top-p + top-k together.</p></div>
+<div class="qablock"><b>How does fine-tuning differ from RAG?</b><p>Fine-tuning changes weights (learns style/tasks). RAG adds external facts at prompt time (fresh/private knowledge, no retraining). For "know more facts" → RAG; for "behave differently / new format" → SFT/LoRA; for alignment → RLHF/DPO.</p></div>
+<div class="qablock"><b>How would you evaluate an LLM output?</b><p>Task-specific metrics (accuracy on QA, faithfulness for summarization, retrieval hit-rate for RAG, refusals/toxicity), LLM-as-judge vs human-label set, logged user metrics post-deploy (helpful/error rates). Never trust loss/ppl alone.</p></div>
+</div>
+<div class="card">
+<h3>4. ML coding — implement from memory (NumPy only)</h3>
+<pre><code># k-means
+def kmeans(X, k, iters=100):
+    centers = X[np.random.choice(len(X), k, replace=False)]
+    for _ in range(iters):
+        d = ((X[:,None,:] - centers[None,:,:])**2).sum(-1)   # n x k
+        labels = d.argmin(1)
+        for j in range(k):
+            if (labels==j).any(): centers[j] = X[labels==j].mean(0)
+    return labels, centers
+
+# logistic regression via GD
+def logreg(X, y, lr=0.1, iters=1000):
+    w, b = np.zeros(X.shape[1]), 0.0
+    for _ in range(iters):
+        p = 1/(1+np.exp(-(X@w + b)))
+        w -= lr * (X.T @ (p-y)) / len(y)
+        b -= lr * (p-y).sum() / len(y)
+    return w, b
+
+# confusion-matrix metrics
+TP = ((pred==1)&amp;(y==1)).sum(); FP = ((pred==1)&amp;(y==0)).sum()
+FN = ((pred==0)&amp;(y==1)).sum(); TN = ((pred==0)&amp;(y==0)).sum()
+
+# KNN
+def knn(Xtr, ytr, Xte, k=3):
+    d = ((Xtr[:,None,:]-Xte[None,:,:])**2).sum(2)  # train x test
+    idx = d.argsort(1)[:,:k]                        # k nearest
+    return np.array([np.bincount(ytr[i]).argmax() for i in idx])</code></pre>
+</div>
+<div class="card">
+<h3>5. Datascience SQL/code quick fire</h3>
+<div class="qablock"><b>Write a daily-churn count per cohort?</b><p><code>SELECT signup_week, COUNT(DISTINCT user_id) FILTER (WHERE week_offset=0) AS wk0, …</code> — or a recursive CTE / self-join on first activity (see SW SQL guide section 3. <b>Cohort analysis</b>).</p></div>
+<div class="qablock"><b>Find top 3 spenders per city?</b><p><code>SELECT user_id, city, amt FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY city ORDER BY amt DESC) rn FROM orders) t WHERE rn&lt;=3;</code></p></div>
+<div class="qablock"><b>Sessionize events (gap &gt;30min = new session)?</b><p><code>LAG(ts) → flag gap&gt;30min → SUM(flag) OVER (ORDER BY ts) → session_id</code>.</p></div>
+<div class="qablock"><b>Missing values in pandas?</b><p><code>df.isnull().sum()</code> → decide (drop/fillna(median)/KNN + missing-flag). Sales amounts: log-transform heavy tail.</p></div>
+<div class="qablock"><b>Duplicate transactions?</b><p>Group by amount+ts+merchant+user, count&gt;1; consider same amount ±, repeated attempts (velocity type features).</p></div>
+</div>
+<div class="card">
+<h3>6. System design rapid-fire</h3>
+<div class="qablock"><b>Design a real-time fraud detection service?</b><p>Ingest tx → rule screen + model (GBDT, &lt;150ms, feature store) → risk score → threshold by $ cost → block/allow/hold review queue → delayed-label reconciliation → drift monitoring + retrain.</p></div>
+<div class="qablock"><b>Design a recommendation feed?</b><p>Two-tower retrieval (user/item embeddings → top-k candidates) → LightGBM/DL ranker on click/session features → post-rule diversity &amp; business constraints → A/B uplift. Cold-start fallback: popularity + item embeddings.</p></div>
+<div class="qablock"><b>What latency QPS budget for a chatbot?</b><p>Define first: p95 &lt; 2s, throughput/budget, context size. Serve LLM via vLLM with KV-cache, batch, quantize, cache common prompts; guardrails + fallback. State assumptions before numbers.</p></div>
+</div>
+<div class="card">
+<h3>7. AI-role behaviorals to prep</h3>
+<ul>
+<li>"Walk me through a project end-to-end." → Problem → metric → data (leakage!) → model selection → eval → how you'd deploy/monitor. Have <b>1 ML project and 1 GenAI project</b> ready.</li>
+<li>"When did a model fail in production?" → Own the story: symptom, diagnosis (drift/leakage/skew), fix, monitoring added.</li>
+<li>"How do you decide when to build a model vs a rule?" → Data volume, maintainability, cost/benefit, fairness — rules for hard guarantees, ML for pattern scale.</li>
+<li>"How do you explain ML to a business stakeholder?" → Plain metrics (recall/$, saved) with threshold cost trade-off, no jargon.</li>
+</ul>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<section class="page" id="page-ai8" data-title="AI Career Roadmap & Resources" data-group="AI / ML">
+<div class="page-head">
+  <div class="pn">8</div>
+  <div><div class="tag">AI / ML</div><h2>AI Career Roadmap &amp; Resources</h2></div>
+</div>
+
+<div class="card">
+<h3>1. Roles — know what you're applying for</h3>
+<table><tr><th>Role</th><th>Core duties</th><th>Interview tests</th></tr>
+<tr><td>Data Scientist</td><td>analytics, A/B, modeling, SQL/pandas heavy</td><td>SQL, stats, case studies, moderate ML</td></tr>
+<tr><td>ML Engineer (MLE)</td><td>build + ship models: training, serving, pipelines</td><td>DSA, ML, system design, MLOps</td></tr>
+<tr><td>AI / GenAI Engineer</td><td>LLM apps: RAG, fine-tuning, agents, evals</td><td>transformers/LLM depth, prompt/agent design</td></tr>
+<tr><td>Applied Scientist</td><td>R&amp;D-flavored ML at scale, papers optional</td><td>math, ML depth, modelling, research taste</td></tr>
+<tr><td>ML Platform / Ops</td><td>infra: feature store, training/serving platforms</td><td>system design, distributed systems, MLOps</td></tr>
+</table>
+<p class="note">Same portfolio can serve all — emphasize the slice each JD cares about.</p>
+</div>
+<div class="card">
+<h3>2. 12-week plan from absolute scratch</h3>
+<details>
+<summary>Week 1-2 — Python + Math skeleton</summary>
+<p>Python basics (functions, comprehension, class), then repeat NumPy/Pandas drills (the ops in §1.6). Read <i>Essence of Linear Algebra</i> (3Blue1Brown); skim linear algebra + calculus + probability chapters of a stats book in parallel.</p>
+</details>
+<details>
+<summary>Week 3-4 — Classical ML core</summary>
+<p>Supervised: linear/logistic regression, trees, RF, XGBoost. Metrics, bias-variance, k-fold, regularization. One full sklearn project per week: Titanic (classification), Boston/housing (regression).</p>
+</details>
+<details>
+<summary>Week 5-6 — Unsupervised + depth</summary>
+<p>k-means, DBSCAN, PCA, anomaly detection, feature engineering, imbalanced data. Kaggle competition #1 (tabular): aim top 50% and read top solutions.</p>
+</details>
+<details>
+<summary>Week 7-8 — Deep learning</summary>
+<p>MLP → backprop by hand → CNN on CIFAR → RNN/LSTM. Implement training loop in PyTorch from scratch (no tutorials copy-paste).</p>
+</details>
+<details>
+<summary>Week 9-10 — LLM stack</summary>
+<p>Transformers (attention math), BERT/GPT difference, tokenizers. Build a RAG chatbot (chunks, embeddings, vector DB, reranker) + a LoRA fine-tune on a small model (Llama/Mistral). Learn eval (retrieval hit-rate + faithfulness).</p>
+</details>
+<details>
+<summary>Week 11 — System design + MLOps</summary>
+<p>Practice 3-5 design prompts (fraud, recsys, search, RAG), read MLOps basics (MLflow, Airflow, serving).</p>
+</details>
+<details>
+<summary>Week 12 — Interview sprint</summary>
+<p>Revise all 8 pages here, do NC part 7 coding drills, 2-3 mock interviews/week, polish resume + projects + elevator pitch.</p>
+</details>
+</div>
+<div class="card">
+<h3>3. Portfolio projects (quality &gt; quantity)</h3>
+<ul>
+<li><b>Classical:</b> fraud/churn classifier with a PDF write-up: EDA → features → model sweep → threshold by cost → deployment sketch.</li>
+<li><b>RAG:</b> production-flavored doc-QA bot: chunking strategy, embedding + rerank, citations, eval harness (hit-rate + faithfulness + latency).</li>
+<li><b>Agent:</b> tool-calling agent (research + summarize, transaction-help) with guardrails + error handling demo'd in a README + short demo video.</li>
+<li><b>Also-nice:</b> fine-tuned (LoRA) small model to answer your-city specific FAQ; time-series forecast (ETS + LightGBM).</li>
+<li>Each repo: clean README (problem, approach, metric, results table), pinned requirements, screenshot of eval result. Resume bullets: "improved recall@50 by X via Y."</li>
+</ul>
+</div>
+<div class="card">
+<h3>4. Resume &amp; LinkedIn tips</h3>
+<ul>
+<li>First 3 lines must contain keywords interviewers search: PyTorch / scikit-learn, LLM / RAG / fine-tuning (LoRA), Transformers, MLOps (MLflow), SQL + pandas, A/B testing.</li>
+<li>Quantify: "Cut latency 40%, lifted AUC 0.81→0.85, retrieved hit-rate 92%". Metric + delta beats verbs alone.</li>
+<li>Projects ⚠ listed as bullets, not paragraphs. One-line GitHub + portfolio URL clickable. Prepare domain context (payments/UPI, banking, marketplace) since most AI roles are contextual.</li>
+<li>Keep a "top 5 achievements" cheat page like this guide's Behavioral/SW §8 for HR rounds.</li>
+</ul>
+</div>
+<div class="card">
+<h3>5. Resource list (learn fast, don't hoard)</h3>
+<table><tr><th>Area</th><th>Best resource (concrete)</th></tr>
+<tr><td>Fastest math intuition</td><td>3Blue1Brown: Essence of Linear Algebra + Calculus + NN series</td></tr>
+<tr><td>Classical ML books</td><td>Hands-On ML (Géron) — 2nd ed, Andrew Ng ML Coursera (optional)</td></tr>
+<tr><td>Deep learning</td><td>deeplearning.ai (deeplearning specialization #1-2), CS231n slides for CNN</td></tr>
+<tr><td>Transformers/LLM</td><td>Karpathy "Let's build GPT", "Attention is All You Need" paper, Hugging Face NLP course, Andriy Burkov "The 100-Page LLM Book"</td></tr>
+<tr><td>RAG / Agents</td><td>LangChain &amp; LlamaIndex docs + Karpathy's "Agentic Patterns" (1:45h) + "Lost in the Middle" paper (context extremes matter)</td></tr>
+<tr><td>ML system design</td><td>Groking MLOps (free online), Machine Learning System Design Interview (Ali Aminian)", "Designing Machine Learning Systems" (Huyen)</td></tr>
+<tr><td>Practice</td><td>Kaggle (competitions + tabular play), HackerRank SQL / numpy, custom ML-from-scratch drills (page 7)</td></tr>
+<tr><td>Interview mirrors</td><td>This guide (all 8 AI pages), LeetCode DSA (SW §1-2), mock interviews with peers</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>6. Final checklist before your AI interviews</h3>
+<ul class="chk">
+<li><input type="checkbox" id="ai-c1"><label for="ai-c1">Explain bias-variance, overfit fixes, leakage with a real example from MY project</label></li>
+<li><input type="checkbox" id="ai-c2"><label for="ai-c2">Recite 5 classification + 3 regression metrics and when accuracy lies</label></li>
+<li><input type="checkbox" id="ai-c3"><label for="ai-c3">Write NumPy k-means / logistic-GD / KNN blind (page 7 §4)</label></li>
+<li><input type="checkbox" id="ai-c4"><label for="ai-c4">Explain attention formula + why O(n²); know temperature/top-p/top-k</label></li>
+<li><input type="checkbox" id="ai-c5"><label for="ai-c5">Explain RAG pipeline + failure modes; when to RAG vs fine-tune vs RLHF/DPO</label></li>
+<li><input type="checkbox" id="ai-c6"><label for="ai-c6">Walk one ML-System-Design case (fraud/recsys/search) in the §6 framework</label></li>
+<li><input type="checkbox" id="ai-c7"><label for="ai-c7">Know training-serving skew, drift types, monitoring, MLOps tooling names</label></li>
+<li><input type="checkbox" id="ai-c8"><label for="ai-c8">SQL: window functions, cohort/funnel query, percentile, sessionization</label></li>
+<li><input type="checkbox" id="ai-c9"><label for="ai-c9">Have 1 classical + 1 GenAI project told end-to-end (metric + failure story)</label></li>
+<li><input type="checkbox" id="ai-c10"><label for="ai-c10">Behaviorals + HR (motivation, conflict, "your improvement plan") rehearsed</label></li>
+</ul>
+</div>
+
+
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+<footer>Master Interview Preparation Guide · Software + Electronics + AI/ML · Works offline on any device</footer>
 </main>
 
 <script>
@@ -4813,7 +5550,8 @@ MEMORY:      .text/.data/.bss/stack/heap | cache | MMU/MPU | DMA flush/invalidat
   const order = [
     'home','sw1','sw2','sw3','sw4','sw5','sw6','sw7','sw8','sw9','sw10',
     'sw11','sw12',
-    'el1','el2','el3','el4','el5','el6','el7','el8','el9'
+    'el1','el2','el3','el4','el5','el6','el7','el8','el9',
+    'ai1','ai2','ai3','ai4','ai5','ai6','ai7','ai8'
   ];
   const pageMap = {};
   pages.forEach(p => { pageMap[p.id.replace('page-','')] = p; });
@@ -4821,8 +5559,9 @@ MEMORY:      .text/.data/.bss/stack/heap | cache | MMU/MPU | DMA flush/invalidat
   const titleById = id => pageMap[id] ? pageMap[id].dataset.title : 'Home';
 
   // Build sidebar nav
-  const swIds = order.slice(1, 13);
-  const elIds = order.slice(13);
+  const swIds = order.filter(id => id.startsWith('sw'));
+  const elIds = order.filter(id => id.startsWith('el'));
+  const aiIds = order.filter(id => id.startsWith('ai'));
   const buildGroup = (label, ids) => {
     let h = `<div class="grp-title">${label}</div>`;
     ids.forEach(id => {
@@ -4830,7 +5569,7 @@ MEMORY:      .text/.data/.bss/stack/heap | cache | MMU/MPU | DMA flush/invalidat
     });
     return h;
   };
-  sideNav.innerHTML = buildGroup('Software', swIds) + buildGroup('Electronics', elIds);
+  sideNav.innerHTML = buildGroup('Software', swIds) + buildGroup('Electronics', elIds) + buildGroup('AI / ML', aiIds);
 
   // Sidebar listeners
   sideNav.addEventListener('click', e => {

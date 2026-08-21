@@ -4,6 +4,7 @@
 # Allow the main index.html and gitignore
 !index.html
 !.gitignore
+!style.css
 
 # Allow software folder contents (HTML pages and stylesheet)
 !software/

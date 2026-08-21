@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3 · RISC-V + MIPS + Verilog — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>RISC-V + MIPS + VERILOG</h1><div class="sub">Registers, instruction formats, instructions, pipeline hazards, immediate extraction, ALU, MIPS assembly, Verilog/SV — for digital design &amp; semiconductor OAs.</div></header>
+
+<h2>1. Computer Architecture Basics</h2>
+<div class="card">
+<ul>
+<li>A computer: Input → Process → Store → Output. CPU = ALU + CU + Registers.</li>
+<li><b>Von Neumann:</b> one memory for code+data, single bus (bottleneck). <b>Harvard:</b> separate code/data memories, parallel buses → used in many MCUs (PIC, AVR, DSP). MIPS SoCs often use modified Harvard (separate I-cache/D-cache).</li>
+<li><b>Fetch–Decode–Execute cycle:</b> fetch instruction from PC → decode in CU → execute in ALU → advance PC → repeat.</li>
+<li><b>Registers:</b> PC (next instruction), IR (current instruction), SP (stack), general purpose, status/flags (zero, carry, overflow, negative).</li>
+<li><b>RISC vs CISC:</b> RISC = simple fixed-length, load-store (MIPS, ARM, RISC-V); CISC = complex variable-length, ops can touch memory (x86).</li>
+<li><b>Memory hierarchy:</b> Registers (~1 cycle) → L1/L2 cache (2–10) → RAM (100+) → Disk (millions). Locality: spatial (nearby) + temporal (recent).</li>
+</ul>
+</div>
+
+<h2>2. RISC-V Register File (32 × XLEN)</h2>
+<div class="card">
+<table><tr><th>Reg</th><th>ABI</th><th>Preserved</th><th>Role</th></tr>
+<tr><td>x0</td><td>zero</td><td>—</td><td>Hardwired to 0 (reads 0, writes ignored)</td></tr>
+<tr><td>x1</td><td>ra</td><td>No</td><td>Return address (JAL link)</td></tr>
+<tr><td>x2</td><td>sp</td><td>Yes</td><td>Stack pointer</td></tr>
+<tr><td>x3/x4</td><td>gp / tp</td><td>—</td><td>Global / thread pointer</td></tr>
+<tr><td>x5–7</td><td>t0–2</td><td>No</td><td>Temporaries</td></tr>
+<tr><td>x8</td><td>s0/fp</td><td>Yes</td><td>Saved/Frame pointer</td></tr>
+<tr><td>x10–17</td><td>a0–7</td><td>No</td><td>Function args / return values</td></tr>
+<tr><td>x18–27</td><td>s2–11</td><td>Yes</td><td>Saved registers</td></tr>
+<tr><td>x28–31</td><td>t3–6</td><td>No</td><td>More temporaries</td></tr>
+</table>
+<p class="note"><b>MCQ:</b> How many RISC-V registers? → 32. Which is always zero? → x0.</p>
+</div>
+
+<h2>3. RISC-V Instruction Formats (all 32-bit, 6 types)</h2>
+<div class="card">
+<ul>
+<li><b>R-type:</b> funct7(7) rs2(5) rs1(5) funct3(3) rd(5) opcode(7) → ADD rd,rs1,rs2</li>
+<li><b>I-type:</b> imm[11:0] rs1 funct3 rd opcode → ADDI, LW</li>
+<li><b>S-type:</b> imm[11:5] rs2 rs1 funct3 imm[4:0] opcode → SW</li>
+<li><b>B-type:</b> imm[12] imm[10:5] rs2 rs1 funct3 imm[4:1] imm[11] opcode → BEQ (imm[0]=0)</li>
+<li><b>U-type:</b> imm[31:12] rd opcode → LUI</li>
+<li><b>J-type:</b> imm[20] imm[10:1] imm[11] imm[19:12] rd opcode → JAL</li>
+</ul>
+<p class="note">All immediates are sign-extended (except U). B &amp; J type have LSB = 0 (aligned to 2 bytes). I-type imm[0] exists.</p>
+<h3>Immediate extraction (expect coding in Verilog)</h3>
+<pre><code>wire [31:0] imm_i = {{21{instruction[31]}}, instruction[30:20]};
+wire [31:0] imm_s = {{21{instruction[31]}}, instruction[30:25], instruction[11:7]};
+wire [31:0] imm_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+wire [31:0] imm_u = {instruction[31:12], 12'b0};
+wire [31:0] imm_j = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};</code></pre>
+</div>
+
+<h2>4. RISC-V Common Instructions</h2>
+<div class="card">
+<table><tr><th>Instr</th><th>opcode</th><th>funct3</th><th>funct7</th><th>Meaning</th></tr>
+<tr><td>ADD</td><td>0110011</td><td>000</td><td>0000000</td><td>rd = rs1 + rs2</td></tr>
+<tr><td>SUB</td><td>0110011</td><td>000</td><td><b>0100000</b></td><td>rd = rs1 − rs2 (same opcode/funct3 as ADD — funct7 distinguishes)</td></tr>
+<tr><td>AND/OR/XOR</td><td>0110011</td><td>111/110/100</td><td>0000000</td><td>bitwise</td></tr>
+<tr><td>SLL/SRL/SRA</td><td>0110011</td><td>001/101/101</td><td>0/0/0100000</td><td>shifts (SRA arithmetic)</td></tr>
+<tr><td>SLT/SLTU</td><td>0110011</td><td>010/011</td><td>0000000</td><td>set less than (signed/unsigned)</td></tr>
+<tr><td>ADDI/ANDI/ORI</td><td>0010011</td><td>000/111/110</td><td>—</td><td>immediate ops (I-type)</td></tr>
+<tr><td>LW</td><td>0000011</td><td>010</td><td>—</td><td>rd = MEM[rs1 + imm]</td></tr>
+<tr><td>SW</td><td>0100011</td><td>010</td><td>—</td><td>MEM[rs1 + imm] = rs2</td></tr>
+<tr><td>BEQ/BNE/BLT/BGE</td><td>1100011</td><td>000/001/100/101</td><td>—</td><td>branches (PC-relative)</td></tr>
+<tr><td>JAL / JALR</td><td>1101111/1100111</td><td>—/000</td><td>—</td><td>jump-and-link / indirect jump</td></tr>
+<tr><td>LUI / AUIPC</td><td>0110111/0010111</td><td>—</td><td>—</td><td>load upper / add upper to PC</td></tr>
+</table>
+<h3>Quick mnemonics</h3>
+<pre><code>LW rd, imm(rs1)   → rd = MEM[rs1+imm]
+SW rs2, imm(rs1)  → MEM[rs1+imm] = rs2
+JAL rd, label      → rd = PC+4; PC = label
+JALR rd, rs1, imm → rd = PC+4; PC = (rs1+imm) &amp; ~1
+LUI rd, imm        → rd = imm &lt;&lt; 12
+AUIPC rd, imm      → rd = PC + (imm &lt;&lt; 12)</code></pre>
+</div>
+
+<h2>5. The 5-Stage Pipeline</h2>
+<div class="card">
+<pre><code>IF → ID → EX → MEM → WB
+1: IF (fetch, PC+4)
+2: ID (decode, read rs1/rs2, sign-extend)
+3: EX (ALU, branch check, effective address)
+4: MEM (D$ read for LW / write for SW)
+5: WB (write result to rd)</code></pre>
+<p>Pipeline registers: IF/ID (PC, instr), ID/EX (PC, rs1_val, rs2_val, imm, control), EX/MEM (ALU result, rs2_val, rd), MEM/WB (mem data, ALU result, rd).</p>
+</div>
+
+<h2>6. Pipeline Hazards</h2>
+<div class="card">
+<h3>Structural</h3>
+<p>Two instructions need the same hardware unit (single memory for I$ + D$ on load). Fix: separate I$/D$ (Harvard) or stall.</p>
+<h3>Data Hazard (RAW)</h3>
+<pre><code>ADD x1, x2, x3    // x1 written in WB
+SUB x4, x1, x5    // x1 read in EX — stale!
+→ Fix: FORWARDING (bypass) from EX/MEM or MEM/WB to EX input mux</code></pre>
+<h3>Load-Use Hazard</h3>
+<pre><code>LW x1, 0(x2)      // x1 ready at END of MEM
+ADD x3, x1, x4    // x1 needed at START of EX
+→ Requires 1 STALL BUBBLE + forward</code></pre>
+<h3>Control Hazard (Branch)</h3>
+<p>Branch decided in EX → next PC unknown until cycle 3. Fix: predict-not-taken (flush 2 stages on miss), branch target buffer, 2-bit saturating counter. Penalty = 2 cycles if mispredicted.</p>
+<h3>Hazard summary table</h3>
+<table><tr><th>Hazard</th><th>Detect</th><th>Fix</th></tr>
+<tr><td>RAW ALU-ALU</td><td>ID/EX.rd == IF/ID.rs1/rs2</td><td>forward</td></tr>
+<tr><td>RAW Load-Use</td><td>EX/MEM.rd == ID/EX.rs1/rs2 AND memread</td><td>stall 1 + forward</td></tr>
+<tr><td>Control</td><td>branch in EX</td><td>flush on mispredict</td></tr>
+<tr><td>Structural</td><td>same memory I$+D$</td><td>Harvard / stall</td></tr>
+</table>
+</div>
+
+<h2>7. ALU in Verilog</h2>
+<div class="card">
+<pre><code>module riscv_alu(input logic [31:0] a,b, input logic [3:0] alu_op,
+                 output logic [31:0] out, output logic zero);
+  always_comb case(alu_op)
+    4'b0000: out = a + b;     // ADD
+    4'b0001: out = a - b;     // SUB
+    4'b0010: out = a &amp; b;     // AND
+    4'b0011: out = a | b;     // OR
+    4'b0100: out = a ^ b;     // XOR
+    4'b0101: out = a &lt;&lt; b[4:0];   // SLL
+    4'b0110: out = a &gt;&gt; b[4:0];   // SRL
+    4'b0111: out = $signed(a) &gt;&gt;&gt; b[4:0]; // SRA
+    4'b1000: out = ($signed(a) &lt; $signed(b)); // SLT
+    4'b1001: out = (a &lt; b);   // SLTU
+  endcase
+  assign zero = (out == 32'b0);
+endmodule
+
+// forwarding mux control
+if (ex_mem_regwrite && ex_mem_rd!=0 && ex_mem_rd==id_ex_rs1) fwd = 2'b10; // EX/MEM
+else if (mem_wb_regwrite && mem_wb_rd!=0 && mem_wb_rd==id_ex_rs1) fwd=2'b01; // MEM/WB
+else fwd = 2'b00;</code></pre>
+</div>
+
+<h2>8. Verilog / SystemVerilog Basics</h2>
+<div class="card">
+<ul>
+<li>module/endmodule; input/output; wire (continuous) vs reg (procedural).</li>
+<li><b>always_comb</b> (combinational, = blocking) vs <b>always_ff @(posedge clk)</b> (sequential, &lt;= non-blocking).</li>
+<li><b>Blocking (=)</b> in combinational; <b>non-blocking (&lt;=)</b> in sequential — the golden rule.</li>
+<li>case, if/else, parameter/localparam, generate.</li>
+<li>Branch (EX stage): BEQ zero=1, BNE zero=0, BLT lt=1, BGE lt=0.</li>
+</ul>
+</div>
+
+<h2>9. MIPS Architecture (GlobalFoundries)</h2>
+<div class="card">
+<h3>Registers (32 × 32-bit)</h3>
+<p>$zero(0)=0 · $v0-$v1(2-3)=return · $a0-$a3(4-7)=args · $t0-$t7(8-15)=caller-saved · $s0-$s7(16-23)=callee-saved · $t8-$t9(24-25) · $k0-$k1(26-27)=kernel · $gp(28) · $sp(29) · $fp(30) · $ra(31)</p>
+<h3>Instruction formats</h3>
+<ul>
+<li><b>R:</b> op rs rt rd shamt funct → add, sub, and, or, slt</li>
+<li><b>I:</b> op rs rt immediate(16) → addi, lw, sw, beq, bne</li>
+<li><b>J:</b> op target(26) → j, jal</li>
+</ul>
+<h3>Common instructions</h3>
+<pre><code>add $t0,$t1,$t2    # t0 = t1 + t2
+addi $t0,$t1,100  # immediate
+slt  $t0,$t1,$t2  # t0 = 1 if t1 &lt; t2
+lw $t0, 0($sp)    # load word
+sw $t0, 4($sp)    # store word
+beq $t0,$t1,L     # branch equal
+j L               # unconditional jump
+jal L             # jump-and-link ($ra = return address)
+jr $ra            # return from function
+li $t0,100 / move $t0,$t1   # pseudo-instructions</code></pre>
+<h3>Translate C → MIPS</h3>
+<pre><code>a = b + c;         → add $s0,$s1,$s2     (a=$s0,b=$s1,c=$s2)
+if(x==y) goto L;   → beq $t0,$t1,L
+a = b - c;         → sub $s0,$s1,$s2
+a = b + 100;       → addi $s0,$s1,100
+x = arr[i];        → lw $t0, offset($t1)
+arr[i] = x;        → sw $t0, offset($t1)
+if (a==b) c=d+1;   → bne $s0,$s1,skip; addi $s2,$s3,1; skip:</code></pre>
+<h3>MIPS vs RISC-V</h3>
+<table><tr><th></th><th>RISC-V</th><th>MIPS</th></tr>
+<tr><td>Branch</td><td>PC-relative B-type</td><td>PC+4 + I-imm offset</td></tr>
+<tr><td>Delay slots</td><td>NO</td><td>YES (branch delay slot)</td></tr>
+<tr><td>Zero reg</td><td>x0</td><td>$0/$zero</td></tr>
+</table>
+</div>
+
+<h2>10. PC Calculation</h2>
+<div class="card">
+<pre><code>pc_plus4      = pc + 4
+branch_target = pc + imm_b
+jump_target   = pc + imm_j
+jalr_target   = (rs1 + imm_i) &amp; ~1   // JALR clears LSB
+if (branch_taken) next_pc = branch_target;
+else if (jal) next_pc = jump_target;
+else next_pc = pc_plus4;</code></pre>
+</div>
+
+<footer>Page 3 · RISC-V + MIPS + Verilog · <a href="index.html">← Home</a> · <a href="04_memory_mastery.html">Next: Memory Mastery →</a></footer>
+</div>
+</body>
+</html>

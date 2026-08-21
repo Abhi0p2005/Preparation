@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 · Digital + Analog + Signals — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>DIGITAL + ANALOG + SIGNALS &amp; SYSTEMS</h1><div class="sub">Number systems, Boolean/K-maps, combinational &amp; sequential circuits, memories, op-amps, diodes, transistors, signals, communication.</div></header>
+
+<h2>1. Number Systems</h2>
+<div class="card">
+<ul>
+<li>Binary, octal, hex, BCD. Each hex digit = 4 bits: 0=0000 ... F=1111. <code>0xA5 = 1010 0101</code>.</li>
+<li><b>Two's complement (negative numbers):</b> invert all bits + 1. Example −5 (8-bit): 00000101 → invert 11111010 → +1 → 11111011. Why: 5 + (−5) = 0 with normal addition hardware.</li>
+<li>8-bit ranges: unsigned 0–255, signed −128 to 127.</li>
+<li>ASCII: 'A'=65, 'a'=97, '0'=48.</li>
+<li>C octal trap: <code>int x = 052;</code> → x = 42 (leading zero = octal), not 52.</li>
+</ul>
+</div>
+
+<h2>2. Boolean Algebra Laws</h2>
+<div class="card">
+<table><tr><th>Law</th><th>Expression</th></tr>
+<tr><td>Identity</td><td>A+0=A, A·1=A</td></tr>
+<tr><td>Null</td><td>A+1=1, A·0=0</td></tr>
+<tr><td>Complement</td><td>A+A'=1, A·A'=0</td></tr>
+<tr><td>Idempotent</td><td>A+A=A, A·A=A</td></tr>
+<tr><td>Involution</td><td>(A')'=A</td></tr>
+<tr><td>De Morgan</td><td>(A+B)'=A'·B', (AB)'=A'+B'</td></tr>
+<tr><td>Absorption</td><td>A+AB=A, A(A+B)=A</td></tr>
+<tr><td>Consensus</td><td>AB+A'C+BC = AB+A'C</td></tr>
+</table>
+<h3>K-map rules</h3>
+<ul>
+<li>Groups of 1, 2, 4, 8, 16 (powers of 2), rectangular, can wrap around edges.</li>
+<li>Each 1 must be covered at least once; larger groups = simpler expression.</li>
+<li>Don't cares (X) can be 0 or 1 to maximize group size.</li>
+</ul>
+</div>
+
+<h2>3. Combinational Circuits</h2>
+<div class="card">
+<ul>
+<li><b>Half adder:</b> S = A⊕B, C = AB.</li>
+<li><b>Full adder:</b> S = A⊕B⊕Cin, Cout = AB + Cin(A⊕B).</li>
+<li>MUX (2ⁿ:1 picks with n select bits), DEMUX, decoder, encoder, priority encoder, comparator.</li>
+<li><b>NAND and NOR are universal gates</b> — all others can be built from them.</li>
+</ul>
+</div>
+
+<h2>4. Sequential Circuits</h2>
+<div class="card">
+<ul>
+<li>Flip-flops: SR (invalid at 11), JK (no invalid state), D (Q=D edge-triggered), T (toggles).</li>
+<li>Race condition in SR latch when S=R=1.</li>
+<li>Registers, shift registers (SISO/SIPO/PISO/PIPO), ring / Johnson counters.</li>
+<li>Synchronous vs asynchronous counters; MOD-n counters.</li>
+<li>Frequency division: T flip-flop ÷2; cascade n FFs = ÷2ⁿ.</li>
+</ul>
+</div>
+
+<h2>5. Memories — SRAM / DRAM / Cache / Flash / FIFO / ECC</h2>
+<div class="card">
+<h3>SRAM vs DRAM</h3>
+<table><tr><th></th><th>SRAM</th><th>DRAM</th></tr>
+<tr><td>Storage element</td><td>6-transistor latch (6T)</td><td>1T + 1C capacitor</td></tr>
+<tr><td>Speed</td><td>Fast 1–10 ns</td><td>Slower 10–100 ns</td></tr>
+<tr><td>Density</td><td>Lower (6T/bit)</td><td>Higher (1T/bit)</td></tr>
+<tr><td>Refresh</td><td>not needed</td><td>every ~64 ms</td></tr>
+<tr><td>Use</td><td>cache, registers</td><td>main memory (DDR)</td></tr>
+</table>
+<ul>
+<li><b>SRAM cells:</b> 6T (standard) · 8T (separate read port → better read stability, higher SNM) · 10T (low voltage). <b>SNM</b> = static noise margin, max DC noise without flipping; read SNM &lt; hold SNM.</li>
+<li><b>DRAM operation:</b> RAS# asserts row → row copied to sense amps → CAS# selects column. Refresh every row every 64 ms. DDR = double data rate.</li>
+</ul>
+<h3>ROM types</h3>
+<table><tr><th>Type</th><th>Programmable?</th><th>Erasable?</th><th>Use</th></tr>
+<tr><td>Mask ROM</td><td>at fabrication</td><td>no</td><td>fixed, high volume</td></tr>
+<tr><td>PROM</td><td>once (fuse)</td><td>no</td><td>small volume</td></tr>
+<tr><td>EPROM</td><td>programmer</td><td>UV</td><td>development</td></tr>
+<tr><td>EEPROM</td><td>electrically</td><td>byte-level</td><td>config storage</td></tr>
+<tr><td>Flash NOR</td><td>electrically</td><td>block-erase</td><td>code XiP</td></tr>
+<tr><td>Flash NAND</td><td>electrically</td><td>block-erase</td><td>mass storage</td></tr>
+</table>
+<h3>NOR vs NAND</h3>
+<table><tr><th></th><th>NOR</th><th>NAND</th></tr>
+<tr><td>Cell connection</td><td>parallel to bitline</td><td>serial string</td></tr>
+<tr><td>Read</td><td>fast random, byte-addressable (XiP)</td><td>slower, page-based</td></tr>
+<tr><td>Write</td><td>slow</td><td>fast (page program)</td></tr>
+<tr><td>Density</td><td>lower</td><td>higher</td></tr>
+<tr><td>Bad blocks</td><td>rare</td><td>expected (managed by controller)</td></tr>
+</table>
+<h3>Cache memory architecture</h3>
+<pre><code>CPU → L1 (per-core, split I$+D$, 32-64KB, 2-4 cycles)
+     → L2 (256KB-2MB, 10-20 cycles)
+     → L3 (shared, 2-32MB, 30-50 cycles)
+     → DRAM (100+ cycles)</code></pre>
+<ul>
+<li><b>Cache params:</b> Total = Sets × Associativity × Block. Sets = size/(assoc×block). Address = [Tag | Index | Offset]. Index bits = log2(sets), offset bits = log2(block).</li>
+<li>Replacement: LRU, FIFO, Random, Pseudo-LRU. Write: write-through (no dirty bit, high traffic) vs write-back (dirty bit, complex coherency).</li>
+</ul>
+<h3>FIFO depth calculation</h3>
+<p>Given write rate fw, read rate fr, burst B → <b>depth = B × (1 − fr/fw)</b>. Example: 100 MHz write, 80 MHz read, burst 100 → 100 × 0.2 = 20.</p>
+<h3>ECC</h3>
+<ul>
+<li><b>Parity:</b> single bit, detects odd number of errors (simple XOR).</li>
+<li><b>Hamming SECDED:</b> correct single, detect double. For d data bits: 2^p ≥ d + p + 1. 8 data → 4 parity → 12-bit codeword; 16 data → 5 parity.</li>
+</ul>
+</div>
+
+<h2>6. Analog Electronics</h2>
+<div class="card">
+<h3>Diodes &amp; rectifiers</h3>
+<ul>
+<li>Half-wave: ripple factor 1.21, PIV=Vm. Full-wave center-tap: 0.48, PIV=2Vm. Bridge: 0.48, PIV=Vm.</li>
+<li><b>Zener</b> operates in reverse breakdown → voltage regulation.</li>
+<li>Ideal diode: ON when forward biased, OFF when reverse.</li>
+</ul>
+<h3>Transistors</h3>
+<ul>
+<li><b>BJT</b> = current-controlled (Ic ≈ β·Ib). Configs: CE (voltage gain ≈ −gm·Rc), CB, CC (emitter follower, buffer).</li>
+<li>Biasing: fixed, voltage-divider (stabilizes Q-point).</li>
+<li><b>MOSFET</b> = voltage-controlled. Regions: cutoff, triode/linear, saturation. Vgs(th) threshold.</li>
+</ul>
+<h3>Op-amp (memorize these)</h3>
+<ul>
+<li>Ideal op-amp rules: V+ = V− (virtual short), input current = 0, infinite gain, infinite input impedance, zero output impedance.</li>
+<li><b>Inverting gain = −Rf/R1</b> · <b>Non-inverting gain = 1 + Rf/R1</b>.</li>
+<li>Summing amplifier, integrator (cap feedback), differentiator, comparator (saturates, no feedback).</li>
+</ul>
+<h3>Feedback &amp; filters</h3>
+<ul>
+<li>Negative feedback: lowers gain, increases bandwidth &amp; stability. Positive feedback → oscillators.</li>
+<li>RC low-pass cutoff fc = 1/(2πRC). Series/parallel resonance, Q-factor.</li>
+</ul>
+</div>
+
+<h2>7. Signals &amp; Systems</h2>
+<div class="card">
+<ul>
+<li>Fourier series (periodic), Fourier transform (aperiodic), Laplace transform (ROC, poles/zeros), Z-transform (discrete).</li>
+<li>Convolution, correlation, Parseval. Even/odd, periodic, power vs energy signals.</li>
+<li><b>LTI systems:</b> linearity, time-invariance, causality (no future input), stability (poles in LHP / inside unit circle).</li>
+<li><b>Sampling (Nyquist):</b> fs ≥ 2·fmax else aliasing. Nyquist rate = 2× max frequency.</li>
+<li>Classic: y(n) = x(n−1) + 2x(n+1) → <b>not causal</b> (uses future input).</li>
+<li>System y depends only on current/past inputs → causal; Ω/unit circle for stability.</li>
+</ul>
+</div>
+
+<h2>8. Communication</h2>
+<div class="card">
+<ul>
+<li>AM: bandwidth = 2fm, modulation index m, sidebands fc±fm.</li>
+<li>FM: bandwidth ≈ 2(Δf + fm) (Carson's rule).</li>
+<li>Digital modulation: ASK/FSK/PSK/QPSK.</li>
+<li>Shannon: C = B·log₂(1+SNR).</li>
+<li>Multiplexing: FDM (analog), TDM (digital), CDMA/OFDM.</li>
+</ul>
+</div>
+
+<h2>9. Memory / Digital MCQ Practice</h2>
+<div class="card">
+<div class="qablock"><b>A 6T SRAM cell uses how many transistors?</b><p>6 — 2 cross-coupled inverters (4) + 2 access transistors.</p></div>
+<div class="qablock"><b>Why does DRAM need refresh?</b><p>Capacitor charge leaks over time (~64ms).</p></div>
+<div class="qablock"><b>Cache 32KB, 64B blocks, 8-way set-assoc — index bits?</b><p>Sets = 32768/(8×64) = 64 → log2(64) = 6 bits.</p></div>
+<div class="qablock"><b>Hamming SECDED with 16 data bits — parity bits?</b><p>2^5=32 ≥ 16+5+1=22 → 5.</p></div>
+<div class="qablock"><b>FIFO written 200 MHz, read 150 MHz, burst 60?</b><p>60 × (1 − 150/200) = 60 × 0.25 = 15.</p></div>
+<div class="qablock"><b>Which SRAM cell has best read stability?</b><p>8T — separate read port, no read-disturb.</p></div>
+<div class="qablock"><b>Row address strobe in DRAM?</b><p>RAS# — row access strobe.</p></div>
+</div>
+
+<footer>Page 1 · Digital + Analog + Signals · <a href="index.html">← Home</a> · <a href="02_c_language.html">Next: C Language →</a></footer>
+</div>
+</body>
+</html>

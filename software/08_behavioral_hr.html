@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8 · Behavioral / HR / Resume — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>BEHAVIORAL / HR / RESUME — COMPLETE</h1><div class="sub">STAR method, tell-me-about-yourself pitch, 10 most-likely HR questions + model answers, STAR story bank, resume defense, 60-second ritual.</div></header>
+
+<h2>1. The STAR Framework (use it every time)</h2>
+<div class="card">
+<ul>
+<li><b>S</b>ituation — the context (1–2 lines)</li>
+<li><b>T</b>ask — what YOU were responsible for</li>
+<li><b>A</b>ction — what YOU specifically did (use "I", not "we")</li>
+<li><b>R</b>esult — a number / metric / concrete outcome</li>
+</ul>
+<p class="note"><b>Format rule:</b> S+T in 15 sec · Action 45–60 sec · Result 15 sec ending with a number. Never answer a behavioral question without a Result. Keep under 2 minutes.</p>
+</div>
+
+<h2>2. "Tell Me About Yourself" — Universal 3-Beat Pitch</h2>
+<div class="card">
+<ol>
+<li><b>Beat 1 (one-liner):</b> "I'm a final-year engineering student with a focus on [domain]. My through-line is turning messy data into structured, automated, decision-ready insight." (Customize the through-line to the role.)</li>
+<li><b>Beat 2 (proof):</b> 2–3 projects/internships, each 1–2 lines WITH a number. "I built X which cut Y by Z%."</li>
+<li><b>Beat 3 (why here):</b> Use THEIR vocabulary — "This team does exactly what I've been doing, and I want to do it at your scale."</li>
+</ol>
+</div>
+
+<h2>3. The 10 Most-Likely HR Questions + Model Answers</h2>
+<div class="card">
+<details><summary>Q1. Tell me about yourself</summary><p>Use the 3-beat pitch; end by linking to the company/team.</p></details>
+<details><summary>Q2. Why this company? (MUST be researched)</summary><p>4 beats: ① their business model — say what they actually do → ② the specific team/tech you're applying for → ③ scale (numbers they announced) → ④ culture/values. Use facts you noted at the PPT.</p></details>
+<details><summary>Q3. Why this role/team and not another?</summary><p>Map YOUR strengths to the JD's verbs: "Data sourcing, engineering, automation — that's literally my resume." Show the role's work is the work you've already done.</p></details>
+<details><summary>Q4. Why hire you despite your branch/background gap? (E&amp;TC vs CS)</summary><p>Don't apologize. ① Acknowledge honestly ("I know the JD lists CS/IT; I'm E&amp;TC — but my actual work is software/data engineering"). ② Prove the skills are there (the prerequisites are exactly what you've built). ③ Close: "I cleared the OA on that work — my projects speak louder than my branch name."</p></details>
+<details><summary>Q5. Tell me about a time you met a tight deadline</summary><p>STAR → prioritize a vertical slice first (working end-to-end), build incrementally, test under load. Result with a number ("3,000+ QPS, zero oversell, demo delivered on time").</p></details>
+<details><summary>Q6. Tell me about a mistake / failure</summary><p>STAR → own it, trace the root cause, describe the fix (idempotency keys, validation gates), state the lesson. Never blame others.</p></details>
+<details><summary>Q7. Describe a conflict with a teammate</summary><p>STAR → lay out both sides WITH DATA, propose a layered/defense-in-depth compromise, result = team adopted it + measurable outcome.</p></details>
+<details><summary>Q8. Where do you see yourself in 5 years?</summary><p>Year 1 master the delivery standards → years 2–3 own bigger deliverables → years 4–5 lead/mentor. Frame as wanting a long-term home at their company.</p></details>
+<details><summary>Q9. Strengths &amp; weaknesses</summary><p>Strengths: 3 real ones tied to the role. Weakness (real but framed): "I can over-polish a deliverable; I've learned to timebox and share early for feedback." Shows self-awareness + a fix. Never say "I'm a perfectionist".</p></details>
+<details><summary>Q10. Do you have any questions? (ALWAYS have 3)</summary><ul>
+<li>"What does the first 6–12 months look like — what would I own early?"</li>
+<li>"What separates the people who stand out in their first year?"</li>
+<li>"How does the team decide between building X vs Y, and where do new hires plug in?"</li>
+</ul></details>
+</div>
+
+<h2>4. HR Logistics (know your numbers)</h2>
+<div class="card">
+<ul>
+<li><b>Salary:</b> know the offered CTC; "I'm comfortable with that — my focus is joining the team." Never negotiate cold.</li>
+<li><b>Location:</b> flexible + a mild preference; never "anywhere" with zero reasoning.</li>
+<li><b>Joining:</b> honest answer matching your situation.</li>
+<li><b>Other offers:</b> "processes in flight, but you're my priority because of the fit."</li>
+</ul>
+</div>
+
+<h2>5. Reusable STAR Story Bank</h2>
+<div class="card">
+<table><tr><th>Project</th><th>Best STAR</th><th>30-sec line</th></tr>
+<tr><td>Flash-sale platform (Spring/Redis)</td><td>Deadline + scaling: 300→3,200 QPS, reads −75%, zero oversell</td><td>"Caching + atomic ops + async queue + optimistic lock w/ retry"</td></tr>
+<tr><td>FPGA HFT pipeline (Verilog)</td><td>Hardest bug: non-deterministic order-book corruption → watchdog reset; demo ran clean 30 min</td><td>"Deterministic sub-microsecond execution on FPGA"</td></tr>
+<tr><td>Options trading engine (Python/APIs)</td><td>Trade-off: REST vs WebSocket benchmarked → right choice by data</td><td>"Hypothesis-tested strategies, statistical rigor vs benchmark"</td></tr>
+<tr><td>AI portfolio manager (MERN+Gemini)</td><td>Resilience: 3-tier fallback + circuit breaker, first data 1.2s</td><td>"Slow AI never blocks the UI"</td></tr>
+<tr><td>LangGraph multi-agent (IBM)</td><td>Deadline + AI safety: contradictions 12%→0.3%</td><td>"Governed AI — model proposes, validation disposes"</td></tr>
+<tr><td>Admin platform (Grails/MongoDB)</td><td>Ambiguity: prioritized with PM; page load 4s→800ms</td><td>"Modular + indexed + cached"</td></tr>
+</table>
+</div>
+
+<h2>6. Resume Defense</h2>
+<div class="card">
+<ul>
+<li>Every resume line → 1 answer + 1 follow-up. Never a fact you can't defend.</li>
+<li>Deep-master 2–3 projects (architecture, hardest problem, trade-off, failure). Others = 30-second mentions.</li>
+<li><b>Data quality angle</b> (banks love): source validation, reconciliation, idempotency, audit trail.</li>
+<li><b>Performance angle:</b> cache misses, context switches, hot path, false sharing — beyond Big-O.</li>
+<li>Don't know something → "I don't have that memorized — here's how I'd approach it." Never bluff on numbers.</li>
+<li><b>Differentiator line (E&amp;TC vs CS):</b> "CS teaches abstract computation; my EnTC training teaches real computation — cache misses, context switches, clock cycles. I've programmed FPGAs with no OS. Same fundamentals, plus the hardware layer."</li>
+</ul>
+</div>
+
+<h2>7. Brain Teasers (banks ask these)</h2>
+<div class="card">
+<div class="qablock"><b>Angle between clock hands at 3:15?</b><p>At 3:00: minute=0°, hour=90°. In 15 min: minute hand = 90°, hour hand moves 0.5°/min → 90+7.5 = 97.5°. Difference = <b>7.5°</b>.</p></div>
+<div class="qablock"><b>Measure 4 liters with 3L and 5L jugs?</b><p>Fill 5L → pour into 3L (2L left) → empty 3L → pour 2L into 3L → fill 5L → pour 1L into 3L (which has 2L) → <b>4L left in the 5L jug</b>.</p></div>
+<div class="qablock"><b>Coin tossed 3 times — P(at least one head)?</b><p>Total 8 outcomes. All tails = 1/8. P = 1 − 1/8 = <b>7/8</b>.</p></div>
+<div class="qablock"><b>100 floors, 2 eggs?</b><p>Drop from 10, 20, 30... to narrow the floor range, then linear search. Minimizes worst case.</p></div>
+<div class="qablock"><b>Three light switches, three bulbs?</b><p>Switch 1 on for a minute, off. Switch 2 on. Enter room: warm+off = switch 1, on = switch 2, off+cold = switch 3.</p></div>
+</div>
+
+<h2>8. The 60-Second Ritual Before Each Interview</h2>
+<div class="card">
+<ol>
+<li>Posture: shoulders back, feet planted.</li>
+<li>Breathe: one slow 4-second inhale, 4-second exhale.</li>
+<li>Anchor line (silent): "I am the person this team builds for — this is my work."</li>
+<li>Mental skeleton: self-intro 90s · every project = problem → what I did → result with a number · every behavioral = STAR ending with a number.</li>
+<li>Enter: smile, greet by name/title, firm handshake, "Thank you for having me."</li>
+</ol>
+</div>
+
+<h2>9. Mindset Rules</h2>
+<div class="card">
+<ol>
+<li>One bad result ≠ you're bad — this is your first shot, not your last.</li>
+<li>A buffer chance is a bonus — prepare like you're in, keep moving elsewhere.</li>
+<li>Control what you control — how ready you are is one of them.</li>
+<li>The recruiter's silence is not your answer — ask directly.</li>
+<li>Interviewers want you to succeed — they're evaluating, not hunting for reasons to reject.</li>
+</ol>
+</div>
+
+<footer>Page 8 · Behavioral / HR · <a href="index.html">← Home</a> · <a href="09_ds_ml.html">Next: Data Science →</a></footer>
+</div>
+</body>
+</html>

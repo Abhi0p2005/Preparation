@@ -1,7 +1,16 @@
-# Only publish the single-file master guide.
-# Everything else inside master_guide (software/, electronics/, merged html files)
-# and anything above is intentionally excluded.
-
+# Ignore everything by default
 *
+
+# Allow the main index.html and gitignore
 !index.html
 !.gitignore
+
+# Allow software folder contents (HTML pages and stylesheet)
+!software/
+!software/**/*.html
+!software/style.css
+
+# Allow electronics folder contents (HTML pages and stylesheet)
+!electronics/
+!electronics/**/*.html
+!electronics/style.css

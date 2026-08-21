@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9 · OA Strategy + Checklists — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>OA STRATEGY + CHECKLISTS</h1><div class="sub">Topic weighting, timing plan, pre-submit ritual, MCQ strategy, ECE quick-fire facts, 2-week plan, night-before checklist.</div></header>
+
+<h2>1. Topic Weighting (per typical electronics OA)</h2>
+<div class="card">
+<table><tr><th>Section</th><th>Qs</th><th>Time</th></tr>
+<tr><td>Aptitude &amp; Logical Reasoning</td><td>~8</td><td>10 min</td></tr>
+<tr><td>Memories (SRAM, DRAM, Cache, Flash, FIFO)</td><td>~12</td><td>20 min</td></tr>
+<tr><td>Digital Logic Design</td><td>~10</td><td>15 min</td></tr>
+<tr><td>Verilog / SystemVerilog</td><td>~8</td><td>15 min</td></tr>
+<tr><td>Computer Architecture</td><td>~8</td><td>15 min</td></tr>
+<tr><td>C/C++ Output &amp; MCQs</td><td>~6</td><td>10 min</td></tr>
+<tr><td>C Coding Problem</td><td>1</td><td>15 min</td></tr>
+</table>
+<ul>
+<li><b>Negative marking?</b> If yes, DON'T guess. If no, guess aggressively (after eliminating obvious distractors).</li>
+<li><b>First pass:</b> answer certain Qs, flag unsure ones, return later.</li>
+<li><b>Coding:</b> partial test cases = partial marks. Always write main() with correct I/O.</li>
+</ul>
+</div>
+
+<h2>2. Timing Plan (if 3 coding problems)</h2>
+<div class="card">
+<pre><code>Q1 (Easy):   0–20 min → solve, submit
+Q2 (Medium): 20–40 min → solve, submit
+Q3 (Hard):   40–60 min → solve or stub
+Stuck &gt;15 min → write brute-force stub, submit, move on, return later.</code></pre>
+</div>
+
+<h2>3. Pre-Submit Ritual (60 seconds)</h2>
+<div class="attention">
+<ul>
+<li>Loop bounds: i &lt; n vs i &lt;= n, off-by-one</li>
+<li>Types/overflow: use <code>long</code>/<code>int64_t</code> if sum can exceed 2.1e9</li>
+<li>Defensive copies before mutating</li>
+<li>Edge cases: empty, single, all same, all zeros, max values, negatives</li>
+<li>Guard clauses at top: <code>if (arr == NULL || n == 0) return ...;</code></li>
+<li>Return type matches expected</li>
+</ul>
+</div>
+
+<h2>4. MCQ Strategy</h2>
+<div class="card">
+<ul>
+<li>Read EVERY option before picking — distractors are the "trap" answers (unsigned conversion, sizeof, padding, octal literals).</li>
+<li>For output questions: <b>trace the code line by line with concrete values</b>.</li>
+<li>Two's complement: use range bounds (−128..127 for int8).</li>
+<li>Watch: unsigned vs signed comparison, sizeof vs strlen, struct padding, pre/post increment, macro expansion, ++x vs x++.</li>
+</ul>
+</div>
+
+<h2>5. ECE Quick-Fire Facts (memorize)</h2>
+<div class="card">
+<ul>
+<li>Unit: charge=Coulomb, resistance=Ohm, capacitance=Farad</li>
+<li>Op-amp ideal: infinite gain/input impedance, zero output impedance</li>
+<li>Nyquist rate = 2× max frequency</li>
+<li>Cache faster than RAM; SRAM faster than DRAM</li>
+<li>BJT current-controlled; MOSFET voltage-controlled</li>
+<li>LED forward biased; Zener reverse breakdown</li>
+<li>MCU has RAM/ROM/peripherals on-chip vs MPU</li>
+<li>PWM for dimming/motor control</li>
+<li>RISC: fixed-length, load-store (MIPS/ARM/RISC-V). CISC: x86</li>
+<li>Von Neumann (single bus) vs Harvard (separate code/data)</li>
+<li>Full adder: S=A⊕B⊕Cin, Cout=AB+Cin(A⊕B)</li>
+<li>NAND/NOR universal gates</li>
+</ul>
+</div>
+
+<h2>6. Universal 2-Week Plan</h2>
+<div class="card">
+<table><tr><th>Phase</th><th>Focus</th><th>Effect</th></tr>
+<tr><td>Day 1–2</td><td>Aptitude + Verbal daily + C warm-ups (bit ops, pointers)</td><td>services-company rounds</td></tr>
+<tr><td>Day 3–5</td><td>Digital Electronics + Analog</td><td>core exams</td></tr>
+<tr><td>Day 6–8</td><td>Signals + Networks + C deep (structs, macros, strings)</td><td>core depth + GATE MCQs</td></tr>
+<tr><td>Day 9–11</td><td>Microcontrollers + embedded C + RISC-V/arch + Verilog</td><td>semiconductor/digital design</td></tr>
+<tr><td>Day 12–13</td><td>RTOS + Linux/toolchain + OS + networking</td><td>embedded SW companies</td></tr>
+<tr><td>Day 14</td><td>3 timed mocks (1 core, 1 aptitude, 1 coding)</td><td>stamina + speed</td></tr>
+</table>
+</div>
+
+<h2>7. Coding Drill Bank (solve each &lt; 5 min)</h2>
+<div class="card">
+<h3>Easy</h3>
+<ul>
+<li>Reverse a string in place</li>
+<li>Check palindrome</li>
+<li>Largest &amp; smallest in array</li>
+<li>Count set bits (Brian Kernighan): <code>while(n){n&amp;=n-1;c++;}</code></li>
+<li>Check power of 2: <code>n && !(n&amp;(n-1))</code></li>
+<li>Set / clear / toggle a bit</li>
+<li>Swap two ints without temp (XOR)</li>
+</ul>
+<h3>Medium</h3>
+<ul>
+<li>Remove duplicates from sorted array (in place)</li>
+<li>Check anagrams</li>
+<li>Find rightmost set bit</li>
+<li>Implement strlen/strcpy/strcmp by hand</li>
+<li>Circular buffer push/pop</li>
+<li>Reverse array (two pointers)</li>
+</ul>
+<h3>Embedded-style</h3>
+<ul>
+<li>GPIO init + LED toggle at register level</li>
+<li>UART putc (poll LSR then write DR)</li>
+<li>Traffic-light state machine</li>
+<li>ISR-safe counter (volatile flag + main loop)</li>
+<li>sizeof(struct) puzzle — explain padding</li>
+<li>Reverse bits of 32-bit int</li>
+<li>Find middle of linked list (slow/fast)</li>
+<li>Merge two sorted arrays / linked lists</li>
+</ul>
+</div>
+
+<h2>8. Night-Before / On-the-Day Checklist</h2>
+<div class="card chk">
+<ul>
+<li><input type="checkbox" id="c1"><label for="c1">Company type confirmed → picked correct sections (core / services / embedded / digital design)</label></li>
+<li><input type="checkbox" id="c2"><label for="c2">Platform + sections + time limit noted from PPT/email</label></li>
+<li><input type="checkbox" id="c3"><label for="c3">C compiler/IDE ready; C syntax + I/O template refreshed</label></li>
+<li><input type="checkbox" id="c4"><label for="c4">Formula sheet: op-amp gains, AM/FM BW, resonance, K-map steps, FIFO depth, cache index bits</label></li>
+<li><input type="checkbox" id="c5"><label for="c5">Memories table (SRAM/DRAM/NOR/NAND/ECC) revised</label></li>
+<li><input type="checkbox" id="c6"><label for="c6">RISC-V registers/formats/hazards + Verilog immediate extraction</label></li>
+<li><input type="checkbox" id="c7"><label for="c7">Verbal rules + vocab + aptitude formulas refreshed this morning</label></li>
+<li><input type="checkbox" id="c8"><label for="c8">Time split planned (MCQ ~1 min each; coding 20 min each; negative marking check)</label></li>
+<li><input type="checkbox" id="c9"><label for="c9">Edge cases: empty, n=1, negatives, overflow → long/int64</label></li>
+</ul>
+</div>
+
+<h2>9. Last-24-Hours One-Pager</h2>
+<div class="card">
+<pre><code>EMBEDDED C:  volatile | const combos | struct padding | bit ops | pointer arithmetic
+ARCHITECTURE: two's complement | RISC load-store | pipeline IF-ID-EX-MEM-WB | endianness
+OS:          process vs thread | RR vs priority | mutex vs semaphore | 4 deadlock conds
+RTOS:        tick | context switch | FromISR APIs | priority inheritance
+MEMORY:      .text/.data/.bss/stack/heap | cache | MMU/MPU | DMA flush/invalidate</code></pre>
+</div>
+
+<footer>Page 9 · OA Strategy · <a href="index.html">← Home</a> · <a href="../index.html">Master Guide Home</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4 · Operating Systems — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>OPERATING SYSTEMS — COMPLETE INTERVIEW GUIDE</h1><div class="sub">Mechanism-level explanations: process/thread, scheduling, deadlock, synchronization, memory, IPC, syscalls + full flashcard set.</div></header>
+
+<h2>1. Process vs Thread</h2>
+<div class="card">
+<table><tr><th></th><th>Process</th><th>Thread</th></tr>
+<tr><td>Memory</td><td>Own independent address space</td><td>Shares heap+code+data, own stack+registers</td></tr>
+<tr><td>Communication</td><td>IPC (pipes, sockets, shmem)</td><td>Shared memory (needs locks)</td></tr>
+<tr><td>Crash isolation</td><td>High — one crash doesn't affect others</td><td>Low — one thread crash kills process</td></tr>
+<tr><td>Context switch</td><td>Expensive (TLB flush, page tables)</td><td>Cheap (registers + stack only)</td></tr>
+<tr><td>Creation</td><td>Slow (fork + exec)</td><td>Fast (pthread_create)</td></tr>
+<tr><td>Owns</td><td>PCB, page tables, file table</td><td>Stack + registers; shares rest</td></tr>
+</table>
+<div class="qablock"><b>Which to choose?</b><p>Threads when work units must share state directly and cheaply (a kv_store) — cost is explicit synchronization. Processes when isolation matters more than sharing (a shell's independent commands) — a crash shouldn't take the shell down.</p></div>
+</div>
+
+<h2>2. Process States &amp; Context Switching</h2>
+<div class="card">
+<p><b>5-state model:</b> New → Ready → Running → Waiting/Blocked → Terminated.</p>
+<table><tr><th>State</th><th>Meaning</th></tr>
+<tr><td>New</td><td>being created</td></tr>
+<tr><td>Ready</td><td>loaded, waiting for CPU — could run immediately</td></tr>
+<tr><td>Running</td><td>executing on a CPU core</td></tr>
+<tr><td>Waiting/Blocked</td><td>waiting on event (I/O, lock) — can't run even with CPU</td></tr>
+<tr><td>Terminated</td><td>done — zombie until parent reaps (wait())</td></tr>
+</table>
+<div class="qablock"><b>What moves Running → Ready (not Blocked)?</b><p>Preemption — timer interrupt (time slice expired) or higher-priority process becomes ready; the OS forcibly takes the CPU. Blocked happens because the process itself requested something it must wait for (e.g. read() with no data).</p></div>
+<div class="qablock"><b>Is a thread context switch cheaper than a process switch? Why?</b><p>Yes — thread switch saves/restores registers + stack pointer but shares the address space, so no page-table switch or TLB flush. Process switch requires both.</p></div>
+<p><b>Context switch steps:</b> save registers → PCB → update state → move to queue → schedule next → load its PCB → restore registers → flush TLB → run at PC.</p>
+</div>
+
+<h2>3. PCB — What Gets Saved</h2>
+<div class="card">
+<p><b>Process Control Block</b> = the kernel's record for a process: PID, state, CPU registers, program counter, stack pointer, memory info (page table pointers), open file descriptor table, scheduling info (priority, queue pointers).</p>
+</div>
+
+<h2>4. CPU Scheduling Algorithms</h2>
+<div class="card">
+<table><tr><th>Algorithm</th><th>Idea</th><th>Weakness</th></tr>
+<tr><td>FCFS</td><td>arrival order</td><td>Convoy effect — one long job blocks all shorter ones behind it</td></tr>
+<tr><td>SJF / SRTF</td><td>shortest burst first</td><td>starvation of long jobs; needs burst time in advance</td></tr>
+<tr><td>Round Robin</td><td>fixed time quantum q</td><td>q small → excessive context-switch overhead; q large → FCFS</td></tr>
+<tr><td>Priority</td><td>highest priority first</td><td>can starve low priority indefinitely — fix with <b>aging</b></td></tr>
+<tr><td>MLFQ</td><td>multiple priority queues, migrate by behaviour</td><td>complex to tune</td></tr>
+</table>
+<div class="qablock"><b>What is "aging" and what does it solve?</b><p>Aging gradually increases a waiting process's priority — a direct fix for starvation in priority scheduling, guaranteeing even low-priority processes eventually run.</p></div>
+<p><b>Formulas:</b> Turnaround = completion − arrival · Waiting = turnaround − burst · Response = first CPU allocation − arrival.<br>
+<b>Quantum choice:</b> q→∞ = FCFS; q→0 = too many switches; ideal ≈ slightly larger than typical burst (10–100 ms).</p>
+</div>
+
+<h2>5. Concurrency &amp; Synchronization</h2>
+<div class="card">
+<h3>Race conditions &amp; critical sections</h3>
+<p>A <b>race condition</b> occurs when correctness depends on the relative timing of concurrent operations (≥2 threads access shared data, ≥1 write, no synchronization). The <b>critical section</b> is the code accessing the shared resource.</p>
+<div class="qablock"><b>Three requirements of a correct critical-section solution:</b><p>① <b>Mutual exclusion</b> — only one thread in at a time. ② <b>Progress</b> — if CS is free, a wanting thread must be able to enter. ③ <b>Bounded waiting</b> — a limit on how many others can enter before a waiting thread gets its turn.</p></div>
+<h3>Mutex vs Semaphore vs Monitor</h3>
+<table><tr><th></th><th>Mutex</th><th>Semaphore</th><th>Monitor</th></tr>
+<tr><td>Purpose</td><td>mutual exclusion (binary lock)</td><td>signaling / N resources</td><td>lock + condition vars bundle</td></tr>
+<tr><td>Ownership</td><td>only locker unlocks</td><td>any thread can signal</td><td>implicit</td></tr>
+<tr><td>Value</td><td>locked/unlocked</td><td>integer counter (binary or N)</td><td>implicit</td></tr>
+<tr><td>Priority inheritance</td><td>yes (RTOS)</td><td>usually no</td><td>—</td></tr>
+</table>
+<div class="qablock"><b>Example where a semaphore fits and a mutex doesn't?</b><p>A connection pool allowing at most 5 concurrent DB connections — a counting semaphore initialized to 5 lets exactly 5 threads proceed, blocking the 6th. A mutex only models "1 at a time".</p></div>
+<ul>
+<li><b>Producer-Consumer:</b> mutex (protect buffer) + empty(N) + full(0) semaphores.</li>
+<li><b>Readers-Writers:</b> first = reader preference (writer starves); second = writer preference.</li>
+<li><b>Spinlock:</b> busy-wait loop — use when the critical section is very short (saves context-switch cost).</li>
+</ul>
+</div>
+
+<h2>6. Deadlock</h2>
+<div class="card">
+<h3>Four necessary conditions (ALL must hold simultaneously)</h3>
+<table><tr><th>Condition</th><th>Meaning</th></tr>
+<tr><td>① Mutual Exclusion</td><td>resource held in non-shareable mode</td></tr>
+<tr><td>② Hold &amp; Wait</td><td>holding one, waiting to acquire others</td></tr>
+<tr><td>③ No Preemption</td><td>resources can't be forcibly taken</td></tr>
+<tr><td>④ Circular Wait</td><td>cycle: P1 waits for P2's resource, P2 waits for P1's</td></tr>
+</table>
+<pre><code>// Thread 1:            // Thread 2:
+lock(mutexA);            lock(mutexB);
+lock(mutexB);   // waits  lock(mutexA);   // waits → deadlock</code></pre>
+<div class="qablock"><b>How to fix the 2-lock deadlock?</b><p>Enforce consistent global lock ordering — always acquire mutexA before mutexB in EVERY thread. Circular wait becomes structurally impossible, breaking condition ④.</p></div>
+<h3>Prevention / Avoidance / Detection</h3>
+<table><tr><th>Strategy</th><th>Idea</th></tr>
+<tr><td>Prevention</td><td>break one of the 4 conditions (spooling, request-all-at-once, preempt, total ordering)</td></tr>
+<tr><td>Avoidance</td><td>Banker's algorithm — only grant if a safe sequence exists</td></tr>
+<tr><td>Detection + Recovery</td><td>allow it, check for cycles in resource-allocation graph, recover by preemption/kill</td></tr>
+</table>
+<h3>Deadlock vs Starvation vs Livelock vs Contention</h3>
+<ul>
+<li><b>Deadlock</b> — permanent cycle of mutual waiting; none can ever proceed.</li>
+<li><b>Starvation</b> — CAN run but keeps getting passed over (no cycle, just unfairness).</li>
+<li><b>Livelock</b> — actively changing state but making no progress (two people dodging each other in a hallway).</li>
+<li><b>Contention</b> — threads competing for a lock → serialization/queueing (a performance issue, NOT a correctness bug).</li>
+</ul>
+<p class="note"><b>Gotcha:</b> every client thread serializing on one global mutex is <b>contention</b>, not deadlock — every thread WILL eventually get the lock.</p>
+</div>
+
+<h2>7. Memory Management</h2>
+<div class="card">
+<h3>Paging vs Segmentation</h3>
+<table><tr><th></th><th>Paging</th><th>Segmentation</th></tr>
+<tr><td>Unit</td><td>fixed-size pages/frames</td><td>variable logical segments (code, stack, heap, data)</td></tr>
+<tr><td>Fragmentation</td><td>internal (wasted inside page)</td><td>external (gaps between segments)</td></tr>
+<tr><td>Hardware</td><td>page table + TLB</td><td>segment table</td></tr>
+</table>
+<h3>Page faults</h3>
+<p>A page fault occurs when a process accesses a page not currently mapped to a frame. <b>NOT always an error:</b> a "minor" fault (page exists, not yet mapped — first access) is normal demand paging. A "major" fault requiring an actual disk read is expensive.</p>
+<h3>Page replacement</h3>
+<table><tr><th>Algorithm</th><th>Idea</th><th>Weakness</th></tr>
+<tr><td>FIFO</td><td>evict oldest-loaded</td><td>Belady's anomaly — more frames can cause MORE faults</td></tr>
+<tr><td>LRU</td><td>evict least-recently-used</td><td>expensive to track exactly in hardware</td></tr>
+<tr><td>Optimal</td><td>evict farthest-in-future</td><td>needs future knowledge — theoretical benchmark</td></tr>
+<tr><td>Clock (2nd chance)</td><td>LRU approximation w/ reference bit</td><td>less precise, cheaper</td></tr>
+</table>
+<h3>TLB, Thrashing, Copy-on-Write</h3>
+<ul>
+<li><b>TLB</b> — small fast cache of recent virtual→physical translations. Hit = 1 cycle; miss = 10–100 (page walk). Process switch flushes it → that's why process context switches cost more than thread switches. Reach = TLB size × page size; huge pages increase reach.</li>
+<li><b>Thrashing</b> — more time swapping than executing (too many processes, too few frames). Detect: spiking fault rate with dropping CPU utilization. Mitigate: reduce degree of multiprogramming / working-set model.</li>
+<li><b>Copy-on-Write</b> — fork() shares read-only pages; first write triggers a fault that copies just that page → fork() is fast.</li>
+<li><b>Virtual memory benefits:</b> isolation, abstraction, sharing, demand paging.</li>
+</ul>
+</div>
+
+<h2>8. IPC — Inter-Process Communication</h2>
+<div class="card">
+<table><tr><th>Mechanism</th><th>Idea</th></tr>
+<tr><td>Pipes</td><td>unidirectional byte stream, parent-child</td></tr>
+<tr><td>Named pipes (FIFOs)</td><td>pipe with a filesystem name — unrelated processes</td></tr>
+<tr><td>Shared memory</td><td><b>fastest</b> — same physical RAM mapped into both processes; needs explicit synchronization</td></tr>
+<tr><td>Message queues</td><td>kernel-managed queue of discrete messages</td></tr>
+<tr><td>Sockets</td><td>works across a network as well as locally</td></tr>
+<tr><td>Signals</td><td>async notification (SIGINT)</td></tr>
+</table>
+<div class="qablock"><b>Why is shared memory fastest?</b><p>Pipes/sockets/message queues copy data twice through a kernel buffer plus syscall overhead. Shared memory lets processes read/write the SAME physical memory directly with no copying and no kernel mediation — the cost is you handle synchronization yourself.</p></div>
+</div>
+
+<h2>9. System Calls &amp; Kernel Modes</h2>
+<div class="card">
+<ul>
+<li>User-mode code can't touch hardware directly — it requests the kernel via a <b>system call</b> (mode switch). Every syscall (fork, exec, open, read, socket, bind) is more expensive than a plain function call.</li>
+<li><b>Syscall vs interrupt:</b> syscall = user asks the OS for a service (voluntary, synchronous). Interrupt = hardware signals the CPU (async, involuntary).</li>
+<li><b>Kernel types:</b> Monolithic (Linux — everything in kernel, fast, one bug crashes OS) vs Microkernel (QNX, Minix — minimal kernel, stable, slower IPC) vs Hybrid (Windows/macOS).</li>
+<li><b>Ring 0 vs Ring 3:</b> kernel mode (full hardware) vs user mode (restricted). The CPU enforces it.</li>
+</ul>
+</div>
+
+<h2>10. Zombie &amp; Orphan Processes</h2>
+<div class="card">
+<ul>
+<li><b>Zombie</b> — terminated but exit status not collected by parent via wait()/waitpid(). Occupies a process-table entry.</li>
+<li><b>Orphan</b> — parent died first; automatically re-parented to init (PID 1), which reaps it.</li>
+</ul>
+<div class="qablock"><b>Can you kill -9 a zombie?</b><p>No — a zombie has already terminated; there's no running code to signal. Only the parent's wait()/waitpid() removes it (or the parent terminates, orphaning it to init).</p></div>
+</div>
+
+<h2>11. OS Flashcard Essentials</h2>
+<div class="card">
+<div class="qablock"><b>Process vs Thread?</b><p>Process = own address space, PCB, heavy context switch, isolated. Thread = shares heap/code/data, own stack+registers, cheap switch.</p></div>
+<div class="qablock"><b>fork() vs exec()?</b><p>fork() copies the current process (child). exec() replaces the process image with a new program. Together = "start a program".</p></div>
+<div class="qablock"><b>FCFS problem?</b><p>Convoy effect — one long job makes all short jobs behind it wait.</p></div>
+<div class="qablock"><b>How to fix starvation in Priority scheduling?</b><p>Aging — gradually increase a waiting process's priority.</p></div>
+<div class="qablock"><b>Banker's algorithm?</b><p>Deadlock avoidance — before granting, simulate whether a safe sequence exists; only grant if safe.</p></div>
+<div class="qablock"><b>Page fault steps?</b><p>Trap to kernel → check validity → invalid=segfault → find frame/evict (dirty→swap) → read page → update page table → restart instruction.</p></div>
+<div class="qablock"><b>Belady's anomaly?</b><p>Only FIFO: adding more frames can INCREASE page faults. LRU/Optimal have the stack property, so they can't.</p></div>
+<div class="qablock"><b>Fastest IPC?</b><p>Shared memory — same RAM mapped into both processes.</p></div>
+</div>
+
+<h2>12. Rapid-Review Question Bank</h2>
+<div class="card">
+<ul>
+<li>Difference between process and thread — memory, communication, crash isolation?</li>
+<li>Walk through everything a context switch saves/restores.</li>
+<li>Four deadlock conditions — and how to break each one?</li>
+<li>Is a single global mutex under heavy contention the same as deadlock? Why not?</li>
+<li>Mutex vs semaphore, precisely — not just "one is binary".</li>
+<li>What is virtual memory solving, and how does paging implement it?</li>
+<li>Why does LRU page replacement get approximated in real systems?</li>
+<li>What is thrashing, and how does an OS detect/recover?</li>
+<li>Why is shared memory faster than pipes/sockets — the mechanical reason?</li>
+<li>What happens when a user-mode program makes a system call?</li>
+<li>Why can't a zombie be killed, and how do you get rid of one?</li>
+<li>Starvation vs deadlock?</li>
+</ul>
+</div>
+
+<footer>Page 4 · Operating Systems · <a href="index.html">← Home</a> · <a href="05_networks_master.html">Next: Networks →</a></footer>
+</div>
+</body>
+</html>

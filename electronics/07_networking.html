@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7 · Networking — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>NETWORKING FUNDAMENTALS</h1><div class="sub">OSI model, TCP vs UDP, handshakes, congestion control, IP/subnetting, byte order, embedded networking.</div></header>
+
+<h2>1. OSI 7 Layers &amp; TCP/IP</h2>
+<div class="card">
+<table><tr><th>Layer</th><th>Function</th><th>Example</th></tr>
+<tr><td>7 Application</td><td>user apps</td><td>HTTP, DNS</td></tr>
+<tr><td>6 Presentation</td><td>data format</td><td>SSL</td></tr>
+<tr><td>5 Session</td><td>sessions</td><td>TLS</td></tr>
+<tr><td>4 Transport</td><td>reliable delivery, ports</td><td>TCP, UDP</td></tr>
+<tr><td>3 Network</td><td>routing, logical addr</td><td>IP</td></tr>
+<tr><td>2 Data Link</td><td>MAC, frames</td><td>Ethernet</td></tr>
+<tr><td>1 Physical</td><td>bits, signals</td><td>cable</td></tr>
+</table>
+<p><b>Mnemonic:</b> "Please Do Not Throw Sausage Pizza Away". TCP/IP 4 layers = Application / Transport / Internet / Link.</p>
+</div>
+
+<h2>2. TCP vs UDP</h2>
+<div class="card">
+<table><tr><th></th><th>TCP</th><th>UDP</th></tr>
+<tr><td>Connection</td><td>3-way handshake</td><td>connectionless</td></tr>
+<tr><td>Reliability</td><td>reliable, retransmits, ordered</td><td>unreliable, no ordering</td></tr>
+<tr><td>Header</td><td>20+ bytes</td><td>8 bytes</td></tr>
+<tr><td>Use</td><td>web, email, file transfer</td><td>streaming, DNS, gaming, stock feeds</td></tr>
+</table>
+<ul>
+<li><b>3-way handshake:</b> SYN → SYN-ACK → ACK.</li>
+<li><b>4-way teardown:</b> FIN → ACK → FIN → ACK.</li>
+<li><b>Ports:</b> HTTP 80, HTTPS 443, SSH 22, DNS 53, FTP 21, DHCP 67/68.</li>
+<li><b>Congestion control:</b> Slow Start (double/RTT) → Congestion Avoidance (+1 MSS) → Fast Retransmit (3 dup ACK) → Fast Recovery (halve).</li>
+</ul>
+</div>
+
+<h2>3. IP Addressing</h2>
+<div class="card">
+<ul>
+<li>IPv4: 32 bits, 4 octets. <b>Private ranges (RFC 1918):</b> 10.x.x.x, 172.16-31.x.x, 192.168.x.x — not routable publicly.</li>
+<li>Subnet mask 255.255.255.0 = /24. CIDR notation 192.168.1.0/24.</li>
+<li><b>Hosts = 2^(32−prefix) − 2.</b> /24 → 254 usable.</li>
+<li><b>Default gateway</b> = router to reach other networks. <b>DNS</b> = domain → IP.</li>
+<li><b>NAT</b> = private→public translation. <b>VLAN</b> = logical LAN segmentation. <b>Multicast</b> = one sender, group of receivers.</li>
+</ul>
+</div>
+
+<h2>4. Byte Order (networking classic)</h2>
+<div class="card">
+<ul>
+<li><b>Host byte order</b> — your CPU's order (ARM/MIPS often little-endian). <b>Network byte order</b> — always big-endian.</li>
+<li>Conversions: <code>htons(), htonl(), ntohs(), ntohl()</code>.</li>
+<li>Ethernet MAC (L2 frames) + PHY (physical signals). Switching = L2 by MAC; Routing = L3 by IP.</li>
+</ul>
+</div>
+
+<h2>5. Sockets Programming (C)</h2>
+<div class="card">
+<pre><code>// Server: socket → bind → listen → accept → recv → send → close
+int sfd = socket(AF_INET, SOCK_STREAM, 0);
+struct sockaddr_in addr = {.sin_family=AF_INET, .sin_port=htons(8080), .sin_addr.s_addr=INADDR_ANY};
+bind(sfd, (void*)&amp;addr, sizeof(addr));
+listen(sfd, 5);
+int cfd = accept(sfd, NULL, NULL);
+read(cfd, buf, sizeof(buf)); write(cfd, "hello", 5);
+
+// Client: socket → connect → send → recv → close
+inet_pton(AF_INET, "127.0.0.1", &amp;addr.sin_addr);
+connect(sfd, (void*)&amp;addr, sizeof(addr));</code></pre>
+</div>
+
+<h2>6. Embedded Networking Concepts</h2>
+<div class="card">
+<ul>
+<li>MIPS networking SoCs: high-throughput packet forwarding, often with hardware accelerators.</li>
+<li><b>TCP/IP offload</b> — NIC/hardware does protocol processing to free the CPU.</li>
+<li>Ethernet MAC + PHY. <b>NAT, VLAN, multicast</b> as above.</li>
+</ul>
+</div>
+
+<h2>7. Linux Network Commands</h2>
+<div class="card">
+<pre><code>ifconfig eth0 192.168.1.10 netmask 255.255.255.0 up
+ip addr show · ip link set eth0 up
+ping 8.8.8.8 · traceroute 8.8.8.8
+netstat -tulnp · route -n / ip route
+tcpdump -i eth0 · nc (netcat) · iptables</code></pre>
+</div>
+
+<h2>8. Networking Flashcards</h2>
+<div class="card">
+<div class="qablock"><b>TCP vs UDP — pick one?</b><p>TCP: reliable/ordered (web, email, transfers). UDP: fast/loss-tolerant (streaming, DNS, VoIP, price feeds).</p></div>
+<div class="qablock"><b>What is byte order and why care?</b><p>Little stores LSB first (ARM default); big stores MSB first (network). Misreading bytes corrupts protocol values.</p></div>
+<div class="qablock"><b>What are htonl/ntohl for?</b><p>Convert host ↔ network (big-endian) byte order for sending/receiving protocol data.</p></div>
+</div>
+
+<footer>Page 7 · Networking · <a href="index.html">← Home</a> · <a href="08_aptitude_verbal.html">Next: Aptitude + Verbal →</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2 · C Language — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>C LANGUAGE — COMPLETE SYNTAX &amp; TRAPS</h1><div class="sub">The #1 tested subject in embedded/digital OAs. Everything C can do that Java can't, with every MCQ trap.</div></header>
+
+<h2>1. Data Types &amp; Sizes</h2>
+<div class="card">
+<table><tr><th>Type</th><th>32-bit</th><th>64-bit</th><th>Range</th></tr>
+<tr><td>char</td><td>1</td><td>1</td><td>−128..127 or 0..255</td></tr>
+<tr><td>short</td><td>2</td><td>2</td><td>−32768..32767</td></tr>
+<tr><td>int</td><td>4</td><td>4</td><td>±2³¹</td></tr>
+<tr><td>long</td><td>4</td><td><b>8</b> (LP64)</td><td>platform-dependent</td></tr>
+<tr><td>long long</td><td>8</td><td>8</td><td>±2⁶³</td></tr>
+<tr><td>float</td><td>4</td><td>4</td><td>~7 digits</td></tr>
+<tr><td>double</td><td>8</td><td>8</td><td>~15 digits</td></tr>
+</table>
+<ul>
+<li>C has <b>unsigned</b>; Java does not. C type sizes are implementation-defined; Java fixed.</li>
+<li>On 64-bit Linux, int is still 4 bytes (ILP32 vs LP64 — long and pointers change, not int).</li>
+<li>Always use fixed-width types in embedded: <code>&lt;stdint.h&gt;</code> → uint8_t, int8_t, uint16_t, uint32_t, uint64_t.</li>
+</ul>
+<h3>Integer literals</h3>
+<pre><code>int a = 42;        // decimal
+int b = 0x2A;      // hex (0x prefix)
+int c = 052;       // OCTAL! (leading zero → 42 decimal)  ★TRAP
+int d = 0b101010;  // binary (C23 / extension)
+unsigned u = 42U;  long l = 42L;  long long ll = 42LL;</code></pre>
+</div>
+
+<h2>2. Pointers — The Biggest Difference From Java</h2>
+<div class="card">
+<pre><code>int a = 42;
+int *p = &amp;a;     // p stores ADDRESS of a; &amp; = address-of
+*p               // dereference → 42
+printf("%p",&amp;a); // address where a lives
+
+int *p = NULL;   // null pointer (points to 0)
+int *r;          // UNINITIALIZED — dereferencing = UB/segfault</code></pre>
+<h3>Pointer arithmetic (scales by sizeof(type))</h3>
+<pre><code>int arr[5] = {10,20,30,40,50};
+int *p = arr;         // p → arr[0]
+*(p+1)                // 20 (adds 1×sizeof(int)=4 bytes)
+p[2] == *(p+2)        // TRUE — array notation works on pointers
+*arr + 1              // 11 (NOT arr[1])
+q - p                 // ELEMENT COUNT, not bytes</code></pre>
+<h3>Void, function, double pointers</h3>
+<pre><code>void *ptr;            // generic — must cast before use
+double *pp; int **pp; // pointer to pointer (2D arrays, modifying a pointer in a fn)
+int (*fp)(int,int); fp = &amp;add; fp(5,3);   // function pointer → callbacks, ISR tables
+int (*ops[])(int,int) = {add, sub};      // array of function pointers (lookup table)</code></pre>
+</div>
+
+<h2>3. Arrays &amp; the Decay Trap</h2>
+<div class="card">
+<pre><code>int arr[5] = {1,2};        // rest zeroed: {1,2,0,0,0}
+int arr3[5] = {0};         // all zeros
+int *p = arr;              // arr DECAYS to int* (address of arr[0])
+
+sizeof(arr)                // 20 (5 × 4 bytes — full array)
+sizeof(p)                  // 8 (just the pointer on 64-bit)
+void f(int a[]) { sizeof(a); }   // 8 — decayed to pointer! ★#1 MCQ trap
+
+int vla[n];                // VLA (C99 only)
+int *h = malloc(5*sizeof(int));  // heap array — free later</code></pre>
+<p class="attention"><b>No bounds checking:</b> <code>arr[10] = 42</code> on a size-5 array = UB (silent corruption). Java throws; C corrupts.</p>
+</div>
+
+<h2>4. Strings</h2>
+<div class="card">
+<pre><code>char s1[] = "Hello";       // 6 bytes: H e l l o \0
+char *s3 = "Hello";        // pointer to STRING LITERAL — READ-ONLY!
+s1[0] = 'h';               // OK (mutable array)
+// s3[0] = 'h';            // UB — literal may live in ROM
+
+sizeof(s1) = 6;            // includes '\0'
+strlen(s1)  = 5;           // excludes '\0'
+sizeof(s3)  = 8;           // pointer size
+
+strcpy(d,s); strncpy(d,s,n); strcat; strncat;
+strcmp(a,b)==0;            // compare content — NEVER use == (compares addresses!)
+strstr; strchr; sprintf(buf,"%d",42);</code></pre>
+</div>
+
+<h2>5. Memory Management (Manual in C)</h2>
+<div class="card">
+<pre><code>int *p = malloc(10*sizeof(int));   // UNINITIALIZED
+int *q = calloc(10, sizeof(int));  // zero-initialized
+p = realloc(p, 20*sizeof(int));    // may MOVE; DON'T do p=realloc(p,x) (loses original on fail)
+free(p); p = NULL;                 // ALWAYS null after free
+free(p);                           // double free = UB ★</code></pre>
+<table><tr><th>Region</th><th>Contents</th><th>Lifetime</th></tr>
+<tr><td>.text</td><td>code</td><td>program</td></tr>
+<tr><td>.data / .bss</td><td>globals / statics</td><td>program</td></tr>
+<tr><td>Stack</td><td>locals, frames (grows DOWN, LIFO)</td><td>function scope</td></tr>
+<tr><td>Heap</td><td>malloc'd memory (grows UP)</td><td>until free</td></tr>
+</table>
+<ul>
+<li>Memory bugs: leak, dangling pointer, double free, buffer overflow, stack overflow, use-after-free, uninitialized read.</li>
+<li>Embedded: dynamic allocation discouraging (fragmentation, non-deterministic timing) → static buffers / memory pools.</li>
+</ul>
+</div>
+
+<h2>6. struct / union / enum / bit-fields</h2>
+<div class="card">
+<pre><code>typedef struct { uint8_t h,m,s; } Time;
+Time t;  t.h=10;          // dot
+Time *tp = &amp;t;  tp-&gt;h=11; // arrow
+
+// ★PADDING — HIGH MCQ FREQUENCY
+struct S { char c; int i; };  // sizeof = 8, NOT 5 (3 pad bytes after c)
+// offset rule: each member at multiple of its size; struct rounded to largest member's alignment
+
+struct P { char a; int b; char c; };  // 12 bytes
+struct Q { char a; char c; int b; };  // 8 bytes — reorder largest→smallest to save!
+
+// #pragma pack(1) forces 1-byte alignment for wire/protocol structs (7 bytes above)
+// union — members SHARE memory, size = largest member
+union U { uint32_t full; uint8_t bytes[4]; };  // sizeof 4
+// enum: 0,1,2...
+typedef struct { uint32_t en:1, mode:3, rd:1; } Ctrl;  // bit fields</code></pre>
+</div>
+
+<h2>7. Storage Classes — static / volatile / const / extern</h2>
+<div class="card">
+<ul>
+<li><b>static local</b> — persists across calls, initialized ONCE. <b>static file-scope</b> — visible only in this .c (information hiding).</li>
+<li><b>volatile</b> — compiler MUST NOT optimize reads/writes (hardware registers, ISR flags). <code>while(!flag);</code> without volatile may become an infinite loop.</li>
+<li><b>const combos:</b> <code>const int *p</code> (value const, pointer moves) · <code>int *const p</code> (pointer const) · <code>const int *const p</code> (both). <code>int const *s</code> = <code>const int *</code>.</li>
+<li><b>extern</b> — defined in another file.</li>
+<li>Hardware register: <code>volatile uint32_t *reg = (volatile uint32_t*)0x40000000;</code></li>
+<li>Classic: a hardware <b>status</b> register is <code>volatile const</code> — changes on its own, but the program must not write it.</li>
+</ul>
+</div>
+
+<h2>8. Preprocessor &amp; Macros</h2>
+<div class="card">
+<pre><code>#define PI 3.14159
+#define SQUARE(x) x*x        // ★BUG: SQUARE(3+1) = 3+1*3+1 = 7, NOT 16
+#define SQUARE(x) ((x)*(x))  // correct
+#define MAX(a,b) ((a)&gt;(b)?(a):(b))   // BUT: MAX(x++,4) evaluates x++ twice!
+
+#include &lt;stdio.h&gt;    // system path
+#include "myfile.h"   // current dir first
+#ifdef DEBUG ... #endif
+#ifndef HEADER_H ... #define HEADER_H ... #endif   // header guard</code></pre>
+<ul>
+<li>Macros: no type checking, no debug info, side effects (args evaluated multiple times). Prefer <code>static inline</code> functions (type-safe, no call overhead).</li>
+</ul>
+</div>
+
+<h2>9. Operators &amp; Control-Flow Traps</h2>
+<div class="card">
+<pre><code>&amp; | ^ ~ &lt;&lt; &gt;&gt;    // bitwise: 5&amp;3=1, 5|3=7, 5^3=6, ~5=-6, 5&lt;&lt;2=20, 5&gt;&gt;1=2
+&&  ||  !        // logical
+x &amp;&amp; y  vs  x &amp; y   // ★ logical vs bitwise — MCQs LOVE this
+if (x = 5)          // ★ assignment, ALWAYS true (unless 0)
+y = ++x  vs  y = x++   // pre vs post
+int x = (1,2,3);    // comma operator → x=3 (last value)
+// switch FALLS THROUGH without break
+// C HAS goto; Java doesn't
+// float == float → NEVER (precision)</code></pre>
+</div>
+
+<h2>10. I/O &amp; Error Handling</h2>
+<div class="card">
+<pre><code>printf("%d %f %s %c %x %p %lu %zu\n", i, f, s, c, x, p, ul, sz);
+scanf("%d", &amp;age);    // &amp; NEEDED (except arrays/strings — they decay)
+FILE *f = fopen("f.txt","r"); while(fgets(line,sizeof(line),f)){}
+fclose(f);            // MUST close — no auto-close
+// No exceptions. Check return codes + errno:
+if (result == -1) perror("fn");</code></pre>
+</div>
+
+<h2>11. Compilation Model</h2>
+<div class="card">
+<pre><code>gcc -c main.c -o main.o     // compile → object
+gcc -c utils.c -o utils.o
+gcc main.o utils.o -o prog  // link → executable
+./prog
+gcc -O2 -Wall -Wextra -g main.c -o prog</code></pre>
+<p>C: source → preprocess → compile → assemble → link → .exe. Java: source → bytecode → JVM.</p>
+</div>
+
+<h2>12. THE C MCQ CHEAT-SHEET (memorize all 15)</h2>
+<div class="card">
+<ol>
+<li><code>052</code> is OCTAL = 42 decimal, NOT 52</li>
+<li><code>"Hello" == "Hello"</code> compares ADDRESSES → use strcmp()</li>
+<li>sizeof(arr) inside a function = pointer size (8), not array size</li>
+<li><code>if (x = 5)</code> is ASSIGNMENT → always TRUE</li>
+<li>++i vs i++ — pre vs post-increment</li>
+<li><code>#define SQUARE(x) x*x</code> → SQUARE(1+2)=5, not 9</li>
+<li><code>struct { char a; int b; }</code> sizeof = 8 (padding)</li>
+<li><code>free(p); p = NULL;</code> ALWAYS</li>
+<li><code>p = realloc(p, big)</code> — on failure p=NULL, original LOST</li>
+<li>'\0' (0) vs '0' (48)</li>
+<li><code>int *p; *p = 5;</code> — uninitialized deref = SEGFAULT</li>
+<li>scanf("%d",&x) — &amp; required for primitives</li>
+<li>Never compare floats with ==</li>
+<li><code>unsigned int x = -1;</code> → wraps to 4294967295 (UINT_MAX)</li>
+<li><code>a[i] = *(a+i) = i[a]</code> — YES, i[a] is valid C</li>
+</ol>
+</div>
+
+<h2>13. Sample Output Questions</h2>
+<div class="card">
+<div class="qablock"><b>unsigned int x=10; int y=-1; if (y &gt; x) ...</b><p>TRUE — y converts to unsigned (huge number 4294967295). Classic sign-compare trap.</p></div>
+<div class="qablock"><b>sizeof(struct { char c; int i; }) ?</b><p>8 — 3 padding bytes after c.</p></div>
+<div class="qablock"><b>Little-endian 0x12345678 in memory?</b><p>78 56 34 12 (LSB first).</p></div>
+<div class="qablock"><b>#define SQUARE(x) x*x → SQUARE(3+2)?</b><p>3+2*3+2 = 11.</p></div>
+<div class="qablock"><b>int *const p means?</b><p>p (the pointer) can't be repointed; *p (value) can change.</p></div>
+</div>
+
+<footer>Page 2 · C Language · <a href="index.html">← Home</a> · <a href="03_riscv_arch.html">Next: RISC-V + MIPS + Verilog →</a></footer>
+</div>
+</body>
+</html>

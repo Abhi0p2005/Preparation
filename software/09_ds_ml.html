@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9 · Data Science &amp; ML — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>DATA SCIENCE &amp; ML — COMPLETE GUIDE</h1><div class="sub">ML pipeline, algorithms, evaluation, statistics &amp; probability, Bayes, hypothesis testing, SQL for DS, pandas. For DS/data-engineer roles (PhonePe, TresVista, etc.).</div></header>
+
+<h2>1. AI vs ML vs DL vs LLM</h2>
+<div class="card">
+<ul>
+<li><b>AI</b> — any machine doing "smart" things (umbrella term)</li>
+<li><b>ML</b> — machines that learn patterns from data instead of explicit rules</li>
+<li><b>DL</b> — ML using big multi-layer neural networks</li>
+<li><b>LLM</b> — deep-learning model trained on enormous text that predicts the next word</li>
+</ul>
+<p>Analogy: AI = vehicle, ML = car, DL = electric car, LLM = a specific Tesla model.</p>
+</div>
+
+<h2>2. Types of ML</h2>
+<div class="card">
+<table><tr><th>Type</th><th>Learns from</th><th>Example</th></tr>
+<tr><td><b>Supervised</b></td><td>inputs + correct answers (labels)</td><td>predict fraud yes/no from transaction features</td></tr>
+<tr><td><b>Unsupervised</b></td><td>inputs only, no labels</td><td>group merchants into clusters (K-means)</td></tr>
+<tr><td><b>Reinforcement</b></td><td>rewards/punishments for actions</td><td>bot learning cashback strategy by trial-and-error</td></tr>
+</table>
+<p>Inside supervised: <b>regression</b> predicts a number; <b>classification</b> predicts a category.</p>
+</div>
+
+<h2>3. The ML Pipeline (memorize the order)</h2>
+<div class="card">
+<ol>
+<li>Business problem → ML problem</li>
+<li>Data collection / sourcing</li>
+<li>Clean data (missing values, outliers, dtypes, duplicates, <b>leakage</b>)</li>
+<li>Feature engineering (create columns, scale, encode)</li>
+<li>Split: train / validation / test</li>
+<li>Model + hyperparameter tuning (on validation, NEVER test)</li>
+<li>Evaluate, deploy, monitor (watch for drift)</li>
+</ol>
+<p class="note"><b>Leakage:</b> if future/test information reaches training, the model looks amazing in testing but fails in production. Split BEFORE any feature fitting.</p>
+</div>
+
+<h2>4. Core Algorithms — plain meaning + when to use</h2>
+<div class="card">
+<table><tr><th>Model</th><th>How it works</th><th>Needs scaling?</th><th>Strength</th></tr>
+<tr><td>Linear regression</td><td>fits y=wx+b, minimizes MSE</td><td>yes (GD)</td><td>interpretable</td></tr>
+<tr><td>Logistic regression</td><td>linear + sigmoid σ(z)=1/(1+e⁻ᶻ) → probability; loss = binary cross-entropy</td><td>yes</td><td>interpretable baseline</td></tr>
+<tr><td>Decision tree</td><td>splits by Gini impurity / entropy; can overfit → cap depth</td><td>no</td><td>explainable rules</td></tr>
+<tr><td>Random forest</td><td>bagging: many trees on bootstrap samples + random features, vote</td><td>no</td><td>robust, reduces <b>variance</b></td></tr>
+<tr><td>XGBoost/LightGBM</td><td>boosting: trees fit residuals sequentially, reduce <b>bias</b></td><td>no</td><td>best accuracy on tabular</td></tr>
+<tr><td>KNN</td><td>k nearest neighbours vote; lazy learner; curse of dimensionality</td><td><b>yes</b></td><td>simple, no training</td></tr>
+<tr><td>SVM</td><td>max-margin boundary; kernel trick (RBF)</td><td><b>yes</b></td><td>high-dim, small data</td></tr>
+<tr><td>Naive Bayes</td><td>Bayes theorem assuming feature independence</td><td>no</td><td>fast, text</td></tr>
+<tr><td>K-means</td><td>pick k centres, assign nearest, recompute means; elbow method for k</td><td><b>yes</b></td><td>scalable clustering</td></tr>
+<tr><td>PCA</td><td>eigenvectors of covariance matrix → top variance directions</td><td>yes</td><td>dimension reduction</td></tr>
+</table>
+<p class="note"><b>Threshold trade:</b> lowering the classification threshold catches more positives (higher recall, more FPs); raising it gives higher precision. For fraud with expensive FPs, block only at a high probability.</p>
+</div>
+
+<h2>5. Evaluation &amp; Diagnostics (most-asked MCQs)</h2>
+<div class="card">
+<h3>Confusion matrix &amp; metrics</h3>
+<table><tr><th>Metric</th><th>Meaning</th><th>Formula</th></tr>
+<tr><td>Accuracy</td><td>all correct / all</td><td>(TP+TN)/(all)</td></tr>
+<tr><td>Precision</td><td>of predicted positives, how many were truly positive</td><td>TP/(TP+FP)</td></tr>
+<tr><td>Recall (Sensitivity)</td><td>of actual positives, how many we caught</td><td>TP/(TP+FN)</td></tr>
+<tr><td>Specificity</td><td>of actual negatives, how many stayed negative</td><td>TN/(TN+FP)</td></tr>
+<tr><td>F1</td><td>balanced P+R</td><td>2PR/(P+R)</td></tr>
+</table>
+<p class="attention"><b>Accuracy trap:</b> with 0.01% fraud, a model that never calls fraud is 99.99% "accurate" — and useless. Judge rare classes with precision, recall, F1, PR-AUC.</p>
+<ul>
+<li><b>ROC-AUC:</b> P(random positive ranked above random negative); 0.5 = random, 1 = perfect. On imbalanced data use <b>PR-AUC</b> instead.</li>
+<li><b>Overfitting (high variance)</b> — memorizes training noise. Fixes: more data, regularization, fewer features, simpler model, CV, early stopping, dropout.</li>
+<li><b>Underfitting (high bias)</b> — too simple. Fixes: more features, more complex model, lower regularization.</li>
+<li><b>k-fold CV:</b> split into k parts, train k−1, validate 1. Stratified for imbalanced classes.</li>
+</ul>
+<h3>Regularization</h3>
+<ul>
+<li><b>L1 (Lasso):</b> |weight| penalty → shrinks some weights EXACTLY to 0 → feature selection.</li>
+<li><b>L2 (Ridge):</b> weight² penalty → shrinks all toward 0 (never zero) → handles multicollinearity.</li>
+<li><b>ElasticNet:</b> both.</li>
+</ul>
+</div>
+
+<h2>6. Deep Learning &amp; LLMs (intuition)</h2>
+<div class="card">
+<ul>
+<li><b>Neuron:</b> inputs × weights + bias → activation → output.</li>
+<li><b>Activations:</b> ReLU (default hidden), sigmoid (0-1 binary), tanh (−1..1), softmax (multi-class sum 1).</li>
+<li><b>Training:</b> forward pass → loss → backpropagation (chain rule) → update weight −= lr × gradient. Small lr = slow but stable; too large = jumps over minimum.</li>
+<li><b>CNN:</b> convolution (filters/kernels) + pooling (downsample) + dense layers. Transfer learning reuses ImageNet weights.</li>
+<li><b>RNN/LSTM:</b> sequential data; RNNs suffer vanishing gradients; LSTM/GRU add gates.</li>
+<li><b>Transformers:</b> self-attention — every token looks at every other token, weights importance; trains in parallel. LLMs predict the next word. Embeddings = dense vectors capturing meaning.</li>
+</ul>
+</div>
+
+<h2>7. Statistics &amp; Probability (biggest MCQ source)</h2>
+<div class="card">
+<h3>Descriptive stats</h3>
+<ul>
+<li>Mean (sensitive to outliers), Median (robust), Mode.</li>
+<li>Variance = avg squared distance from mean; <b>sample variance divides by n−1</b> (Bessel's correction). SD = √variance.</li>
+<li>CV = σ/μ (unit-free). Skew: right-skewed → mean > median > mode.</li>
+<li>IQR = Q3−Q1; outliers beyond Q1−1.5·IQR, Q3+1.5·IQR. z-score = (x−μ)/σ.</li>
+<li>Correlation r ∈ [−1,1], unit-free. <b>r=0 ⇒ no LINEAR correlation, NOT independence.</b> Correlation ≠ causation.</li>
+</ul>
+<h3>Probability rules</h3>
+<ul>
+<li>P(A∪B) = P(A)+P(B)−P(A∩B). Independent: P(A∩B)=P(A)P(B). Mutually exclusive: P(A∩B)=0.</li>
+<li>Conditional: P(A|B) = P(A∩B)/P(B). <b>Bayes:</b> P(A|B) = P(B|A)P(A)/P(B) — most-asked concept.</li>
+<li>E[X+Y] = E[X]+E[Y] always. Var(aX+b) = a²Var(X). Var(X+Y) = Var(X)+Var(Y)+2Cov(X,Y).</li>
+</ul>
+<div class="qablock"><b>Bayes classic:</b> disease prevalence 1%, sensitivity &amp; specificity 99%. P(disease | positive)?<p>= (0.99·0.01)/(0.99·0.01 + 0.01·0.99) = <b>0.50</b>. At low prevalence, half your "positives" are false positives.</p></div>
+<h3>Distributions</h3>
+<table><tr><th>Distribution</th><th>Used for</th><th>Mean</th><th>Variance</th></tr>
+<tr><td>Binomial(n,p)</td><td># successes in n independent trials</td><td>np</td><td>np(1−p)</td></tr>
+<tr><td>Poisson(λ)</td><td>rare events in fixed interval</td><td>λ</td><td>λ</td></tr>
+<tr><td>Normal(μ,σ²)</td><td>CLT limit of sums</td><td>μ</td><td>σ²</td></tr>
+<tr><td>Uniform(a,b)</td><td>all equally likely</td><td>(a+b)/2</td><td>(b−a)²/12</td></tr>
+<tr><td>Exponential(λ)</td><td>time between Poisson events (memoryless)</td><td>1/λ</td><td>1/λ²</td></tr>
+</table>
+<p><b>CLT:</b> sample mean ≈ Normal(μ, σ/√n). SE = σ/√n. 68-95-99.7 rule.</p>
+</div>
+
+<h2>8. Hypothesis Testing (JD-listed skill)</h2>
+<div class="card">
+<ul>
+<li>H0 (skeptical default) vs H1 → pick test → compute statistic → compare p-value vs α.</li>
+<li><b>p-value:</b> P(data as extreme as observed | H0 true). Small p = evidence against H0. NOT "P(H0 is true)".</li>
+<li><b>Type I (α):</b> reject a true H0 (false alarm). <b>Type II (β):</b> fail to reject a false H0 (miss). <b>Power = 1−β</b>.</li>
+<li>z-test if σ known or n large; <b>t-test (df=n−1)</b> when σ estimated. One-sample t = (x̄−μ)/(s/√n). Paired t on differences.</li>
+<li><b>Chi-square</b> Σ(O−E)²/E — categorical independence. <b>ANOVA (F)</b> — compare 3+ group means.</li>
+<li><b>Heavy-tailed data (e.g. UPI amounts):</b> t-test unreliable → use <b>Mann-Whitney U</b> (non-parametric) or bootstrap CI, or log-transform.</li>
+<li><b>Multiple testing:</b> 10 metrics → Bonferroni (α/10) or Benjamini-Hochberg FDR.</li>
+</ul>
+<h3>Confidence intervals</h3>
+<p>x̄ ± z·σ/√n or x̄ ± t·s/√n. Correct reading: "~95% of repeated intervals would contain the true mean" — NOT "95% chance the mean is in this interval".</p>
+<h3>Linear algebra quick 20%</h3>
+<p>Dot product = Σxi·yi. Cosine similarity = (A·B)/(|A||B|). Eigenvalue A·v=λ·v. PCA = eigenvectors of covariance; eigenvalue = variance explained. L2 = √Σxi² (Euclidean), L1 = Σ|xi| (Manhattan).</p>
+</div>
+
+<h2>9. Python / NumPy / Pandas (OA workhorse)</h2>
+<div class="card">
+<h3>Core Python</h3>
+<ul>
+<li>List (mutable) / Tuple (immutable, hashable) / Set (unique, O(1)) / Dict (key→value, O(1)).</li>
+<li>Comprehensions: <code>[x*2 for x in lst if x&gt;0]</code>. collections: Counter, defaultdict, heapq, deque, bisect.</li>
+<li><b>append vs a = a+[x]:</b> append mutates O(1); + builds new list O(n) → O(n²) in a loop.</li>
+</ul>
+<h3>NumPy</h3>
+<pre><code>np.array(...); a.reshape(3,2); a.T; np.stack; a.sum(axis=0); np.percentile(a,90)
+np.dot(a,b); a @ b; np.linalg.norm(x); a[a&gt;3]; np.where(a&gt;3,1,0); np.clip; np.argmax(a,axis=1)
+np.random.seed(42)  # reproducibility
+# Euclidean distance matrix one-liner:
+((x[:,None,:]-y[None,:,:])**2).sum(-1)**0.5</code></pre>
+<h3>Pandas</h3>
+<pre><code>df.head(); df.info(); df.describe(); df.shape; df.dtypes
+df.loc[row_label, col_label]   # label-based
+df.iloc[int, int]              # position-based
+df[(df.a&gt;0) &amp; (df.b&lt;5)]       # use & NOT 'and'
+df.isnull().sum(); df.dropna(); df.fillna(mean); df.ffill()
+df.groupby('user_id')['amount'].agg(['sum','mean','count','max'])
+df['user_mean'] = df.groupby('user_id')['amount'].transform('mean')  # per-group, keeps index
+pd.merge(a,b,on='key',how='left'); df.nlargest(10,'amount')
+df['rn'] = df.groupby('user_id')['ts'].rank(ascending=False, method='first'); df[df['rn']==1]</code></pre>
+</div>
+
+<h2>10. Business Metrics &amp; A/B Testing</h2>
+<div class="card">
+<ul>
+<li><b>DAU/MAU,</b> stickiness = DAU/MAU, retention, conversion rate, churn = 1−retention, ARPU/ARPPU, take rate, <b>LTV vs CAC</b> (healthy if LTV &gt; CAC).</li>
+<li><b>AARRR:</b> Acquisition → Activation → Retention → Revenue → Referral.</li>
+<li><b>A/B test steps:</b> hypothesis → random split → sample size (from effect size, α, power BEFORE running) → run → test → interpret (p&lt;0.05 significant; but check effect size).</li>
+<li><b>Watch outs:</b> novelty effect, Simpson's paradox, multiple-testing inflation, peeking.</li>
+</ul>
+</div>
+
+<h2>11. DS Quiz</h2>
+<div class="card">
+<div class="qablock"><b>K-means is which ML type?</b><p>Unsupervised — clustering (no labels).</p></div>
+<div class="qablock"><b>Bagging reduces ____ ; boosting reduces ____?</b><p>variance (RF); bias (XGBoost).</p></div>
+<div class="qablock"><b>Which regularization sets coefficients exactly to 0?</b><p>Lasso (L1) → feature selection.</p></div>
+<div class="qablock"><b>Which model needs scaling most?</b><p>KNN (distance-based).</p></div>
+<div class="qablock"><b>Model 99.9% accurate on 0.1% fraud. Next step?</b><p>Check precision/recall and PR-AUC — accuracy is misleading with rare classes.</p></div>
+</div>
+
+<footer>Page 9 · Data Science &amp; ML · <a href="index.html">← Home</a> · <a href="10_oa_strategy.html">Next: OA Strategy →</a></footer>
+</div>
+</body>
+</html>

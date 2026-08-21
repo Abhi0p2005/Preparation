@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3 · SQL Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>SQL MASTER GUIDE — ZERO TO WINDOW FUNCTIONS</h1><div class="sub">Complete SQL from SELECT to window functions, joins, CTEs, subqueries, worked examples + flashcards.</div></header>
+
+<h2>1. SQL Statement Types</h2>
+<div class="card">
+<table><tr><th>Type</th><th>Name</th><th>Examples</th><th>Purpose</th></tr>
+<tr><td>DQL</td><td>Data Query Language</td><td>SELECT</td><td>Read data</td></tr>
+<tr><td>DML</td><td>Data Manipulation Language</td><td>INSERT, UPDATE, DELETE</td><td>Change data (rollback-able, fires triggers)</td></tr>
+<tr><td>DDL</td><td>Data Definition Language</td><td>CREATE, ALTER, DROP, <b>TRUNCATE</b></td><td>Change structure</td></tr>
+<tr><td>DCL</td><td>Data Control Language</td><td>GRANT, REVOKE</td><td>Permissions</td></tr>
+</table>
+<p class="note"><b>Trap:</b> TRUNCATE is <b>DDL</b> (drops-and-recreates, no rollback). DELETE is <b>DML</b> (removes rows, rollback-able, fires triggers).</p>
+<h3>Key one-line definitions</h3>
+<ul>
+<li><b>Primary Key</b> — uniquely identifies a row (no dup, no NULL)</li>
+<li><b>Foreign Key</b> — references another table's PK → relationship</li>
+<li><b>Index</b> — sorted lookup structure making WHERE fast (B-tree, O(log n))</li>
+<li><b>Join</b> — combine rows on a related column</li>
+<li><b>Transaction</b> — group of SQL that all succeed or all fail</li>
+<li><b>Normalisation</b> — split data into tables to avoid repetition</li>
+</ul>
+</div>
+
+<h2>2. SELECT / WHERE / NULL / ORDER BY / LIMIT</h2>
+<div class="card">
+<pre><code>SELECT * FROM trades;
+SELECT DISTINCT asset_class FROM trades;
+SELECT * FROM trades WHERE status='SETTLED' AND amount&gt;100000;
+SELECT * FROM trades WHERE amount BETWEEN 50000 AND 200000;   -- inclusive both ends
+SELECT * FROM trades WHERE asset_class IN ('EQUITY','FX');
+SELECT * FROM trades WHERE name LIKE '%BANK%';   -- % any, _ one char
+SELECT * FROM trades WHERE settlement_date IS NULL;
+SELECT * FROM trades ORDER BY amount DESC LIMIT 10;
+SELECT trade_id AS id, amount*0.01 AS commission FROM trades;</code></pre>
+<ul>
+<li><b>Execution order:</b> FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. That's why aliases can't be used in WHERE but CAN in ORDER BY.</li>
+<li><b>NULL is 3-valued logic</b> (TRUE/FALSE/UNKNOWN): <code>= NULL</code> never true → use <code>IS NULL</code>. <code>NULL = NULL</code> is UNKNOWN.</li>
+<li><b>COUNT(*)</b> counts all rows (incl. NULLs) · <b>COUNT(col)</b> counts non-NULL · <b>COUNT(DISTINCT col)</b> counts distinct non-NULL.</li>
+<li><b>BETWEEN</b> is inclusive. <b>AND binds tighter than OR</b> — use parentheses.</li>
+<li>Second-highest: <code>SELECT DISTINCT salary ORDER BY salary DESC LIMIT 1 OFFSET 1;</code> or <code>MAX(salary) WHERE salary &lt; (SELECT MAX(salary))</code>.</li>
+<li><b>Avoid SELECT *</b> — pulls unused columns, breaks on schema change, can't use covering index.</li>
+</ul>
+</div>
+
+<h2>3. GROUP BY &amp; Aggregation</h2>
+<div class="card">
+<pre><code>SELECT asset_class, SUM(amount) AS volume FROM trades GROUP BY asset_class;
+SELECT asset_class, direction, COUNT(*) AS cnt FROM trades GROUP BY asset_class, direction;
+SELECT counterparty, SUM(amount) AS volume FROM trades
+WHERE status='SETTLED' GROUP BY counterparty HAVING SUM(amount) &gt; 100000;
+
+-- Conditional aggregation (one pass)
+SELECT asset_class,
+  COUNT(*) AS total,
+  COUNT(CASE WHEN direction='BUY' THEN 1 END) AS buys,
+  SUM(CASE WHEN status='FAILED' THEN amount ELSE 0 END) AS failed_amount
+FROM trades GROUP BY asset_class;</code></pre>
+<p class="attention"><b>Golden rule (#1 trap):</b> every column in SELECT must be grouped OR inside an aggregate. <b>WHERE filters rows (before grouping, no aggregates); HAVING filters groups (after, aggregates allowed).</b> You can NEVER use an aggregate in WHERE.</p>
+<ul>
+<li>Aggregates: COUNT, SUM, AVG, MIN, MAX. Without GROUP BY the whole table = one group.</li>
+<li>GROUP BY NULL → NULLs form their own group.</li>
+<li>DISTINCT vs GROUP BY: same unique rows; GROUP BY additionally enables aggregates.</li>
+</ul>
+</div>
+
+<h2>4. JOINs</h2>
+<div class="card">
+<pre><code>SELECT t.trade_id, t.amount, c.name FROM trades t
+INNER JOIN counterparties c ON t.counterparty_id = c.id;
+
+SELECT c.name, t.trade_id FROM counterparties c
+LEFT JOIN trades t ON c.id = t.counterparty_id;   -- all left rows + matches
+
+-- Find "no trades": LEFT JOIN + WHERE right col IS NULL
+SELECT c.name FROM counterparties c
+LEFT JOIN trades t ON c.id=t.counterparty_id
+WHERE t.trade_id IS NULL;   -- CORRECT
+
+-- SELF JOIN (hierarchy)
+SELECT e.name AS employee, m.name AS manager
+FROM employees e LEFT JOIN employees m ON e.manager_id=m.id;</code></pre>
+<ul>
+<li><b>Visual:</b> INNER = A∩B · LEFT = A ∪ (A∩B) · RIGHT = (A∩B) ∪ B · FULL = A∪B · CROSS = A×B</li>
+<li><b>LEFT JOIN trap:</b> filtering the RIGHT table's column in WHERE converts it back to INNER JOIN — move that filter into the ON clause to keep unmatched rows.</li>
+<li><b>INNER JOIN can multiply rows</b> when right side has duplicates → use COUNT(DISTINCT) or a subquery.</li>
+<li><b>JOIN vs UNION:</b> JOIN merges columns sideways on a key; UNION stacks rows vertically (same column count).</li>
+<li>Internal strategies: Nested Loop (tiny side), Hash Join (big equi-join), Merge Join (sorted).</li>
+</ul>
+</div>
+
+<h2>5. String &amp; Date Functions</h2>
+<div class="card">
+<pre><code>CONCAT(a,b) | a || b (PG) | SUBSTRING(s FROM 1 FOR 4) | SUBSTR(s,1,4) (MySQL)
+LENGTH(s) | CHAR_LENGTH(s) | UPPER() | LOWER() | TRIM() | LTRIM() | RTRIM()
+REPLACE(phone,'-','') | LEFT(iban,4) | RIGHT(name,4) | REVERSE(s)
+
+EXTRACT(YEAR FROM trade_date) | CURRENT_DATE | CURRENT_TIMESTAMP
+trade_date + INTERVAL '2 days' (PG) | DATE_ADD(trade_date,INTERVAL 2 DAY) (MySQL)
+DATEADD(day,2,trade_date) (SQLServer) | DATEDIFF(day,a,b)
+DATE_TRUNC('month', trade_date) (PG) | DATE_FORMAT(trade_date,'%Y-%m') (MySQL)</code></pre>
+<p class="note"><b>Group-by-month pattern:</b> truncate to a month boundary then GROUP BY. <b>Index tip:</b> <code>WHERE trade_date BETWEEN '2026-01-01' AND '2026-12-31'</code> is index-friendly; wrapping the column in EXTRACT kills the index. Postgres <code>'a'||NULL=NULL</code>; MySQL CONCAT skips NULLs.</p>
+</div>
+
+<h2>6. Subqueries &amp; CTEs</h2>
+<div class="card">
+<pre><code>-- Scalar subquery (per output row)
+SELECT trade_id, amount, amount/(SELECT AVG(amount) FROM trades) FROM trades;
+
+-- IN subquery
+SELECT name FROM counterparties
+WHERE id IN (SELECT counterparty_id FROM trades WHERE amount&gt;1000000);
+
+-- Correlated subquery (runs per outer row — "trades above their own asset-class avg")
+SELECT trade_id, asset_class, amount FROM trades t
+WHERE amount &gt; (SELECT AVG(amount) FROM trades WHERE asset_class=t.asset_class);
+
+-- EXISTS short-circuits (faster for big sets)
+SELECT c.name FROM counterparties c WHERE EXISTS
+  (SELECT 1 FROM trades t WHERE t.counterparty_id=c.id AND t.amount&gt;1000000);
+
+-- Derived table in FROM must have an alias
+SELECT * FROM (SELECT asset_class, AVG(amount) a FROM trades GROUP BY asset_class) s WHERE a&gt;50000;
+
+-- CTE (named, reusable, chained)
+WITH high AS (SELECT counterparty_id, SUM(amount) v FROM trades WHERE status='SETTLED'
+              GROUP BY counterparty_id HAVING SUM(amount)&gt;10000000)
+SELECT c.name, h.v FROM counterparties c JOIN high h ON c.id=h.counterparty_id;
+
+-- Recursive CTE (org hierarchy): anchor + UNION ALL + recursive member
+WITH RECURSIVE org AS (
+  SELECT id,name,manager_id,1 AS lvl FROM employees WHERE manager_id IS NULL
+  UNION ALL
+  SELECT e.id,e.name,e.manager_id,ot.lvl+1 FROM employees e
+  JOIN org ot ON e.manager_id=ot.id)
+SELECT * FROM org;</code></pre>
+<p class="attention"><b>NOT IN + NULL trap:</b> <code>x NOT IN (1,2,NULL)</code> is never TRUE → returns zero rows. Fix: use NOT EXISTS or filter NULLs.</p>
+<ul>
+<li>IN vs EXISTS: EXISTS short-circuits at first match (fast for large subqueries).</li>
+<li>Subquery in SELECT must be scalar (one row, one column).</li>
+<li>CTE vs temp table: CTE lives only for the query; temp table persists across statements.</li>
+<li>Recursive CTE needs 3 parts: anchor + <b>UNION ALL</b> + recursive member that joins back.</li>
+</ul>
+</div>
+
+<h2>7. Window Functions (the game-changer)</h2>
+<div class="card">
+<pre><code>-- ROW_NUMBER / RANK / DENSE_RANK
+SELECT trade_id, amount,
+  ROW_NUMBER() OVER (ORDER BY amount DESC) rn,
+  RANK()       OVER (ORDER BY amount DESC) rk,
+  DENSE_RANK() OVER (ORDER BY amount DESC) drk
+FROM trades;
+-- amounts [100,80,80,50]: ROW=1,2,3,4 · RANK=1,2,2,4 · DENSE=1,2,2,3
+
+-- Top-N per category (the most reused idiom)
+SELECT * FROM (SELECT trade_id, amount,
+  DENSE_RANK() OVER (PARTITION BY asset_class ORDER BY amount DESC) rnk
+  FROM trades WHERE status='SETTLED') x WHERE rnk&lt;=3;
+
+-- LAG / LEAD (previous / next row) for MoM / day-over-day change
+SELECT trade_date, SUM(amount) v,
+  LAG(SUM(amount)) OVER (ORDER BY trade_date) prev,
+  SUM(amount)-LAG(SUM(amount)) OVER (ORDER BY trade_date) chg
+FROM trades GROUP BY trade_date ORDER BY trade_date;
+
+-- Running total (default frame: UNBOUNDED PRECEDING TO CURRENT ROW)
+SELECT trade_date, amount,
+  SUM(amount) OVER (PARTITION BY counterparty_id ORDER BY trade_date) running
+FROM trades;
+
+-- Rolling average (7-row frame)
+AVG(amount) OVER (ORDER BY txn_ts ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)</code></pre>
+<p class="note"><b>Window vs GROUP BY:</b> GROUP BY collapses rows to one per group. Window functions keep EVERY row and ADD a computed value over a window. Every window needs OVER(). To filter a window result use a subquery/CTE (WHERE rn=1 fails directly).</p>
+</div>
+
+<h2>8. UNION / INTERSECT / EXCEPT</h2>
+<div class="card">
+<pre><code>SELECT city FROM a UNION SELECT city FROM b;       -- dedup (slower, sorts)
+SELECT city FROM a UNION ALL SELECT city FROM b;   -- keeps dups (faster)
+SELECT id FROM a INTERSECT SELECT id FROM b;       -- both (not in MySQL → IN subquery)
+SELECT id FROM a EXCEPT SELECT id FROM b;          -- a minus b (not in MySQL → NOT IN / LEFT JOIN IS NULL)</code></pre>
+<p><b>Rules:</b> same column count, compatible types, aligned order. Column names come from the first SELECT.</p>
+</div>
+
+<h2>9. Must-Know Patterns (DS/SQL interviews)</h2>
+<div class="card">
+<ul>
+<li><b>Dedup keep-latest-per-key:</b> ROW_NUMBER() OVER (PARTITION BY key ORDER BY ts DESC) = 1, or GROUP BY + MAX(ts) + join.</li>
+<li><b>MoM % change:</b> LAG(metric) OVER (ORDER BY month), then (cur − prev)/prev with NULLIF.</li>
+<li><b>Top-N per group:</b> ROW_NUMBER() OVER (PARTITION BY group ORDER BY metric DESC) = 1.</li>
+<li><b>Cohort retention:</b> COUNT(DISTINCT user_id) per signup-week + SUM(CASE WHEN re-active...).</li>
+<li><b>Funnel:</b> COUNT(CASE WHEN step='OPEN' THEN 1 END) per stage per user.</li>
+<li><b>Date helpers:</b> DATE_TRUNC('month', ts), EXTRACT(YEAR FROM ts), DATEDIFF.</li>
+<li><b>NULLIF for division:</b> <code>x / NULLIF(y, 0)</code> — returns NULL instead of dividing by zero.</li>
+<li><b>COALESCE(a, b, 0):</b> first non-NULL value.</li>
+</ul>
+</div>
+
+<h2>10. Worked Example — MAU + MoM % change</h2>
+<div class="card">
+<pre><code>WITH mau AS (
+  SELECT DATE_TRUNC('month', txn_ts) AS month,
+         COUNT(DISTINCT user_id)     AS active_users
+  FROM txns WHERE status = 'success'
+  GROUP BY DATE_TRUNC('month', txn_ts)
+)
+SELECT month, active_users,
+       ROUND(100.0 * (active_users - LAG(active_users) OVER (ORDER BY month))
+             / NULLIF(LAG(active_users) OVER (ORDER BY month), 0), 2) AS mom_change_pct
+FROM mau ORDER BY month;</code></pre>
+<p>Why it scores: COUNT(DISTINCT user_id) not COUNT(*); LAG over the monthly window; NULLIF guards the first row (MoM undefined → NULL, correct).</p>
+</div>
+
+<h2>11. Dialect Quick-Reference</h2>
+<div class="card">
+<table><tr><th>Task</th><th>PostgreSQL</th><th>MySQL</th><th>SQL Server</th></tr>
+<tr><td>Truncate to month</td><td>DATE_TRUNC('month', ts)</td><td>DATE_FORMAT(ts,'%Y-%m-01')</td><td>DATETRUNC(month, ts)</td></tr>
+<tr><td>Get year</td><td>EXTRACT(YEAR FROM ts)</td><td>YEAR(ts)</td><td>YEAR(ts)</td></tr>
+<tr><td>Format YYYY-MM</td><td>TO_CHAR(ts,'YYYY-MM')</td><td>DATE_FORMAT(ts,'%Y-%m')</td><td>FORMAT(ts,'yyyy-MM')</td></tr>
+<tr><td>Limit rows</td><td>LIMIT n</td><td>LIMIT n</td><td>SELECT TOP n</td></tr>
+</table>
+</div>
+
+<h2>12. LeetCode Database Quick Set</h2>
+<div class="card">
+<table><tr><th>LC</th><th>Problem</th></tr>
+<tr><td>175</td><td>Combine Two Tables</td></tr>
+<tr><td>181</td><td>Employees Earning More Than Their Manager</td></tr>
+<tr><td>182</td><td>Duplicate Emails</td></tr>
+<tr><td>183</td><td>Customers Who Never Order</td></tr>
+<tr><td>1148</td><td>Article Views I</td></tr>
+<tr><td>1393</td><td>Capital Gain/Loss</td></tr>
+<tr><td>1484</td><td>Group Sold Products By Date</td></tr>
+<tr><td>1757</td><td>Recyclable &amp; Low Fat Products</td></tr>
+<tr><td>1795</td><td>Rearrange Products Table</td></tr>
+</table>
+</div>
+
+<h2>13. SQL Flashcard Essentials</h2>
+<div class="card">
+<div class="qablock"><b>Logical execution order?</b><p>FROM → JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT.</p></div>
+<div class="qablock"><b>WHERE vs HAVING?</b><p>WHERE filters ROWS before grouping (no aggregates). HAVING filters GROUPS after grouping (aggregates allowed).</p></div>
+<div class="qablock"><b>ROW_NUMBER vs RANK vs DENSE_RANK?</b><p>ROW_NUMBER = unique even on ties. RANK = ties share, numbers skip (1,1,3). DENSE_RANK = ties share, no skip (1,1,2).</p></div>
+<div class="qablock"><b>Why can't you use a SELECT alias in WHERE?</b><p>WHERE runs before SELECT creates the alias. Use HAVING, subquery, or repeat the expression.</p></div>
+<div class="qablock"><b>MySQL vs Postgres default isolation?</b><p>MySQL = Repeatable Read. Postgres = Read Committed.</p></div>
+<div class="qablock"><b>NOT IN + NULL trap?</b><p><code>x NOT IN (1,2,NULL)</code> is never TRUE → returns nothing. Fix: NOT EXISTS or filter NULLs.</p></div>
+</div>
+
+<footer>Page 3 · SQL · <a href="index.html">← Home</a> · <a href="04_os_master.html">Next: Operating Systems →</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12 · High-Level Design (HLD) — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a><a href="11_lld_master.html">11. LLD</a><a href="12_hld_master.html">12. HLD</a></div>
+<div class="wrap">
+<header><h1>HIGH-LEVEL DESIGN — COMPLETE INTERVIEW GUIDE</h1><div class="sub">Zero to mastery: back-of-envelope estimation, every core building block (load balancers, caching, SQL/NoSQL, consistent hashing, message queues, CAP), a repeatable interview framework, and 10 fully-solved HLD problems.</div></header>
+
+<h2>1. What is HLD &amp; How the Round Works</h2>
+<div class="card">
+<p><b>High-Level Design</b> = designing a <b>distributed system</b> end-to-end: which components exist, how they talk, where data lives, how it scales to millions of users. No class-level detail — think <i>boxes and arrows</i>.</p>
+<table><tr><th></th><th>HLD</th><th>LLD (see page 11)</th></tr>
+<tr><td>Scope</td><td>Whole system, distributed, at scale</td><td>One module/feature, single process</td></tr>
+<tr><td>Artifacts</td><td>Component diagram: clients, LB, services, DBs, queues, CDN</td><td>Class diagram: classes, interfaces, patterns</td></tr>
+<tr><td>Skills tested</td><td>Estimation, trade-offs, scalability, fault tolerance</td><td>OOP, SOLID, clean code</td></tr>
+</table>
+<div class="qablock"><b>The 4S framework — structure every HLD answer with it</b><p>① <b>S</b>cenario: what are the features and who uses it? ② <b>S</b>ervices: what components do we need? ③ <b>S</b>torage: what data, what database, what schema? ④ <b>S</b>cale: how many users/QPS/data — do the math. If you always cover these four, you never miss a requirement.</p></div>
+<p><b>Typical round format (60 min):</b> 10 min clarify + requirements → 5 min estimation → 20 min high-level diagram → 15 min deep-dive on 1-2 components → 10 min bottlenecks, evolution, trade-offs. <b>Critical rule:</b> never jump to the diagram before requirements and numbers — interviewers explicitly grade that.</p>
+</div>
+
+<h2>2. Back-of-Envelope Estimation</h2>
+<div class="card">
+<p>Interviewers want <i>order-of-magnitude</i> math, not exact figures. Round aggressively, show your work aloud.</p>
+<h3>Latency numbers to memorize (2020s cloud figures)</h3>
+<pre><code>L1 cache         ~1 ns        Reading 1MB from SSD   ~0.1-1 ms
+L2 cache         ~5 ns        Disk seek             ~5-10 ms
+RAM access       ~100 ns      Network round trip    ~0.5 ms (DC)
+Compress 1KB     ~10 us       1MB over network      ~1-2 ms
+Read 1MB RAM     ~10 us       1MB from SSD          ~20 us
+</code></pre>
+<p><b>Rule of thumb:</b> memory ~100 ns, SSD ~0.1 ms, disk ~10 ms, network within DC ~0.5 ms. If a hot-path read hits disk, that's a red flag — cache it.</p>
+<h3>Traffic &amp; storage math (walk through this flow)</h3>
+<pre><code>Assume 100M DAU for Twitter-like app.
+QPS estimate:  users that generate a request per day = 10% * 100M = 10M/day
+               peak QPS (assume 10% of day is peak) = (10M/0.1)/(24*3600) ~= 11.5K
+               peak = 5-10x average = ~100K QPS peak.
+Read:write ratio: 100 reads : 1 write is typical for news feeds.
+Bandwidth: if each read returns 200KB, reads = 100K * 200KB = 20 GB/s peak.
+Storage for 1 year:
+   1 tweet = 500 bytes + 200KB media avg -> 10M writes/day * 200KB = 2 TB/day
+   = 730 TB/year.  With 3x replication = ~2.2 PB/year.  Add headroom x2.
+</code></pre>
+<div class="qablock"><b>Estimation formulas to have ready</b><p>DAU/day → QPS = (actions * DAU) / 86,400. Peak = 5–10× average. Bytes/day × 365 = storage/year. Throughput × replication factor = actual storage. Bandwidth = QPS × avg payload. Cache size = hot set (usually 20% of data serves 80% of reads).</p></div>
+</div>
+
+<h2>3. Core Building Blocks</h2>
+
+<h3>3.1 Client-Server, DNS, CDN</h3>
+<div class="card">
+<p><b>Client-server:</b> browser/mobile (thin clients) → backend over HTTP/HTTPS. <b>DNS</b> resolves <code>example.com</code> → IP: browser checks local cache → ISP resolver → root → TLD → authoritative server. <b>CDN</b> (Content Delivery Network): edge servers cache static content near users; user hits nearest PoP; miss → fetch from origin, then serve + cache. Reduces latency, offloads origin, survives spikes.</p>
+<p><b>Flow diagram (keep this in your head for every problem):</b></p>
+<pre><code>User --DNS--> CDN (static)     \ 
+User --HTTPS--> Load Balancer --&gt; App Servers --&gt; Cache --&gt; DB / Queue / Search
+                                                          \--&gt; CDN origin (media)
+</code></pre>
+</div>
+
+<h3>3.2 Load Balancers</h3>
+<div class="card">
+<table><tr><th></th><th>L4 (transport)</th><th>L7 (application)</th></tr>
+<tr><td>Looks at</td><td>IP + port only</td><td>URL/path/headers/cookies</td></tr>
+<tr><td>Speed</td><td>Faster, less CPU</td><td>Slower, more features</td></tr>
+<tr><td>Use</td><td>TCP/UDP fan-out</td><td>Path-based routing, SSL termination, sticky sessions</td></tr>
+<tr><td>Examples</td><td>HAProxy(L4), AWS NLB</td><td>Nginx, AWS ALB, Envoy</td></tr>
+</table>
+<p><b>Algorithms:</b> Round Robin (equal weight), Weighted RR, Least Connections, Least Response Time, IP Hashing (stickiness → session affinity), Consistent Hashing (cache/DB). <b>Health checks:</b> LB pings /health; unhealthy server removed from pool. <b>Sticky vs stateless:</b> prefer stateless app servers (session in Redis) so any request hits any server.</p>
+</div>
+
+<h3>3.3 Caching</h3>
+<div class="card">
+<p>Cache the <b>hot set</b> (80/20 rule) in RAM in front of slow sources. Placement: CDN (static edge), client-side, in-memory in app, or dedicated cache tier (Redis/Memcached).</p>
+<table><tr><th>Strategy</th><th>Write</th><th>Risk</th></tr>
+<tr><td>Cache Aside (read-through)</td><td>Write to DB; invalidate cache</td><td>Cache miss storm after invalidation; stale on crash</td></tr>
+<tr><td>Write-Through</td><td>Write cache + DB together</td><td>Extra write latency; never stale (mostly)</td></tr>
+<tr><td>Write-Behind/Back</td><td>Write cache, async flush to DB</td><td>Data loss if cache dies</td></tr>
+<tr><td>Write-Around</td><td>Write DB only; read caches</td><td>Cold reads first time</td></tr>
+</table>
+<p><b>Eviction policies:</b> LRU (most used), LFU, TTL expiry, FIFO. <b>Cache stampede:</b> many requests miss simultaneously and all hit DB — protect with a <i>mutex lock around repopulation</i> or stale-while-revalidate. <b>Consistency:</b> Redis vs DB — use <i>cache-aside with TTL</i> as the pragmatic default; mention write-through when consistency is strict.</p>
+</div>
+
+<h3>3.4 Databases — SQL vs NoSQL</h3>
+<div class="card">
+<table><tr><th></th><th>SQL (Postgres/MySQL)</th><th>NoSQL</th></tr>
+<tr><td>Model</td><td>Relational tables, joins, ACID</td><td>Key-value (Redis), Document (Mongo), Wide-column (Cassandra), Graph (Neo4j)</td></tr>
+<tr><td>Schema</td><td>Fixed, enforced</td><td>Flexible</td></tr>
+<tr><td>Scale</td><td>Vertical + read replicas; sharding is painful</td><td>Horizontal by design (Cassandra)</td></tr>
+<tr><td>Best for</td><td>Transactions, joins, relational data (payments, orders)</td><td>High write throughput, flexible schemas, caching, feeds</td></tr>
+<tr><td>Strong for</td><td>Consistency (ACID)</td><td>Availability + partition tolerance, scale</td></tr>
+</table>
+<p><b>Replication:</b> single leader (write → leader, reads to replicas), multi-leader (writes anywhere, conflicts), leaderless (write to quorum of N nodes). <b>Read replicas:</b> scale reads; risk: replication lag → read-your-writes problems (route reads after write to leader or add versioning).</p>
+<p><b>Sharding / partitioning:</b> split data by key — hash-based (even distribution, range queries suffer), range-based (hot spot risk), directory-based (lookup table). <b>Shard key choice is the #1 decision:</b> pick a key that distributes writes evenly and keeps related data together (e.g. user_id for feed, order_id). <b>Indexing:</b> B-tree default; covering indexes avoid table lookups; denormalization duplicates data to avoid joins at read time.</p>
+</div>
+
+<h3>3.5 Consistent Hashing</h3>
+<div class="card">
+<p><b>Problem:</b> classic <code>hash(key) % N</code> breaks when N changes (adding a cache server remaps almost every key → cache stampede).</p>
+<p><b>Solution:</b> place servers on a virtual ring (0..2³²-1). A key maps to the first server clockwise after its hash. Adding/removing a server only remaps keys on the arc that shifted — minimal churn.</p>
+<pre><code>hash("A") --&gt; 5000  --&gt;  clockwise --&gt; server S2
+hash("B") --&gt; 9000  --&gt;  clockwise --&gt; server S1
+Ring:  [0 ---- S1(2500) ---- S2(6000) ---- S3(9500) ---- 2^32]
+Add S4(4000): only keys between 2500 and 4000 move from S2 to S4.
+Virtual nodes (many hashes per server) make distribution uniform.
+</code></pre>
+<p><b>Where used:</b> cache tier (Memcached), Cassandra partitioning, any distributed hash. Follow-up: "what if a server has more capacity?" → weighted virtual nodes.</p>
+</div>
+
+<h3>3.6 Message Queues &amp; Event Streaming</h3>
+<div class="card">
+<p>A <b>queue</b> decouples producers from consumers: producer never blocks on consumer speed; consumers can retry and be added/removed independently. Great for: notifications, order processing, decoupling heavy async work.</p>
+<table><tr><th></th><th>Queue (RabbitMQ/SQS)</th><th>Stream (Kafka)</th></tr>
+<tr><td>Model</td><td>Work queue, one consumer consumes each msg</td><td>Log, many consumer groups read independently</td></tr>
+<tr><td>Ordering</td><td>Best effort</td><td>Per-partition strict order</td></tr>
+<tr><td>Retention</td><td>Deleted after consumption</td><td>Replayable log (retention window)</td></tr>
+<tr><td>Fan-out</td><td>Multiple queues</td><td>Consumer groups naturally</td></tr>
+</table>
+<p><b>Delivery semantics:</b> at-most-once (may drop), at-least-once (may duplicate → make consumers idempotent), exactly-once (hard; dedupe by message ID). <b>Pub/Sub:</b> a topic's events reach every subscriber group (like Observer at system scale). <b>Kafka ordering trick:</b> same <i>partition key</i> (e.g. user_id) ⇒ all events for that user hit the same partition ⇒ ordered.</p>
+</div>
+
+<h3>3.7 API Design</h3>
+<div class="card">
+<p><b>REST:</b> resources + HTTP verbs (GET/POST/PUT/DELETE) + status codes (200, 201, 400, 401, 404, 500). Use plurals: <code>GET /users/42</code>, <code>POST /users</code>. <b>Versioning:</b> <code>/v1/users</code> or header. <b>Pagination:</b> page/limit or cursor-based (stable for feeds — new items don't shift pages). <b>Idempotency:</b> retry-safe writes via <code>Idempotency-Key</code> header → store key + result, return cached result on retry (critical for payments). <b>Rate limiting</b> lives at API layer (see problem R2). <b>GraphQL:</b> client asks for exact fields, one round trip; costs server-side N+1 and caching complexity.</p>
+</div>
+
+<h3>3.8 CAP, ACID, BASE — the consistency trade-off</h3>
+<div class="card">
+<table><tr><th>Property</th><th>Meaning</th></tr>
+<tr><td>Consistency (CAP)</td><td>Every read sees the latest write</td></tr>
+<tr><td>Availability (CAP)</td><td>Every request gets a (possibly stale) response</td></tr>
+<tr><td>Partition tolerance</td><td>System keeps working when nodes can't talk</td></tr>
+</table>
+<div class="qablock"><b>The correct CAP answer (most people get this wrong)</b><p>CAP says: under a <b>network partition</b>, you must choose consistency <b>or</b> availability. You do NOT "pick 2 of 3" freely — partitions happen, so P is mandatory; you pick C or A <i>per operation</i>. CP (choose consistency): payments, tickets, orders. AP (choose availability): feeds, likes, notifications, chat presence. Most systems are "CP for money, AP for everything else."</p></div>
+<p><b>ACID</b> (SQL): Atomicity, Consistency, Isolation, Durability. <b>BASE</b> (NoSQL): Basically Available, Soft state, Eventually consistent. <b>Eventual consistency tools:</b> versioning/vector clocks, read-after-write routing, conflict resolution (last-write-wins or CRDTs).</p>
+</div>
+
+<h3>3.9 Monolith vs Microservices</h3>
+<div class="card">
+<table><tr><th></th><th>Monolith</th><th>Microservices</th></tr>
+<tr><td>Deploy</td><td>One unit</td><td>Per-service, independent</td></tr>
+<tr><td>Scale</td><td>Scale whole app</td><td>Scale only hot service</td></tr>
+<tr><td>Team velocity</td><td>Slow at size (merge conflicts)</td><td>Fast, ownership</td></tr>
+<tr><td>Costs</td><td>Simple</td><td>Network calls, distributed transactions, observability, ops</td></tr>
+</table>
+<p><b>Interview stance:</b> start monolith, split when pain appears. <b>Service communication:</b> synchronous (REST/gRPC) vs async (queue). <b>Distributed problems to name-drop:</b> service discovery, circuit breakers (fail fast, degrade), retries with exponential backoff + jitter, distributed tracing (see 3.10). <b>Event-driven microservices:</b> services communicate via events on a stream (Kafka) — loose coupling.</p>
+</div>
+
+<h3>3.10 Observability: Monitoring, Logging, Tracing, Metrics</h3>
+<div class="card">
+<p><b>Metrics</b> — counters/gauges (QPS, latency percentiles, error rate, saturation). Use <b>p99</b> not average (averages hide outliers). <b>Logging</b> — structured (JSON) with request IDs to correlate. <b>Tracing</b> — one request's journey across services (trace ID → spans): find which service is slow. <b>Dashboards/alerts</b> — alert on symptoms (latency/error rate), not on causes. <b>SLO/SLA/SLI:</b> SLI = measured metric, SLO = target (e.g. 99.9% of requests &lt; 300ms), SLA = contract. Follow-up favorites: "how do you debug a p99 spike?" and "how do you know a service is failing?"</p>
+</div>
+
+<h3>3.11 Security &amp; Reliability Basics</h3>
+<div class="card">
+<p><b>Auth:</b> OAuth2 (authorize 3rd-party access), JWT (stateless signed token), session cookie (stateful). <b>Transport:</b> TLS everywhere. <b>Secrets:</b> never in code/repo — use a vault. <b>Input:</b> validate, never trust client IDs for authorization (IDOR check). <b>Rate limiting</b> on APIs (token bucket) — protection from abuse. <b>DDoS:</b> CDN absorbs, LBs rate-limit, WAF filters. <b>Reliability patterns:</b> retries + backoff, timeouts (avoid cascading), circuit breaker (fail fast), bulkhead (isolate resource pools), graceful degradation (serve stale data instead of erroring), idempotency for retries, graceful shutdown.</p>
+</div>
+
+<h2>4. The HLD Interview Framework (Follow This Every Time)</h2>
+<div class="card">
+<ol>
+<li><b>Clarify &amp; scope (5 min)</b> — features, users, scale hint, constraints. "Is this read-heavy? Does it need realtime? Global or regional?" Write the feature list.</li>
+<li><b>Estimate (5 min)</b> — DAU, QPS (read/write), peak, storage/year, bandwidth. Show the math aloud.</li>
+<li><b>High-level diagram (20 min)</b> — draw the happy path: Client → DNS/CDN → LB → services → storage/queue. Add boxes for each feature; label DBs (SQL/NoSQL + why).</li>
+<li><b>Deep dives (15 min)</b> — interviewer picks a piece: "how do you make feed fast?", "how is data sharded?", "how do you handle duplicate messages?" Use building blocks from section 3.</li>
+<li><b>Bottlenecks &amp; evolution (10 min)</b> — single points of failure (LB, DB leader), what breaks at 10x scale, how to add sharding/caching/queues.</li>
+</ol>
+<div class="qablock"><b>Verbal script that earns marks</b><p>"I'll start with a monolith behind an LB; reads go to cache then read replicas, writes to the leader. Media goes to S3 with a CDN. Notifications and processing are pushed onto Kafka so producers don't block. I shard on user_id so a user's feed stays on one node — consistent hashing keeps the churn low. This is AP-consistent for feed, CP for payments." Justify every box.</p></div>
+<p><b>Common mistakes:</b> starting the diagram too early, ignoring estimation, no read/write split, forgetting CDN/S3 for media, single DB without replication, no failure story, not naming trade-offs, saying "Redis" without saying what's cached or eviction policy.</p>
+</div>
+
+<h2>5. Solved HLD Problems (10)</h2>
+
+<h3>P1 · URL Shortener (TinyURL)</h3>
+<div class="card">
+<p><b>Requirements:</b> shorten long URL → short key; redirect resolves key → original; custom aliases; analytics optional; global scale; keys must not collide.</p>
+<p><b>Estimation:</b> 100M new/day → writes ≈ 1.1K QPS avg, peak ~5K; read:write = 100:1 → ~110K reads peak. Storage: 100M × 100 bytes/year ≈ 10 GB/year — tiny.</p>
+<p><b>Design:</b></p>
+<pre><code>Client --POST /api/v1/shorten--> LB --> URLService
+   URLService: generateKey() -> store (key -> url, created_at) -> return short URL
+Client --GET /{key}-------> LB --> RedirectService
+   RedirectService: lookup key (cache first, then DB) -> 302 Location: url
+Storage: Redis (hot keys, TTL) + Postgres (authoritative, key = PK)
+</code></pre>
+<p><b>Key generation — the real interview meat:</b> ① <b>Base62</b>: DB auto-increment id → encode to base62 (7 chars ≈ 62⁷ ≈ 3.5×10¹² keys, plenty). Simple, ordered, reversible — but leaks count and needs a distributed ID. ② <b>Random 7-char string + retry on collision</b> (collision probability low at our volume). ③ <b>Distributed ID</b>: Snowflake (timestamp + machine + sequence). Recommendation: base62 on a range from a ticket service, or random with collision retry. <b>Analytics:</b> push click events to Kafka, aggregate in a time-series store.</p>
+<p><b>Bottlenecks &amp; evolution:</b> hot keys (celebrity links) → cache aggressively; DB single point → leader + replicas, then shard by key-hash. <b>Failure story:</b> cache down → reads fall through to DB (still correct, slower).</p>
+</div>
+
+<h3>P2 · Rate Limiter</h3>
+<div class="card">
+<p><b>Requirements:</b> allow N requests per user per window (e.g. 100 req/min); different limits per API/plan; distributed across many API servers; low latency.</p>
+<p><b>Algorithms:</b></p>
+<table><tr><th>Algorithm</th><th>How</th><th>Trade-off</th></tr>
+<tr><td>Token Bucket</td><td>Bucket refills at rate r, capacity b; take token per request</td><td>Allows bursts; simple — default choice</td></tr>
+<tr><td>Fixed Window</td><td>Counter resets each minute</td><td>2x spike at boundary (59th sec + 00th sec)</td></tr>
+<tr><td>Sliding Window Log</td><td>Store timestamps, count in last 60s</td><td>Precise, memory-heavy</td></tr>
+<tr><td>Sliding Window Counter</td><td>Weighted previous + current window</td><td>Good balance — most used in practice</td></tr>
+</table>
+<pre><code>Pseudo (Token Bucket, Redis):
+  bucket = GET rate:user:{id}            // {tokens, lastRefill}
+  tokens = min(capacity, tokens + (now-lastRefill) * rate)
+  if tokens >= 1: SET bucket; return ALLOW
+  else: return 429 Too Many Requests
+</code></pre>
+<p><b>Distributed design:</b> Redis is the shared counter store (atomic <code>INCR</code> + <code>EXPIRE</code> for fixed window, Lua script for token bucket). API servers call Redis (2-3 ms) — fast enough. <b>Responses:</b> 429 + <code>Retry-After</code> header. <b>Placement:</b> edge (API gateway / LB) so blocked traffic never reaches app servers. <b>Failure story:</b> if Redis is down, fail open (allow) or closed (reject) — pick fail-open with a secondary local in-memory limiter to avoid self-DoS.</p>
+</div>
+
+<h3>P3 · Twitter / News Feed</h3>
+<div class="card">
+<p><b>Requirements:</b> post tweet, follow users, home timeline = reverse-chronological merged feed of followed users; like/comment; 100M DAU; 100:1 read:write.</p>
+<p><b>Estimation:</b> writes ≈ 10M tweets/day → ~115 avg QPS, ~1K peak. Reads ≈ 100K QPS peak. Feed size: each home timeline = 10 × avg daily tweets per followed account. Storage: ~2 TB/day with media → ~730 TB/year → S3 + CDN for media, Postgres/Cassandra for metadata.</p>
+<p><b>Design — the classic choice: push vs pull (fan-out)</b></p>
+<pre><code>Option A: PULL (fan-out on read)
+  HomeTimeline read: SELECT tweets WHERE user_id IN (followees) ORDER BY ts DESC LIMIT 20
+  Simple, no extra storage; but every read scans followees x tweets -> slow at 100K QPS.
+Option B: PUSH (fan-out on write) — Twitter's approach for normal users
+  On tweet: for each follower, append tweet_id to follower's timeline cache (Redis list, cap 800).
+  Read: GET home:{user} -> list of tweet_ids -> fetch tweets (cached) -> render.
+  Problem: celebrity with 100M followers -> 100M cache writes per tweet = "fan-out problem".
+Fix: hybrid — celebrities (high follower count) use PULL; normal users use PUSH.
+Read path: merge precomputed list + celebrity timeline pulled on read.
+</code></pre>
+<pre><code>Write path: TweetService -> validate -> store (tweet_id, user_id, ts, content)
+   -> media to S3 -> push to followers' timelines (async via Kafka) -> fan-out via workers.
+Read path: TimelineService -> read home:{user} -> hydrate tweet content from cache/DB -> return.
+</code></pre>
+<p><b>Storage:</b> tweets in Postgres or Cassandra (shard by user_id; keep a user's tweets on one node for easy pull). Timeline cache in Redis (list of ids). <b>Likes/comments:</b> separate counters (Redis) + detail store; update asynchronously. <b>Ranking upgrade:</b> swap reverse-chron for a scored/ML feed — mention as evolution. <b>Failure story:</b> fan-out worker lags → timeline shows stale items; mitigate with pull fallback for new tweets.</p>
+</div>
+
+<h3>P4 · Chat / Messaging (WhatsApp)</h3>
+<div class="card">
+<p><b>Requirements:</b> 1:1 + group chat; message delivery, read receipts; push notifications; ordering per conversation; offline messages; media; 100M+ DAU.</p>
+<p><b>Estimation:</b> avg 40 msgs/day/user → ~40M msgs/day → 460 avg QPS, ~4.6K peak. Each msg ~500 bytes → ~20 GB/day → ~7 TB/year. Media (photos/videos) → S3. Retention: keep "last seen" and recent messages hot; archive older.</p>
+<p><b>Design:</b></p>
+<pre><code>App --WebSocket--> ChatService (L7 LB keeps sticky connection) 
+   ChatService validates -> saves msg -> determines recipients (group membership via MembershipService)
+   -> push via NotificationService (APNS/FCM) for offline users -> append to recipient's inbox
+Recipient online: realtime path via WebSocket (long-lived connection to their server)
+Recipient offline: msg stored in inbox; delivered on next connect (or via push)
+Consistency: conversation log stored in Cassandra; each participant reads their own copy
+Group chat: Kafka fan-out (one write per group -> consumers push per member)
+</code></pre>
+<p><b>Ordering:</b> per-conversation sequence numbers; client shows them and reorders. Duplicate/inflight messages (network retry) → dedupe by client-generated message ID. <b>WebSocket scale:</b> LB sticky sessions + a gateway per connection; chat state (connection → user) in Redis so any node can find the user's connection. <b>Read receipts:</b> user → "read" event → Kafka → notify sender (only delivery status needs realtime). <b>Media:</b> client uploads to S3 directly (pre-signed URL), sends the reference in the message. <b>Failure story:</b> chat server dies → WS reconnects via LB to another node; offline messages pick up from inbox on reconnect.</p>
+</div>
+
+<h3>P5 · Uber / Ride Sharing</h3>
+<div class="card">
+<p><b>Requirements:</b> riders request rides; find nearby drivers; match + dispatch; live driver location; ride lifecycle + payments; realtime at scale.</p>
+<p><b>Estimation:</b> 10M DAU riders, 1M concurrent drivers. Location updates: each driver 4-5 updates/sec → 5M updates/sec writes to a geo store (this is the hard part — not SQL friendly). Ride requests: ~1K QPS peak.</p>
+<p><b>Design:</b></p>
+<pre><code>Driver app --HTTPS/WS--> LocationIngestionService --> Kafka (driver position stream)
+   -> GeoSpatial store (GeoHash index: R-tree / PostGIS / Redis GEO) -> keeps live positions
+Rider app --POST /v1/ride--> RideService -> findDrivers(radius) [GeoHash lookup -> candidates]
+   -> RankingService (distance, rating, surge) -> dispatch -> driver accepts -> ride begins
+RideService -> on accept: create Ride (CP: money!) -> status transitions via State machine
+Match is "CP-ish" (one driver can't take two rides) -> use a lock on driver: Redis SETNX
+Payments: separate PaymentService (CP, exactly-once via idempotency key)
+</code></pre>
+<p><b>GeoHash:</b> encode lat/lng to a string; prefixes = rectangles. Query: get geohash of rider + 8 neighbors → candidate driver ids → refine with exact distance. As driver moves, hash changes and they're re-indexed (partition by hash prefix for scale). <b>Realtime push:</b> drivers get ride offers via WebSocket; rides use fire-and-forget push + push-notification fallback. <b>Surge pricing:</b> compute demand/supply ratio per geohash → multiplier (Strategy/service). <b>Duplicate dispatch risk:</b> broadcast offer to multiple drivers, first-accept wins via atomic Redis key. <b>Failure story:</b> geostream backlog → stale driver positions; mitigate with TTL on positions and "last seen" timestamps.</p>
+</div>
+
+<h3>P6 · Video Streaming (Netflix/YouTube)</h3>
+<div class="card">
+<p><b>Requirements:</b> upload, encode, catalog, search, stream video with smooth playback, recommendations; global CDN.</p>
+<p><b>Estimation:</b> 200M subscribers; peak streaming ~ millions concurrent; each stream needs steady bitrate — bandwidth dominated by CDN egress, not your servers. Hot catalog: 20% of titles = 80% of views → those live fully on CDN.</p>
+<p><b>Design — the pipeline:</b></p>
+<pre><code>Upload: Creator --PUT--> UploadService --> Object Store (raw)
+Encode: encoder workers pull raw -> transcode into multiple bitrates (240p..4K) &amp; HLS segments
+        (2-10s chunks) -> store in CDN origin -> manifest (.m3u8) references all variants
+Playback: Player --GET manifest--> CDN edge (near user) -> ABR: adapt bitrate by bandwidth
+Discovery: Search (Elasticsearch) + Recommendations (offline ML pipeline, cached)
+</code></pre>
+<p><b>Adaptive Bitrate (ABR):</b> player watches buffer + bandwidth, requests higher/lower quality segment — why streaming doesn't buffer. <b>CDN strategy:</b> edge cache popular titles (pre-populate "top 100"), miss → fetch from origin, long-tail served direct. <b>Why not one giant DB:</b> video metadata (title, cast) is relational but tiny; play metrics are high-write → time-series/analytics store. <b>Upload pipeline asynchrony:</b> encode is slow (min) → decouple with a queue; notify creator when ready. <b>Failure story:</b> CDN region outage → route to secondary CDN or origin; encoder cluster backlog → scale workers, upload still accepted. <b>Keywords to drop:</b> HLS/DASH, ABR, transcoding matrix, egress cost optimization.</p>
+</div>
+
+<h3>P7 · E-commerce Checkout (Amazon)</h3>
+<div class="card">
+<p><b>Requirements:</b> product catalog, cart, checkout with inventory check, payments, order status, notifications; money flows must be correct (CP).</p>
+<p><b>Estimation:</b> 300M customers; orders peak on sale days (10x normal); each order → cart→inventory→payment→order-record→notify pipeline.</p>
+<p><b>Design — order state machine:</b></p>
+<pre><code>CartService (Redis cart) -> CheckoutService (validate stock, compute total)
+   -> Reserve inventory (atomic decrement; CP) -> PaymentService (idempotency key, exactly-once)
+   -> On success: create Order (state PLACED) -> push to Kafka -> downstream
+Order states: PLACED -> PAID -> PACKED -> SHIPPED -> DELIVERED; CANCELLED/REFUNDED
+Inventory: "reserve" decrements available count; expires reservation after 15 min (like seat lock)
+Search: product catalog in Elasticsearch (fuzzy, facets); product details in cache + DB
+</code></pre>
+<p><b>Correctness under concurrency:</b> last item + two buyers → optimistic lock on inventory row or atomic <code>UPDATE inventory SET qty=qty-1 WHERE id=? AND qty&gt;0</code> (check rows affected). <b>Exactly-once payment:</b> client sends idempotency key; PaymentService dedupes retries; never double charge. <b>Order read path:</b> order history = read replicas; order detail cached. <b>Peak (sale day) strategy:</b> queue the entire checkout flow so the web tier stays responsive; push notifications async. <b>Failure stories:</b> payment timeout → mark PENDING + reconcile job; inventory oversold on a shard → consistency job reconciles. <b>CP vs AP split:</b> payments/orders/inventory = CP; recommendations/cart sync = AP. <b>Sharding:</b> order_id-hash shards for writes; user_id for order-history reads (dual-key or denormalized copies).</p>
+</div>
+
+<h3>P8 · Cloud Storage / File Sync (Google Drive)</h3>
+<div class="card">
+<p><b>Requirements:</b> upload/download files, sync across devices, sharing/ACLs, versioning, dedup, large files (chunking), offline conflicts.</p>
+<p><b>Estimation:</b> 1B users; free tier 15GB; assume avg 100 MB/user active storage → petabytes; uploads async (files are big, latency-tolerant). Metadata (file → chunks map, ACLs) is small and relational — separate from blobs.</p>
+<p><b>Design:</b></p>
+<pre><code>Client --PUT (pre-signed URL)--> Object Store (S3) for blob; chunked multipart for big files
+   Metadata: FilesService (Postgres/Cassandra): file_id, owner, ACLs, chunk list, version
+   Sync engine: watch local changes -> upload new chunks -> commit new version metadata
+Sharing: share file_id with user_id + permission (view/edit) -> ACL check on every access
+Dedup: hash each chunk (SHA-256); only upload chunks not already stored (cross-user dedup)
+Versioning: metadata rows per version; keep last N, GC old blobs (LCS/lifecycle policies)
+Conflict: last-write-wins or fork on edit (like Drive's "conflict copies")
+</code></pre>
+<p><b>Chunking:</b> split into e.g. 8MB chunks; parallel upload resume; only changed chunks re-uploaded on edit → cheap sync. <b>ACL check:</b> authn/authz service in front of every metadata read; permission lookup cached, revoked via push-invalidation. <b>Scale:</b> metadata shard by file_id; blob in S3 (which is already replicated). <b>Failure story:</b> interrupted upload → resume from last chunk (idempotent chunk PUTs with hashes); replica region failover for S3 is automatic. <b>Interview differentiator:</b> mention content-addressed storage + chunk dedup explicitly.</p>
+</div>
+
+<h3>P9 · Notification System</h3>
+<div class="card">
+<p><b>Requirements:</b> send push (APNS/FCM), email, SMS; templated; per-user preferences; millions of notifications/day; retries + backpressure.</p>
+<p><b>Estimation:</b> 100M DAU; 10 notifications/user/day → 1B/day → ~11.5K avg QPS, ~100K peak around events. Each send is async (no need to block request thread).</p>
+<p><b>Design:</b></p>
+<pre><code>Producer (any service) --POST /notify--> NotificationService -> validate -> store notification
+   -> route to Kafka topics: push/email/sms  -> consumers per channel
+PushWorker: batch device tokens (FCM/APNS limits) -> send -> retry with backoff on failure
+EmailWorker: template (Mustache) + send via SES/SendGrid (dedupe, DKIM)
+SMSWorker: rate-limit (carrier limits) + send
+UserPreferenceService: channel opt-out check BEFORE enqueueing (or filter in consumer)
+Store: recent notifications (Redis) + history (Cassandra, TTL); unread count
+</code></pre>
+<p><b>Key challenges:</b> ① <b>Backpressure</b> — third parties (FCM) throttle; use queues + retry with exponential backoff and dead-letter queue for permanent failures. ② <b>Idempotency</b> — same notification shouldn't double-send; dedupe by (user, type, entity_id). ③ <b>Ordering</b> — per-user ordering via partition key user_id if sequence matters (usually doesn't for notifications). ④ <b>Fan-out</b> — one event → 10M pushes: push per-user messages onto Kafka, consumers scale horizontally. ⑤ <b>Dead-letter queue:</b> poison messages go to DLQ for inspection, don't block the queue. <b>Failure story:</b> provider outage → circuit breaker on the provider, queue backlog grows, replay after recovery.</p>
+</div>
+
+<h3>P10 · Search Autocomplete (Typeahead)</h3>
+<div class="card">
+<p><b>Requirements:</b> return top-K suggestions as user types, prefix-based, ranked by frequency/recency, fast (&lt;100ms), global scale.</p>
+<p><b>Estimation:</b> 500M daily queries; ~20 keystrokes/query → 10B keystrokes/day → ~115K QPS avg, >1M peak (autocomplete traffic is heavy). Suggestion lookup must be pure cache/memory (no DB on hot path).</p>
+<p><b>Design — the two paths:</b></p>
+<pre><code>WRITE path (offline): collect search logs (Kafka) -> Aggregator (hourly/daily)
+   -> build trie with counts -> filter (profanity, PII) -> snapshot to storage
+   -> periodically reload in-memory trie per server / precompute top-K per prefix
+READ path (online): GET /suggest?q="ap" -> server's in-memory trie
+   -> traverse "ap" node -> return top 10 by count -> cache in Redis, TTL
+   -> client-side debounce (150ms) + prefix caching (cache "ap" suggests for "app")
+</code></pre>
+<p><b>Trie vs alternatives:</b> in-memory <b>trie</b> (prefix → top-K ranked suggestions precomputed at each node) is O(len) lookup, memory-heavy → use a compact trie / a map of every prefix → top-K list ("prefix → ranked list" map). <b>Ranking:</b> frequency × recency weight; personalization (user location/history) as an optional second pass. <b>Scale:</b> replicate the in-memory snapshot across many stateless servers behind LB — reads are pure memory, hit rates near 100%. <b>Failure story:</b> server reboots → reload trie from storage snapshot (lazy-load + async refresh); data freshness is eventually consistent (hourly), acceptable. <b>Extra marks:</b> keyboard-layout correction, language detection, storing only top-K per prefix to bound memory.</p>
+</div>
+
+<h2>6. Trade-off &amp; Mistake Cheat-Sheet</h2>
+<div class="card">
+<table><tr><th>Decision</th><th>Trade-off to verbalize</th></tr>
+<tr><td>SQL vs NoSQL</td><td>SQL = joins + ACID, vertical scale; NoSQL = horizontal write scale + flexible schema, sacrifices consistency/complex queries.</td></tr>
+<tr><td>Push vs Pull feed</td><td>Push = fast reads, expensive writes (celebrity problem); Pull = cheap writes, slow reads; hybrid = best of both.</td></tr>
+<tr><td>Cache before vs after DB</td><td>Cache-aside default; write-through when consistency strict; never cache money without TTL + invalidation.</td></tr>
+<tr><td>Queue vs direct call</td><td>Queue = decoupled, retryable, slow-safe; direct = simpler, synchronous failure handling.</td></tr>
+<tr><td>Shard key</td><td>Uniform writes vs co-located reads — can't always have both; document the loser.</td></tr>
+<tr><td>At-least-once vs exactly-once</td><td>At-least-once + idempotent consumers is the practical default; exactly-once is expensive.</td></tr>
+<tr><td>Monolith vs microservices</td><td>Start monolithic; split by bounded context when teams/scale demand it.</td></tr>
+<tr><td>Strong vs eventual consistency</td><td>Strong = simple, slow/limited; eventual = fast/high-availability, needs conflict handling.</td></tr>
+</table>
+<div class="attention"><b>Top 8 mistakes that fail HLD rounds:</b> ① no estimation ② no read:write split ③ single DB, no replicas/sharding ④ no cache or cache without a story ⑤ no media/CDN for user-content systems ⑥ no failure/backpressure story ⑦ not naming trade-offs ⑧ jumping to boxes before requirements.</div>
+</div>
+
+<h2>7. HLD Quick Revision Flashcards</h2>
+<div class="card">
+<details><summary>What is the 4S framework?</summary><p>Scenario (features), Services (components), Storage (data + DB choice), Scale (numbers). Cover all four in every problem.</p></details>
+<details><summary>Latency order-of-magnitude: memory, SSD, disk, DC network?</summary><p>RAM ~100 ns, SSD ~0.1 ms, disk ~10 ms, network within a datacenter ~0.5 ms. Hot paths must not touch disk.</p></details>
+<details><summary>How do you convert DAU to QPS?</summary><p>(actions per day × DAU) / 86,400 ≈ average QPS; peak = 5–10× average. 1M requests/day ≈ 12 QPS average.</p></details>
+<details><summary>L4 vs L7 load balancer?</summary><p>L4 routes on IP:port only (faster). L7 inspects URL/headers/cookies (routing, SSL, sticky sessions).</p></details>
+<details><summary>Cache-aside vs write-through?</summary><p>Cache-aside: read DB→populate cache, write DB→invalidate (default, can be stale). Write-through: write both synchronously (consistent, slower writes).</p></details>
+<details><summary>Why consistent hashing instead of mod N?</summary><p>mod N remaps nearly all keys when N changes → cache stampede. Consistent hashing only remaps keys on the affected ring arc; virtual nodes fix skew.</p></details>
+<details><summary>When do you choose Cassandra over Postgres?</summary><p>Huge write throughput, horizontal scale, flexible schema, when queries are key-based (no joins). Choose Postgres when joins/ACID/relational integrity matter.</p></details>
+<details><summary>What does CAP actually say?</summary><p>Under a network partition you choose consistency OR availability (P is unavoidable). Money = CP, feeds/notifications = AP.</p></details>
+<details><summary>How do you guarantee message ordering in Kafka?</summary><p>Same partition key (e.g. user_id) routes all of a user's events to one partition, preserving order within it.</p></details>
+<details><summary>How do you handle duplicate messages/retries?</summary><p>Idempotent consumers + dedupe by message/client request ID; retries with exponential backoff + jitter; dead-letter queue for poison messages.</p></details>
+<details><summary>How do you make a feed of a celebrity fast?</summary><p>Hybrid fan-out: normal users get push (precomputed timeline); celebrities with millions of followers use pull (merged on read) to avoid 100M cache writes per tweet.</p></details>
+<details><summary>What's the single biggest throughput bottleneck in Uber-style systems?</summary><p>Driver location writes (~5M/s). Solved with geo-indexing (GeoHash/R-tree) on a stream pipeline — not a SQL table.</p></details>
+<details><summary>Why chunk files and dedupe by hash in Google Drive?</summary><p>Chunks enable resume + parallel upload; hash dedup means edits only re-upload changed chunks (cheap sync) and identical chunks stored once.</p></details>
+<details><summary>Where does rate limiting live and what store?</summary><p>Edge (API gateway/LB) using Redis (atomic counters / token bucket Lua). Fail-open if Redis is down but add a local limiter to avoid self-DoS.</p></details>
+<details><summary>Interview golden rule for HLD?</summary><p>Requirements → estimation → diagram → deep-dive → bottlenecks, always justifying each box with a named trade-off.</p></details>
+</div>
+
+<footer>Master Software SDE Guide · Page 12 · High-Level Design (HLD)</footer>
+</div>
+</body>
+</html>

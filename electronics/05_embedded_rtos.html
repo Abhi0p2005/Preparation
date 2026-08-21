@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5 · Embedded + Microcontrollers + RTOS — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>EMBEDDED + MICROCONTROLLERS + RTOS</h1><div class="sub">MCU vs MPU, peripherals, interrupts/ISR, ARM Cortex-M boot, FreeRTOS, priority inversion, watchdog, DMA, embedded patterns + interview Q&amp;A.</div></header>
+
+<h2>1. Microcontroller vs Microprocessor</h2>
+<div class="card">
+<table><tr><th></th><th>Microcontroller (MCU)</th><th>Microprocessor (MPU)</th></tr>
+<tr><td>Contains</td><td>CPU + RAM + flash + peripherals on-chip</td><td>CPU only</td></tr>
+<tr><td>Uses</td><td>embedded control, sensors</td><td>PCs, servers</td></tr>
+<tr><td>OS</td><td>bare metal / RTOS</td><td>full OS</td></tr>
+<tr><td>Cost/power</td><td>low</td><td>high</td></tr>
+</table>
+</div>
+
+<h2>2. Peripherals &amp; Communication Protocols</h2>
+<div class="card">
+<table><tr><th>Protocol</th><th>Type</th><th>Speed</th><th>Lines</th><th>Use</th></tr>
+<tr><td>UART</td><td>Async serial</td><td>baud (115200)</td><td>TX/RX (2-wire)</td><td>debug, low-speed sensors</td></tr>
+<tr><td>SPI</td><td>Sync serial</td><td><b>fastest</b></td><td>MOSI/MISO/SCLK/CS</td><td>flash, SD, displays</td></tr>
+<tr><td>I2C</td><td>Sync serial</td><td>100k–400k</td><td>SDA/SCL + pull-ups</td><td>sensors, EEPROM, RTC</td></tr>
+<tr><td>CAN</td><td>Automotive</td><td>~1 Mbps</td><td>CANH/CANL (2-wire differential)</td><td>automotive, industrial</td></tr>
+<tr><td>PWM</td><td>Timing</td><td>—</td><td>duty cycle</td><td>dimming, motor control</td></tr>
+<tr><td>ADC/DAC</td><td>Analog-digital</td><td>—</td><td>resolution bits</td><td>sensor input / analog output</td></tr>
+</table>
+<p class="note"><b>Which is fastest?</b> SPI — synchronous full-duplex, no addressing overhead. I2C is addressed (slower, half-duplex). UART is asynchronous (needs matched baud).</p>
+<ul>
+<li><b>UART:</b> 2-wire async, baud must match, full-duplex. <b>SPI:</b> 4-wire sync, full-duplex, master/slave with CS. <b>I2C:</b> 2-wire, open-drain + pull-ups, addressed, half-duplex.</li>
+<li><b>CAN:</b> differential CAN_H/CAN_L, dominant (0) / recessive (1) bits, arbitration by priority, up to 1 Mbps, used in automotive ECUs.</li>
+</ul>
+</div>
+
+<h2>3. Interrupts &amp; ISR</h2>
+<div class="card">
+<ul>
+<li><b>Interrupt</b> — external hardware event → CPU jumps to ISR. <b>Exception</b> — internal event (div by zero, invalid instruction).</li>
+<li>Flow: save context → jump to interrupt vector → ISR runs → return (eret/rti). MIPS: Cause/Status/EPC registers.</li>
+<li><b>Golden rule:</b> minimal work in ISR — set a flag / push to a queue / signal a task. Heavy work in main loop or a task. NO printf/malloc in ISR.</li>
+<li>Interrupt enable/mask registers (IER); priority/vector tables; nesting.</li>
+</ul>
+<pre><code>volatile uint8_t g_event = 0;
+void ISR_Handler(void){ g_event = 1; }        // minimal work
+int main(void){ for(;;){ if(g_event){ g_event=0; do_work(); } } }</code></pre>
+</div>
+
+<h2>4. ARM Cortex-M Boot Sequence</h2>
+<div class="card">
+<pre><code>0x00000000 = initial SP
+0x00000004 = Reset_Handler address
+Reset: → copy .data (flash→SRAM) → zero .bss → SystemInit (clocks)
+     → call main()</code></pre>
+<ul>
+<li>Vector table at address 0: entry 0 = initial stack pointer, entry 1 = reset handler.</li>
+<li>Then .data copy, .bss zeroing, clock init, main().</li>
+</ul>
+</div>
+
+<h2>5. Watchdog &amp; DMA</h2>
+<div class="card">
+<ul>
+<li><b>Watchdog timer</b> — hardware timer that resets the MCU if the software stops kicking it (detects hangs / infinite loops). Firmware must periodically refresh it.</li>
+<li><b>DMA</b> — transfers data between peripheral and memory without CPU. CPU sets source/dest/count, gets an interrupt when done. Frees CPU for other work.</li>
+</ul>
+</div>
+
+<h2>6. Real-Time Systems &amp; FreeRTOS</h2>
+<div class="card">
+<h3>Hard vs soft real-time</h3>
+<ul>
+<li><b>Hard real-time:</b> missing deadline = failure (airbag, motor control). <b>Soft:</b> degrades quality (video).</li>
+<li><b>Determinism:</b> predictable, bounded worst-case timing.</li>
+</ul>
+<h3>FreeRTOS tasks &amp; scheduler</h3>
+<pre><code>void vTask1(void *p){ for(;;){ toggle_led(); vTaskDelay(pdMS_TO_TICKS(500)); } }
+xTaskCreate(vTask1, "Task1", 128, NULL, 1, NULL);   // priority 1
+xTaskCreate(vTask2, "Task2", 128, NULL, 2, NULL);   // priority 2 (higher = more important)
+vTaskStartScheduler();</code></pre>
+<ul>
+<li><b>Preemptive priority scheduling:</b> highest-priority READY task runs. Timer interrupt (tick) drives the scheduler. Equal priorities → time slicing (round-robin).</li>
+<li><b>Task states:</b> Running, Ready, Blocked (waiting on delay/event/queue), Suspended.</li>
+<li><b>Context switch:</b> save current task's registers + stack, load next task's.</li>
+</ul>
+</div>
+
+<h2>7. FreeRTOS Synchronization &amp; Communication</h2>
+<div class="card">
+<pre><code>// Queue — THE way to pass data between tasks and ISRs
+QueueHandle_t q = xQueueCreate(10, sizeof(uint32_t));
+xQueueSend(q, &amp;val, portMAX_DELAY);
+xQueueReceive(q, &amp;val, portMAX_DELAY);
+
+// Binary semaphore — signaling (ISR → task)
+SemaphoreHandle_t s = xSemaphoreCreateBinary();
+xSemaphoreTake(s, portMAX_DELAY);       // wait for signal
+
+// Counting semaphore — N resources
+SemaphoreHandle_t c = xSemaphoreCreateCounting(10, 0);
+
+// Mutex — mutual exclusion, has PRIORITY INHERITANCE
+SemaphoreHandle_t m = xSemaphoreCreateMutex();
+xSemaphoreTake(m, portMAX_DELAY);  ...  xSemaphoreGive(m);
+
+// Event groups
+xEventGroupSetBits(eg, BIT0);
+xEventGroupWaitBits(eg, BIT0|BIT1, pdTRUE, pdTRUE, portMAX_DELAY);
+
+// Software timers
+xTimerCreate("t", pdMS_TO_TICKS(1000), pdTRUE, NULL, cb); xTimerStart(t,0);</code></pre>
+<h3>ISR ↔ task (must use FromISR versions)</h3>
+<pre><code>void ISR_Handler(void){
+  BaseType_t hpw = pdFALSE;
+  uint8_t byte = read_uart();
+  xQueueSendFromISR(q, &amp;byte, &amp;hpw);
+  portYIELD_FROM_ISR(hpw);   // reschedule if a task was unblocked
+}</code></pre>
+</div>
+
+<h2>8. Priority Inversion &amp; Priority Inheritance</h2>
+<div class="card">
+<ul>
+<li><b>Priority inversion:</b> a low-priority task holds a resource a high-priority task needs, while medium-priority tasks run and starve the high task.</li>
+<li><b>Fix:</b> priority inheritance (mutex) — the low task temporarily inherits the high task's priority, so it can't be preempted by mediums.</li>
+<li>Binary semaphores usually don't support priority inheritance; mutexes do (most RTOS).</li>
+</ul>
+</div>
+
+<h2>9. FreeRTOS Memory &amp; Best Practices</h2>
+<div class="card">
+<ul>
+<li>heap_1..heap_5 (see Memory page 4 §13). heap_4 (coalesces) is the best general choice.</li>
+<li>Overflow detection: configCHECK_FOR_STACK_OVERFLOW == 1 or 2.</li>
+<li>Static allocation preferred (configSUPPORT_DYNAMIC_ALLOCATION=0) for determinism.</li>
+<li>Never malloc/printf in ISR. Use FromISR APIs.</li>
+</ul>
+</div>
+
+<h2>10. Embedded C Patterns (write from memory)</h2>
+<div class="card">
+<pre><code>// memory-mapped register
+#define GPIO_BASE 0x40020000
+#define GPIO_ODR  (*(volatile uint32_t *)(GPIO_BASE + 0x14))
+void led_on(void){ GPIO_ODR |= (1&lt;&lt;5); }
+void led_off(void){ GPIO_ODR &amp;= ~(1&lt;&lt;5); }
+
+// circular buffer
+push: if(count==SIZE) return -1; buf[head]=c; head=(head+1)%SIZE; count++;
+pop:  if(count==0) return -1; *c=buf[tail]; tail=(tail+1)%SIZE; count--;
+
+// state machine
+typedef enum {RED,GREEN,YELLOW} Light;
+Light next(Light cur){ switch(cur){ case RED: return GREEN; ... } }
+
+// linked list push-front + traverse
+node_t *n = malloc(sizeof(node_t)); n-&gt;data=5; n-&gt;next=head; head=n;
+for(node_t *p=head; p; p=p-&gt;next) printf("%d ", p-&gt;data);
+
+// UART putc (polled)
+void uart_putc(uint32_t base, char c){
+  volatile uint32_t *reg = (volatile uint32_t*)base;
+  while(!(reg[LSR] &amp; 0x20));   // wait TX empty
+  reg[DR] = c; }</code></pre>
+</div>
+
+<h2>11. Embedded Interview Q&amp;A</h2>
+<div class="card">
+<div class="qablock"><b>Best practice inside an ISR?</b><p>Keep it short, fast, non-blocking. Set a flag / copy to buffer / signal a task; do the work in main.</p></div>
+<div class="qablock"><b>What does a watchdog do?</b><p>Resets the MCU if software stops kicking it — recovers from hangs.</p></div>
+<div class="qablock"><b>Semaphore vs mutex?</b><p>Semaphore signals/limits resources (no ownership). Mutex provides exclusive access with ownership + priority inheritance.</p></div>
+<div class="qablock"><b>What is priority inversion? Fix?</b><p>Low task holds a mutex a high task needs while mediums starve the high task. Fix: priority inheritance.</p></div>
+<div class="qablock"><b>What is DMA for?</b><p>Transfers data between peripheral and memory without CPU involvement.</p></div>
+<div class="qablock"><b>How do ISR and task communicate?</b><p>Via queues / binary semaphores using ...FromISR APIs; yield after giving.</p></div>
+<div class="qablock"><b>What is the tick?</b><p>A periodic timer interrupt that drives the scheduler (configTICK_RATE_HZ, e.g. 1 kHz = 1 ms).</p></div>
+</div>
+
+<footer>Page 5 · Embedded + RTOS · <a href="index.html">← Home</a> · <a href="06_os_linux.html">Next: OS + Linux →</a></footer>
+</div>
+</body>
+</html>

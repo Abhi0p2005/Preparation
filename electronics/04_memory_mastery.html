@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4 · Memory Mastery — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>MEMORY MASTERY — COMPLETE</h1><div class="sub">The single most-asked embedded topic. C memory layout, stack vs heap, pointers, alignment/padding, caches, virtual memory, MCU memory, MMIO, bugs, debugging, endianness.</div></header>
+
+<h2>1. Memory Hierarchy &amp; Types</h2>
+<div class="card">
+<pre><code>                    Speed        Size         Cost
+Registers          fastest      ~100s bytes   highest/bit
+L1/L2 Cache        2-10 cycles  KB-MB
+Main RAM           100+ cycles  MB-GB
+Flash/Disk         slowest      GB-TB         lowest/bit</code></pre>
+<ul>
+<li><b>Temporal locality</b> — recently used data used again soon (loops). <b>Spatial locality</b> — nearby data (arrays). Caches exploit both.</li>
+<li><b>Volatile vs non-volatile:</b> SRAM/DRAM/registers = volatile; Flash/EEPROM/ROM = non-volatile.</li>
+<li><b>RAM:</b> SRAM (flip-flops, fast, no refresh, low density → cache, MCU RAM) vs DRAM (cap+transistor, refresh, high density → main RAM).</li>
+<li><b>Flash:</b> erased before writing, block/sector erase, limited endurance (~10k–100k cycles) → wear-leveling. NOR = byte-addressable, XiP, code. NAND = page-based, dense, storage.</li>
+<li><b>Cache line</b> — fixed-size block (32–64 bytes) moved RAM↔cache.</li>
+</ul>
+</div>
+
+<h2>2. The C Memory Layout (#1 asked topic)</h2>
+<div class="card">
+<pre><code>High addr
+   Stack  ← grows DOWN (locals, frames)
+   (free)
+   Heap   ← grows UP (malloc'd)
+   .bss   uninitialized globals/statics (zeroed at boot, no binary space)
+   .data  initialized globals/statics (copied from flash at boot)
+   .rodata consts / string literals (read-only)
+   .text  code
+Low addr</code></pre>
+<table><tr><th>Segment</th><th>Contents</th><th>Startup</th></tr>
+<tr><td>.text</td><td>machine code</td><td>—</td></tr>
+<tr><td>.rodata</td><td>consts, "hello" literals</td><td>—</td></tr>
+<tr><td>.data</td><td>initialized globals/statics</td><td>copied from flash to RAM</td></tr>
+<tr><td>.bss</td><td>uninitialized/zero globals</td><td>zeroed (takes no binary space)</td></tr>
+<tr><td>.heap</td><td>malloc'd</td><td>grows up</td></tr>
+<tr><td>.stack</td><td>locals, return addrs</td><td>grows down</td></tr>
+</table>
+<pre><code>int g = 5;              // .data
+int u;                  // .bss
+const int c = 10;       // .rodata
+static int s = 3;       // .data
+char *p = "hello";      // p in .data; "hello" in .rodata
+void f(void){ int l=7; static int st=2; }  // l on stack; st in .data</code></pre>
+<p class="attention">Modifying a string literal through a char* = UB (may crash). Startups: copy .data, zero .bss, set SP, call main.</p>
+</div>
+
+<h2>3. Stack Deep Dive</h2>
+<div class="card">
+<ul>
+<li>LIFO region for: locals, function args, return addresses, saved registers (callee-saved). Grows downward; SP tracks top.</li>
+<li><b>Function call frame:</b> return address + saved prev SP/FP + args + locals pushed; popped on return.</li>
+<li><b>Stack overflow:</b> unbounded recursion or huge local arrays → collides with heap/bounds. MCU defenses: watchdog, stack boundary checks, linker --stack limits, <b>stack canary</b> (known value that detects overwrite).</li>
+<li>Rules: keep locals small (big buffers → static/heap); avoid unbounded recursion in embedded.</li>
+</ul>
+</div>
+
+<h2>4. Heap &amp; Dynamic Memory</h2>
+<div class="card">
+<pre><code>malloc(n)      // n bytes, uninitialized
+calloc(n,sz)   // n*sz bytes, zeroed
+realloc(p,n)   // resize (may MOVE — data preserved up to min)
+free(p)        // release; ALWAYS p = NULL after</code></pre>
+<ul>
+<li><b>How malloc works:</b> free-list search (first/best fit) → write header (size, flags) before returned pointer → return usable memory.</li>
+<li><b>External fragmentation</b> — free space total but scattered in small holes → big malloc fails. <b>Internal fragmentation</b> — allocated block bigger than asked (alignment/size-class rounding).</li>
+<li><b>Why embedded hates malloc:</b> non-deterministic timing, fragmentation over uptime, exhaustion, header overhead.</li>
+<li><b>Memory pool</b> — pre-partitioned fixed-size blocks → deterministic O(1), no fragmentation.</li>
+</ul>
+</div>
+
+<h2>5. Pointers — Every Question</h2>
+<div class="card">
+<ul>
+<li><code>&amp;x</code> address · <code>*p</code> dereference · <code>int **pp</code> pointer-to-pointer (change a pointer in a function, 2D) · <code>void *</code> generic.</li>
+<li><b>Pointer arithmetic scales by sizeof(type):</b> <code>p+1</code> for int* advances 4 bytes. char* moves 1 byte (byte walks / memcpy).</li>
+<li><b>Null</b> = points to 0 (segfault on deref). <b>Dangling</b> = points to freed memory (use-after-free). <b>Wild</b> = never initialized.</li>
+<li><b>Never return a pointer to a local</b> — dangling. Return static/global/heap.</li>
+<li><b>Function pointers</b> in embedded: callbacks, ISR tables, state-machine actions.</li>
+</ul>
+</div>
+
+<h2>6. Alignment, Padding, sizeof</h2>
+<div class="card">
+<pre><code>struct A { char c; int i; };   // sizeof 8 (c at 0, pad 1-3, i at 4)
+struct B { char c; int i; char d; };  // 12 (two pad blocks)
+struct C { char c; char d; int i; };  // 8  — reorder largest→smallest saves!
+union U { char c; int i; };          // sizeof 4 (max member, aligned to int)
+#pragma pack(1) ... #pragma pack()   // packed wire/protocol structs (slower, unaligned)
+
+// bit fields
+struct Ctrl { uint8_t en:1, mode:3, rd:1; };  // still sizeof 1</code></pre>
+<ul>
+<li><b>Why padding:</b> hardware reads aligned addresses efficiently — compiler aligns members to natural boundaries.</li>
+<li><b>sizeof(arr)</b> = total array bytes; <b>sizeof(ptr)</b> = pointer size (4/8). <b>strlen</b> = runtime, excludes '\0'.</li>
+<li><b>Offsetof trick:</b> <code>(size_t)&amp;((type*)0)-&gt;member</code>.</li>
+</ul>
+</div>
+
+<h2>7. Caches</h2>
+<div class="card">
+<table><tr><th>Type</th><th>Mapping</th><th>Pros/Cons</th></tr>
+<tr><td>Direct-mapped</td><td>each addr → exactly one slot</td><td>simple; conflict thrashing</td></tr>
+<tr><td>Fully associative</td><td>any addr → any slot</td><td>no conflicts; complex/expensive</td></tr>
+<tr><td>Set-associative (N-way)</td><td>one slot from a set of N</td><td>balance — most real caches</td></tr>
+</table>
+<ul>
+<li><b>Three C's of misses:</b> Compulsory (cold, first access) · Capacity (working set &gt; cache) · Conflict (addresses fight for same slot).</li>
+<li><b>I-cache vs D-cache:</b> separate → parallel fetch, no structural conflict (modified Harvard in MIPS/DSP).</li>
+<li><b>Cache coherency with DMA (the embedded trap):</b> two cores / CPU+DMA may hold stale copies. Write-back cache: <b>flush</b> before DMA reads; <b>invalidate</b> after DMA writes. Linux dma_map_single does this.</li>
+</ul>
+</div>
+
+<h2>8. Virtual Memory, Paging, TLB, MMU</h2>
+<div class="card">
+<ul>
+<li>Each process gets a private <b>virtual address space</b>; the <b>MMU</b> translates virtual→physical via <b>page tables</b>. Benefits: isolation, protection, map more than physical RAM.</li>
+<li><b>Paging:</b> fixed 4KB pages; page table: page#→frame# with permission bits. <b>Page fault</b> = non-resident access → trap to kernel → load (demand paging) or kill (invalid).</li>
+<li><b>TLB</b> — small cache of recent translations (mirrors cache hit/miss). Large pages = fewer entries needed.</li>
+<li><b>Fragmentation:</b> internal in paging (last partial page); external in segmentation.</li>
+<li><b>MMU</b> — full virtual translation + protection + paging (Linux). <b>MPU</b> — no translation, only region-based permission/bounds (RTOS MCUs).</li>
+</ul>
+</div>
+
+<h2>9. Embedded MCU Memory</h2>
+<div class="card">
+<pre><code>0x0000_0000 - Flash      (code, .rodata)
+0x2000_0000 - SRAM       (data, bss, heap, stack)
+0x4000_0000 - Peripherals (APB/AHB: GPIO, UART...)
+0xE000_0000 - System/private (NVIC, SysTick, MPU, debug)</code></pre>
+<ul>
+<li><b>Boot:</b> vector table (initial SP, Reset_Handler) → copy .data (flash→SRAM) → zero .bss → init clocks/stack → main().</li>
+<li>Flash: code XiP; endurance ~10k–100k; EEPROM ~100k–1M; write in bulk + wear-leveling.</li>
+<li>Minimize SRAM: use const → push to flash. Watch stack vs heap overlap (linker).</li>
+</ul>
+</div>
+
+<h2>10. Memory-Mapped I/O &amp; DMA</h2>
+<div class="card">
+<pre><code>#define GPIO_ODR (*(volatile uint32_t *)0x40020014)
+GPIO_ODR |= (1 &lt;&lt; 5);       // set output pin 5</code></pre>
+<ul>
+<li>Peripherals appear as memory addresses — read/write them like normal memory.</li>
+<li><b>Why volatile is mandatory:</b> register value changes outside program control (hardware/ISR/DMA); without volatile the compiler may cache a stale value or optimize away the access.</li>
+<li>Bus: Data (values), Address (which register), Control (read/write/clock). SoC: AXI/AHB (high-speed, DMA) + APB (low-speed peripherals).</li>
+<li><b>DMA</b> — moves data memory↔peripheral WITHOUT CPU. CPU sets source/dest/count, gets interrupt when done.</li>
+</ul>
+</div>
+
+<h2>11. Memory Bugs — The Complete Catalog</h2>
+<div class="card">
+<table><tr><th>Bug</th><th>Prevention</th></tr>
+<tr><td>Memory leak (allocated, never freed)</td><td>free everything; track counts</td></tr>
+<tr><td>Dangling pointer / use-after-free</td><td>NULL after free; careful lifetime</td></tr>
+<tr><td>Double free</td><td>NULL after free; guard flags</td></tr>
+<tr><td>Buffer overflow (write past bounds)</td><td>bounds checks; safe funcs</td></tr>
+<tr><td>Use-after-scope (pointer to dead frame)</td><td>don't return locals</td></tr>
+<tr><td>Uninitialized read</td><td>init at declaration</td></tr>
+<tr><td>Wrong size (memset(arr,0,5) on int[5])</td><td>use sizeof(arr)</td></tr>
+<tr><td>Off-by-one loop</td><td>test n-1, n, n+1</td></tr>
+<tr><td>Wild pointer (never initialized)</td><td>always init</td></tr>
+<tr><td>Stack overflow (deep recursion)</td><td>limit recursion; big data static</td></tr>
+<tr><td>Heap corruption (metadata destroyed)</td><td>ASan/valgrind</td></tr>
+</table>
+<p>Classic overflow: <code>char buf[8]; strcpy(buf, "too long");</code> — use strncpy/snprintf.</p>
+</div>
+
+<h2>12. Detecting &amp; Debugging Memory Problems</h2>
+<div class="card">
+<table><tr><th>Tool</th><th>Catches</th></tr>
+<tr><td>Valgrind (memcheck)</td><td>leaks, invalid read/write, use-after-free, double-free</td></tr>
+<tr><td>ASan (AddressSanitizer) -fsanitize=address</td><td>buffer overflow, use-after-free, stack overflow — fast</td></tr>
+<tr><td>Static analysis (cppcheck/coverity)</td><td>leaks, uninit at analysis time</td></tr>
+<tr><td>gdb + core dump</td><td>crash backtrace, inspect memory (x/16xw)</td></tr>
+<tr><td>strace</td><td>syscall patterns (mmap/brk)</td></tr>
+<tr><td>MPU / WDT / canary</td><td>region violations / hangs / corruption</td></tr>
+</table>
+<p><b>Debug strategy:</b> reproduce deterministically → backtrace → inspect memory → backtrack who writes (watchpoints, awatch addr).</p>
+</div>
+
+<h2>13. FreeRTOS Memory</h2>
+<div class="card">
+<table><tr><th>Heap impl</th><th>Behavior</th><th>Use</th></tr>
+<tr><td>heap_1</td><td>allocate only, never free</td><td>fixed systems</td></tr>
+<tr><td>heap_2</td><td>alloc + free, no coalescing</td><td>arrays never freed</td></tr>
+<tr><td>heap_3</td><td>wraps std malloc/free</td><td>cheap</td></tr>
+<tr><td>heap_4</td><td>alloc + free + <b>coalesces</b></td><td><b>best general choice</b></td></tr>
+<tr><td>heap_5</td><td>multiple non-contiguous regions</td><td>scattered RAM</td></tr>
+</table>
+<ul>
+<li>Each task needs its own stack (bytes at xTaskCreate). Overflow checks: configCHECK_FOR_STACK_OVERFLOW == 1 (integrity on switch) or == 2 (watermark).</li>
+<li><code>configSUPPORT_DYNAMIC_ALLOCATION=0</code> → xTaskCreateStatic with prebuilt buffers (deterministic).</li>
+<li>Never malloc/printf in ISR — non-deterministic, unsafe. Use FromISR queue patterns.</li>
+</ul>
+</div>
+
+<h2>14. Endianness &amp; Bytes</h2>
+<div class="card">
+<pre><code>uint32_t x = 0x12345678;
+little-endian (x86, ARM default): 78 56 34 12  (LSB first)
+big-endian (network, MIPS configurable): 12 34 56 78
+
+int is_little(void){ uint16_t x=1; return *(uint8_t*)&amp;x; } // 1 → little
+// conversions: htons, htonl, ntohs, ntohl  (host ↔ network big-endian)</code></pre>
+<p>Endianness matters for protocol parsing, register layouts, cross-platform data. Use union to reinterpret bytes.</p>
+</div>
+
+<h2>15. Memory Interview Q&amp;A Bank (master these)</h2>
+<div class="card">
+<div class="qablock"><b>Memory layout of a C program?</b><p>text (code) / rodata (consts) / data (init globals, copied at boot) / bss (zero globals) / heap (up) / stack (down).</p></div>
+<div class="qablock"><b>.data vs .bss?</b><p>.data = initialized globals (copied from flash at boot). .bss = zeroed globals, no binary storage.</p></div>
+<div class="qablock"><b>Stack vs heap?</b><p>Stack: LIFO, local frames, fast, fixed size, grows down, auto lifetime. Heap: malloc, manual lifetime, slower, may fragment.</p></div>
+<div class="qablock"><b>Why does deep recursion crash?</b><p>Each call pushes a frame; unbounded recursion exhausts the fixed stack → stack overflow.</p></div>
+<div class="qablock"><b>Why avoid dynamic allocation in embedded?</b><p>Determinism, fragmentation, exhaustion. Use static/pools.</p></div>
+<div class="qablock"><b>Null vs dangling vs wild pointer?</b><p>0 vs freed memory vs uninitialized/garbage.</p></div>
+<div class="qablock"><b>Why padding?</b><p>Alignment to natural boundaries for efficient hardware access.</p></div>
+<div class="qablock"><b>Cache hit vs miss?</b><p>Hit = found (fast). Miss = fetch block from RAM (slow), may evict a line.</p></div>
+<div class="qablock"><b>Why flush/invalidate cache with DMA?</b><p>CPU and DMA can hold different views of the same memory. Flush writes dirty lines; invalidate drops stale lines.</p></div>
+<div class="qablock"><b>MMU vs MPU?</b><p>MMU = translation + protection + paging. MPU = protection-only regions (no translation).</p></div>
+<div class="qablock"><b>What is a memory pool?</b><p>Pre-partitioned fixed-size blocks → O(1), deterministic, no fragmentation.</p></div>
+</div>
+
+<h2>16. One-Page Cheat Sheet</h2>
+<div class="card">
+<pre><code>MEMORY LAYOUT: .text code | .rodata consts | .data init globals (copied) | .bss zero | heap up | stack down
+SIZEOF: sizeof(ptr)=4/8 · sizeof(arr)=total · strlen excludes '\0' · struct order largest→smallest
+CACHE: hit fast/miss slow · line 32-64B · I vs D cache · flush/invalidate for DMA
+VIRTUAL: MMU maps v→p via page tables · TLB caches it · page fault = load
+EMBEDDED: flash XiP · NOR code/NAND storage · MPU permission regions · MMIO+volatile · DMa · pool over malloc
+BUGS: leak · dangling · double-free · overflow · uninit → valgrind / ASan / MPU</code></pre>
+</div>
+
+<footer>Page 4 · Memory Mastery · <a href="index.html">← Home</a> · <a href="05_embedded_rtos.html">Next: Embedded + RTOS →</a></footer>
+</div>
+</body>
+</html>

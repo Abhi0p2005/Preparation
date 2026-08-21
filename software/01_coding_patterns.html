@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 · Coding Patterns &amp; DSA — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>CODING PATTERNS &amp; DSA — COMPLETE</h1><div class="sub">Every pattern with explanation, Java template, complexity, and when-to-use. Master the pattern — not the problem.</div></header>
+
+<h2>0. The 5-Step Problem-Solving Approach (Group Coding / Interviews)</h2>
+<div class="card">
+<ol>
+<li><b>Clarify (60 sec)</b> — ask before writing: input size/range? negative/zero/duplicates? empty input? sorted? expected complexity?</li>
+<li><b>Think out loud (60 sec)</b> — brute force first, then optimize. A wrong idea beats silent staring.</li>
+<li><b>Choose the data structure fast</b> — match pattern → structure (table below).</li>
+<li><b>Code clean</b> — readable names, one language, no clever one-liners you can't explain.</li>
+<li><b>Self-test (2 min)</b> — 1 normal case + 1 edge case (empty, single, all same, max values).</li>
+</ol>
+<table>
+<tr><th>Pattern you see</th><th>Structure to use</th></tr>
+<tr><td>"Need sorted order"</td><td>Sort, then two pointers</td></tr>
+<tr><td>"Count frequency"</td><td>Hashmap / array of 26</td></tr>
+<tr><td>"Max/min subarray of fixed length"</td><td>Sliding window</td></tr>
+<tr><td>"Most recent element matters"</td><td>Stack</td></tr>
+<tr><td>"First in, first out"</td><td>Queue</td></tr>
+<tr><td>"Find largest/smallest quickly"</td><td>Heap (priority queue)</td></tr>
+<tr><td>"All subsets/permutations"</td><td>Recursion + backtracking</td></tr>
+<tr><td>"Search in sorted data"</td><td>Binary search</td></tr>
+<tr><td>"Hierarchy/nested"</td><td>Tree</td></tr>
+</table>
+</div>
+
+<h2>1. Big-O — Read Any Code Fast</h2>
+<div class="card">
+<table>
+<tr><th>Notation</th><th>Name</th><th>10× input → work</th><th>Example</th></tr>
+<tr><td>O(1)</td><td>Constant</td><td>same</td><td>hashmap lookup, array index</td></tr>
+<tr><td>O(log n)</td><td>Logarithmic</td><td>+1 step</td><td>binary search</td></tr>
+<tr><td>O(n)</td><td>Linear</td><td>10×</td><td>loop over array</td></tr>
+<tr><td>O(n log n)</td><td>Linearithmic</td><td>~10×+</td><td>merge sort</td></tr>
+<tr><td>O(n²)</td><td>Quadratic</td><td>100×</td><td>double nested loop</td></tr>
+<tr><td>O(2ⁿ)</td><td>Exponential</td><td>catastrophic</td><td>brute-force subsets</td></tr>
+<tr><td>O(n!)</td><td>Factorial</td><td>gone</td><td>permutations</td></tr>
+</table>
+<ul>
+<li><b>Three rules:</b> drop constants (2n+5 → O(n)); drop lower terms (n²+n → O(n²)); nested loops multiply, sequential loops add.</li>
+<li><b>Always check constraints before coding:</b> n ≤ 10⁵ → O(n log n) fine, O(n²) TLE. n ≤ 20 → brute-force/bitmask expected.</li>
+</ul>
+</div>
+
+<h2>2. Data Structure Cheat-Sheet</h2>
+<div class="card">
+<table>
+<tr><th>Structure</th><th>Search</th><th>Insert</th><th>Use when…</th></tr>
+<tr><td>Array</td><td>O(n)</td><td>O(n)</td><td>random access by index</td></tr>
+<tr><td>String</td><td>O(n)</td><td>—</td><td>text ops (26-array counter)</td></tr>
+<tr><td>Hash map / set</td><td>O(1)</td><td>O(1)</td><td>"have I seen this?"</td></tr>
+<tr><td>Linked list</td><td>O(n)</td><td>O(1) head</td><td>frequent head insert/delete</td></tr>
+<tr><td>Stack / Queue</td><td>O(n)</td><td>O(1)</td><td>LIFO / FIFO order</td></tr>
+<tr><td>Heap</td><td>O(log n)</td><td>O(log n)</td><td>repeated min/max</td></tr>
+<tr><td>BST (balanced)</td><td>O(log n)</td><td>O(log n)</td><td>sorted dynamic data</td></tr>
+<tr><td>Trie</td><td>O(len)</td><td>O(len)</td><td>prefix / autocomplete</td></tr>
+<tr><td>Graph (adj list)</td><td>O(V+E)</td><td>O(1)</td><td>relationships/networks</td></tr>
+</table>
+</div>
+
+<h2>3. Sliding Window</h2>
+<div class="card">
+<h3>Fixed window (max sum subarray of size k)</h3>
+<pre><code>int maxSumFixed(int[] nums, int k) {
+    int sum = 0;
+    for (int i = 0; i &lt; k; i++) sum += nums[i];
+    int max = sum;
+    for (int i = k; i &lt; nums.length; i++) {
+        sum += nums[i] - nums[i - k];   // slide: add right, remove left
+        max = Math.max(max, sum);
+    }
+    return max;   // O(n) time, O(1) space
+}</code></pre>
+<h3>Variable window (smallest subarray with sum ≥ target)</h3>
+<pre><code>int minSubarrayLen(int target, int[] nums) {
+    int left = 0, sum = 0, minLen = Integer.MAX_VALUE;
+    for (int right = 0; right &lt; nums.length; right++) {
+        sum += nums[right];
+        while (sum &gt;= target) {
+            minLen = Math.min(minLen, right - left + 1);
+            sum -= nums[left++];
+        }
+    }
+    return minLen == Integer.MAX_VALUE ? 0 : minLen;
+}</code></pre>
+<h3>Timestamp-based (rate limiter — last 5 seconds)</h3>
+<pre><code>Deque&lt;Long&gt; window = new ArrayDeque&lt;&gt;();
+boolean allowRequest() {
+    long now = System.currentTimeMillis();
+    while (!window.isEmpty() && window.peekFirst() &lt; now - 5000) window.pollFirst();
+    if (window.size() &gt;= 10) return false;
+    window.offerLast(now); return true;
+}</code></pre>
+<h3>Recognition</h3>
+<table>
+<tr><th>Phrase</th><th>Type</th></tr>
+<tr><td>"consecutive subarray of size k"</td><td>Fixed</td></tr>
+<tr><td>"largest/smallest subarray with condition"</td><td>Variable</td></tr>
+<tr><td>"in last N seconds/minutes"</td><td>Timestamp Deque</td></tr>
+<tr><td>"substring with all characters"</td><td>Frequency map + variable</td></tr>
+</table>
+</div>
+
+<h2>4. Two Pointers</h2>
+<div class="card">
+<pre><code>// Two Sum (sorted)
+int[] twoSum(int[] nums, int t){int l=0,r=nums.length-1;
+  while(l&lt;r){int s=nums[l]+nums[r];
+    if(s==t)return new int[]{l,r}; else if(s&lt;t)l++; else r--;} return new int[]{-1,-1};}
+
+// Three Sum (unsorted) — sort, fix i, two-pointer the rest, skip duplicates
+List&lt;List&lt;Integer&gt;&gt; threeSum(int[] nums,int t){
+  Arrays.sort(nums); List&lt;List&lt;Integer&gt;&gt; res=new ArrayList&lt;&gt;();
+  for(int i=0;i&lt;nums.length-2;i++){
+    if(i&gt;0&&nums[i]==nums[i-1])continue;
+    int l=i+1,r=nums.length-1;
+    while(l&lt;r){int s=nums[i]+nums[l]+nums[r];
+      if(s==t){res.add(Arrays.asList(nums[i],nums[l],nums[r]));
+        while(l&lt;r&&nums[l]==nums[l+1])l++; while(l&lt;r&&nums[r]==nums[r-1])r--; l++; r--;}
+      else if(s&lt;t)l++; else r--;}}
+  return res;}
+
+// Container With Most Water — move the shorter wall each step
+int maxArea(int[] h){int l=0,r=h.length-1,max=0;
+  while(l&lt;r){max=Math.max(max,(r-l)*Math.min(h[l],h[r]));
+    if(h[l]&lt;h[r])l++; else r--;} return max;}</code></pre>
+<p class="note"><b>Worked example — Two Sum sorted</b> [1,2,4,7,9] target 6: 1+9=10&gt;6→r; 1+7=8&gt;6→r; 1+4=5&lt;6→l; 2+4=6 ✓. O(n), O(1).</p>
+</div>
+
+<h2>5. HashMap / Frequency Patterns</h2>
+<div class="card">
+<pre><code>Map&lt;Character,Integer&gt; freq=new HashMap&lt;&gt;();
+for(char c:s.toCharArray()) freq.merge(c,1,Integer::sum);
+
+// Group Anagrams — sorted chars = key
+Map&lt;String,List&lt;String&gt;&gt; map=new HashMap&lt;&gt;();
+for(String s:strs){char[] a=s.toCharArray(); Arrays.sort(a);
+  map.computeIfAbsent(new String(a),k-&gt;new ArrayList&lt;&gt;()).add(s);}
+
+// Top K Frequent — bucket sort (index = frequency)
+Map&lt;Integer,Integer&gt; f=new HashMap&lt;&gt;();
+for(int v:nums)f.merge(v,1,Integer::sum);
+List&lt;Integer&gt;[] buckets=new List[nums.length+1];
+for(var e:f.entrySet()){if(buckets[e.getValue()]==null)buckets[e.getValue()]=new ArrayList&lt;&gt;();
+  buckets[e.getValue()].add(e.getKey());}
+List&lt;Integer&gt; res=new ArrayList&lt;&gt;();
+for(int i=buckets.length-1;i&gt;=0&&res.size()&lt;k;i--) if(buckets[i]!=null)res.addAll(buckets[i]);
+
+// First non-repeating character — count freq in one pass, scan again for count 1</code></pre>
+<table>
+<tr><th>Phrase</th><th>Pattern</th></tr>
+<tr><td>"count occurrences"</td><td>HashMap frequency</td></tr>
+<tr><td>"find duplicates"</td><td>Set or Map count&gt;1</td></tr>
+<tr><td>"group by"</td><td>Map&lt;K,List&lt;V&gt;&gt;</td></tr>
+<tr><td>"most/least frequent"</td><td>Freq map + bucket/heap</td></tr>
+<tr><td>"anagram"</td><td>Sorted string key</td></tr>
+<tr><td>"first non-repeating"</td><td>LinkedHashMap</td></tr>
+</table>
+</div>
+
+<h2>6. Stack &amp; Monotonic Stack</h2>
+<div class="card">
+<pre><code>// Valid parentheses
+boolean isValid(String s){Deque&lt;Character&gt; st=new ArrayDeque&lt;&gt;();
+  for(char c:s.toCharArray()){if(c=='('||c=='{'||c=='[')st.push(c);
+    else{if(st.isEmpty())return false;char o=st.pop();
+      if((c==')'&&o!='(')||(c=='}'&&o!='{')||(c==']'&&o!='['))return false;}}
+  return st.isEmpty();}
+
+// Next Greater Element — monotonic decreasing stack of indices
+int[] nge(int[] nums){int[] r=new int[nums.length];Arrays.fill(r,-1);
+  Deque&lt;Integer&gt; st=new ArrayDeque&lt;&gt;();
+  for(int i=0;i&lt;nums.length;i++){while(!st.isEmpty()&&nums[st.peek()]&lt;nums[i])r[st.pop()]=nums[i];
+    st.push(i);} return r;}
+
+// Sliding Window Maximum — monotonic deque (indices, values decreasing)
+int[] maxSlidingWindow(int[] nums,int k){Deque&lt;Integer&gt; dq=new ArrayDeque&lt;&gt;();
+  int[] r=new int[nums.length-k+1];int ri=0;
+  for(int i=0;i&lt;nums.length;i++){
+    while(!dq.isEmpty()&&dq.peekFirst()&lt;i-k+1)dq.pollFirst();
+    while(!dq.isEmpty()&&nums[dq.peekLast()]&lt;nums[i])dq.pollLast();
+    dq.offerLast(i);
+    if(i&gt;=k-1)r[ri++]=nums[dq.peekFirst()];}
+  return r;}</code></pre>
+<table>
+<tr><th>Problem</th><th>Stack usage</th></tr>
+<tr><td>Parentheses validation</td><td>Push open, pop on close</td></tr>
+<tr><td>Expression evaluation</td><td>Operand + operator stacks</td></tr>
+<tr><td>Next greater/smaller element</td><td>Monotonic stack</td></tr>
+<tr><td>Largest rectangle in histogram</td><td>Monotonic stack (84)</td></tr>
+<tr><td>Undo/redo</td><td>Two stacks</td></tr>
+<tr><td>Iterative DFS</td><td>Manual stack</td></tr>
+</table>
+</div>
+
+<h2>7. Binary Search</h2>
+<div class="card">
+<pre><code>// Standard
+while(l&lt;=r){int m=l+(r-l)/2; if(a[m]==t)return m; else if(a[m]&lt;t)l=m+1; else r=m-1;}
+
+// First occurrence (leftmost)
+if(a[m]&gt;=t){if(a[m]==t)res=m; r=m-1;} else l=m+1;
+
+// Rotated sorted array
+if(a[l]&lt;=a[m]){if(a[l]&lt;=t&&t&lt;a[m])r=m-1; else l=m+1;}
+else{if(a[m]&lt;t&&t&lt;=a[h])l=m+1; else r=m-1;}
+
+// On answer space (min capacity to ship in D days)
+while(l&lt;r){int m=l+(r-l)/2; if(canShip(weights,days,m))r=m; else l=m+1;}</code></pre>
+<p class="note"><b>Key insight:</b> the answer is "binary-search-able" whenever a monotonic condition exists — find the smallest x where f(x) is true.</p>
+</div>
+
+<h2>8. BFS / DFS</h2>
+<div class="card">
+<pre><code>// BFS — shortest path in unweighted graph
+Deque&lt;Integer&gt; q=new ArrayDeque&lt;&gt;(); Set&lt;Integer&gt; vis=new HashSet&lt;&gt;();
+q.offer(start); vis.add(start); int steps=0;
+while(!q.isEmpty()){int size=q.size();
+  for(int i=0;i&lt;size;i++){int n=q.poll(); if(n==target)return steps;
+    for(int nb:graph.getOrDefault(n,List.of())) if(!vis.contains(nb)){vis.add(nb);q.offer(nb);}}
+  steps++;} return -1;
+
+// DFS recursive
+void dfs(g,n,vis){if(vis.contains(n))return; vis.add(n);
+  for(int nb:g.getOrDefault(n,List.of()))dfs(g,nb,vis);}
+
+// DFS path in a tree with backtracking
+path.add(curr); if(curr==target)return true;
+for(int next:graph[curr]){if(next==parent)continue;
+  if(dfsPath(graph,next,target,curr,path))return true;}
+path.remove(path.size()-1); return false;</code></pre>
+</div>
+
+<h2>9. Intervals &amp; Greedy</h2>
+<div class="card">
+<pre><code>// Merge intervals — sort by start, extend end
+Arrays.sort(intervals,(a,b)-&gt;a[0]-b[0]); List&lt;int[]&gt; r=new ArrayList&lt;&gt;();
+int[] cur=intervals[0];
+for(int i=1;i&lt;intervals.length;i++){
+  if(intervals[i][0]&lt;=cur[1])cur[1]=Math.max(cur[1],intervals[i][1]);
+  else{r.add(cur);cur=intervals[i];}}
+r.add(cur);
+
+// Meeting Rooms II — sort starts &amp; ends separately, count overlapping
+int rooms=0, e=0;
+for(int s:starts){if(s&lt;ends[e])rooms++; else e++;}
+
+// Insert interval — 3 phases: before / overlap / after</code></pre>
+</div>
+
+<h2>10. Prefix Sum</h2>
+<div class="card">
+<pre><code>int[] pref=new int[nums.length+1];
+for(int i=0;i&lt;nums.length;i++)pref[i+1]=pref[i]+nums[i];
+// subarray [l,r] sum = pref[r+1] - pref[l]
+
+// Subarray Sum Equals K — prefix-sum hashmap
+Map&lt;Long,Integer&gt; m=new HashMap&lt;&gt;(); m.put(0L,1); long s=0; int c=0;
+for(int v:nums){s+=v; c+=m.getOrDefault(s-k,0); m.merge(s,1,Integer::sum);}</code></pre>
+</div>
+
+<h2>11. Bit Manipulation</h2>
+<div class="card">
+<pre><code>get(i)   = (n&gt;&gt;i)&amp;1
+set(i)   = n | (1&lt;&lt;i)
+clear(i) = n &amp; ~(1&lt;&lt;i)
+toggle   = n ^ (1&lt;&lt;i)
+lastSet  = n &amp; -n
+isPow2   = n&gt;0 && (n&amp;(n-1))==0
+
+// Single number (all others twice) → XOR
+int x=0; for(int v:nums)x^=v;
+
+// Two non-repeating numbers
+int xr=0; for(int v:nums)xr^=v; int bit=xr&amp;-xr, x=0,y=0;
+for(int v:nums){if((v&amp;bit)==0)x^=v; else y^=v;}
+
+// Count set bits (Brian Kernighan)
+int c=0; while(n){n&amp;=(n-1); c++;}</code></pre>
+</div>
+
+<h2>12. Topological Sort &amp; Union-Find</h2>
+<div class="card">
+<h3>Topological Sort (Kahn's algorithm)</h3>
+<pre><code>int[] in=new int[n]; List&lt;Integer&gt;[] g=new ArrayList[n];
+for(int i=0;i&lt;n;i++)g[i]=new ArrayList&lt;&gt;();
+for(int[] p:prereq){g[p[1]].add(p[0]); in[p[0]]++;}
+Deque&lt;Integer&gt; q=new ArrayDeque&lt;&gt;();
+for(int i=0;i&lt;n;i++)if(in[i]==0)q.offer(i);
+int[] res=new int[n];int idx=0;
+while(!q.isEmpty()){int c=q.poll();res[idx++]=c;
+  for(int nx:g[c])if(--in[nx]==0)q.offer(nx);}
+return idx==n?res:new int[0];   // cycle detected if idx != n</code></pre>
+<h3>Union-Find (DSU) — "are these two connected?"</h3>
+<pre><code>class UF{int[] p,r;
+  UF(int n){p=new int[n];r=new int[n];for(int i=0;i&lt;n;i++)p[i]=i;}
+  int find(int x){if(p[x]!=x)p[x]=find(p[x]);return p[x];}   // path compression
+  void union(int a,int b){int pa=find(a),pb=find(b);if(pa==pb)return;
+    if(r[pa]&lt;r[pb])p[pa]=pb; else if(r[pa]&gt;r[pb])p[pb]=pa; else{p[pb]=pa;r[pa]++;}}
+  boolean connected(int a,int b){return find(a)==find(b);}}
+// ≈ O(α(n)) ≈ O(1) amortized</code></pre>
+</div>
+
+<h2>13. Dynamic Programming</h2>
+<div class="card">
+<h3>DP cheat-sheet</h3>
+<ul>
+<li>Use DP when: <b>overlapping subproblems</b> (same small calc repeated) + <b>optimal substructure</b> (answer built from subproblem answers).</li>
+<li>Two styles: <b>top-down (memoization)</b> = recursion + cache; <b>bottom-up (tabulation)</b> = fill table small→big.</li>
+<li>Recursion + memo is ACCEPTED in OAs — no need for fancy bottom-up.</li>
+<li>Define the state (i, j, k, mask) → write recurrence on paper → code.</li>
+</ul>
+<table>
+<tr><th>Pattern</th><th>Recurrence idea</th></tr>
+<tr><td>Climbing stairs / Fib</td><td>dp[i] = dp[i-1] + dp[i-2]</td></tr>
+<tr><td>House robber</td><td>dp[i] = max(dp[i-1], dp[i-2]+a[i])</td></tr>
+<tr><td>Coin change (min)</td><td>dp = min(dp, dp-coin + 1)</td></tr>
+<tr><td>0/1 knapsack / subset sum</td><td>reachability with target capacity</td></tr>
+<tr><td>LIS</td><td>n log n via bisect_left / patience</td></tr>
+<tr><td>LCS</td><td>match → 1+diag; else max(up,left)</td></tr>
+<tr><td>Grid paths</td><td>dp = up + left (or min)</td></tr>
+<tr><td>Max product subarray</td><td>track curMax AND curMin</td></tr>
+<tr><td>Longest palindrome</td><td>expand around center</td></tr>
+</table>
+</div>
+
+<h2>14. Regex &amp; String Parsing</h2>
+<div class="card">
+<pre><code>Pattern p=Pattern.compile(regex); Matcher m=p.matcher(input);
+m.matches(); m.find(); m.group(); m.group(1); m.replaceAll("r");</code></pre>
+<table>
+<tr><th>Token</th><th>Meaning</th></tr>
+<tr><td>.</td><td>any char</td></tr>
+<tr><td>^ $</td><td>start / end</td></tr>
+<tr><td>\d \w \s \b</td><td>digit / word / space / boundary</td></tr>
+<tr><td>[abc] [^abc] [a-z]</td><td>set / negated / range</td></tr>
+<tr><td>* + ? {3} {2,5}</td><td>0+ / 1+ / 0-1 / exactly / range</td></tr>
+<tr><td>| ( )</td><td>OR / capture group</td></tr>
+</table>
+<pre><code>// SWIFT: ^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$
+// IBAN:  ^[A-Z]{2}[0-9]{2}[A-Z0-9]{4,30}$
+// IPv4:  ^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(...)){3}$
+// Email: ^[\w.+-]+@[\w-]+\.[\w]{2,}$
+// Date:  ^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$</code></pre>
+<p class="note">Use <code>BufferedReader</code>/<code>StringTokenizer</code> (Java) for large inputs — Scanner is 3-5× slower and will TLE at n&gt;10⁵.</p>
+</div>
+
+<h2>15. Fast I/O Template (HackerRank)</h2>
+<div class="card">
+<pre><code>BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+StringTokenizer st=new StringTokenizer(br.readLine());
+int n=Integer.parseInt(st.nextToken());
+int[] arr=new int[n];
+st=new StringTokenizer(br.readLine());
+for(int i=0;i&lt;n;i++)arr[i]=Integer.parseInt(st.nextToken());
+System.out.println(solve(arr));</code></pre>
+</div>
+
+<h2>16. Rate Limiter Implementations</h2>
+<div class="card">
+<h3>Token Bucket</h3>
+<pre><code>class TokenBucket{long maxTokens,refillRate,tokens,last;
+  TokenBucket(long max,long rate){maxTokens=max;refillRate=rate;tokens=max;last=System.nanoTime();}
+  synchronized boolean allow(){refill(); if(tokens&gt;0){tokens--;return true;} return false;}
+  void refill(){long now=System.nanoTime();
+    long added=(now-last)*refillRate/1_000_000_000;
+    tokens=Math.min(maxTokens,tokens+added); last=now;}}</code></pre>
+<h3>Fixed Window Counter</h3>
+<pre><code>synchronized boolean allow(){long now=System.currentTimeMillis();
+  if(now-windowStart&gt;=windowMs){windowStart=now;count=0;}
+  if(count&lt;maxRequests){count++;return true;} return false;}</code></pre>
+</div>
+
+<h2>17. Sorting Quick Reference</h2>
+<div class="card">
+<table>
+<tr><th>Algorithm</th><th>Best/Avg/Worst</th><th>Space</th><th>When to pick</th></tr>
+<tr><td>Quick sort</td><td>O(n log n)/O(n²)</td><td>O(log n)</td><td>generic in-place</td></tr>
+<tr><td>Merge sort</td><td>O(n log n)</td><td>O(n)</td><td>stable, linked lists, guaranteed time</td></tr>
+<tr><td>Heap sort</td><td>O(n log n)</td><td>O(1)</td><td>in-place, no worst-case n²</td></tr>
+<tr><td>Counting sort</td><td>O(n+k)</td><td>O(k)</td><td>small integer range</td></tr>
+<tr><td>Bubble/Insertion</td><td>O(n²)</td><td>O(1)</td><td>nearly-sorted data</td></tr>
+</table>
+</div>
+
+<h2>18. Recursion &amp; Backtracking</h2>
+<div class="card">
+<ul>
+<li><b>Structure:</b> base case (stop) + recursive case (call on smaller input).</li>
+<li><b>Backtracking</b> = recursion where you UNDO the last choice before the next (permutations, subsets, N-Queens, Sudoku). Exponential — small n only.</li>
+<li><b>Example — subsets of [1,2]:</b> choose/not-choose → { }, {1}, {2}, {1,2}.</li>
+</ul>
+</div>
+
+<footer>Page 1 · Coding Patterns · <a href="index.html">← Home</a> · <a href="02_leetcode_lists.html">Next: LeetCode Lists →</a></footer>
+</div>
+</body>
+</html>

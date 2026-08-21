@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5 · Computer Networks — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>COMPUTER NETWORKS — COMPLETE GUIDE</h1><div class="sub">OSI model, TCP vs UDP, congestion control, HTTP, DNS, TLS, security + full flashcards.</div></header>
+
+<h2>1. OSI 7-Layer Model</h2>
+<div class="card">
+<table><tr><th>Layer</th><th>Unit</th><th>Protocols</th><th>Devices</th></tr>
+<tr><td>7 Application</td><td>Data</td><td>HTTP, FTP, SMTP, DNS</td><td>—</td></tr>
+<tr><td>6 Presentation</td><td>Data</td><td>TLS/SSL, MIME</td><td>—</td></tr>
+<tr><td>5 Session</td><td>Data</td><td>NetBIOS, RPC, SIP</td><td>—</td></tr>
+<tr><td>4 Transport</td><td>Segment</td><td>TCP, UDP, QUIC</td><td>—</td></tr>
+<tr><td>3 Network</td><td>Packet</td><td>IP, ICMP, OSPF, BGP</td><td>Router</td></tr>
+<tr><td>2 Data Link</td><td>Frame</td><td>Ethernet, Wi-Fi</td><td>Switch, Bridge</td></tr>
+<tr><td>1 Physical</td><td>Bit</td><td>RJ45, Fiber</td><td>Hub, Repeater</td></tr>
+</table>
+<p><b>Mnemonic:</b> "All People Seem To Need Data Processing". TCP/IP 4 layers = Application → Transport → Internet → Network Access. <b>Encapsulation:</b> Data → TCP → IP → Ethernet → bits (each layer wraps the one above).</p>
+<p><b>Device roles:</b> Router (L3, routes by IP) · Switch (L2, forwards by MAC) · Hub (dumb amplifier) · Repeater (regenerates signal).</p>
+</div>
+
+<h2>2. TCP vs UDP</h2>
+<div class="card">
+<table><tr><th></th><th>TCP</th><th>UDP</th></tr>
+<tr><td>Connection</td><td>3-way handshake (connection-oriented)</td><td>Connectionless</td></tr>
+<tr><td>Reliability</td><td>Reliable, ordered, retransmits</td><td>Best-effort, can drop</td></tr>
+<tr><td>Header</td><td>20–60 bytes</td><td>8 bytes</td></tr>
+<tr><td>Speed</td><td>Slower</td><td>Faster</td></tr>
+<tr><td>Use</td><td>Web, email, file transfer</td><td>Video, gaming, DNS, VoIP, stock feeds</td></tr>
+</table>
+<h3>TCP 3-way handshake</h3>
+<p>SYN → SYN-ACK → ACK. Ensures both sides agree on starting sequence numbers.</p>
+<h3>TCP 4-way teardown</h3>
+<p>FIN → ACK → FIN → ACK. Closing side waits TIME_WAIT = 2×MSL (to drain stray packets so a late packet isn't confused with a new connection).</p>
+<h3>Flow control (rwnd)</h3>
+<p>Receiver advertises its free buffer (rwnd) in every ACK; the sender can't exceed it. Zero window → sender stops and sends 1-byte probes.</p>
+</div>
+
+<h2>3. Congestion Control</h2>
+<div class="card">
+<ol>
+<li><b>Slow Start</b> — cwnd starts small (1 MSS) and <b>doubles every RTT</b> (exponential) until loss or ssthresh.</li>
+<li><b>Congestion Avoidance</b> — grow +1 MSS per RTT (linear/additive).</li>
+<li><b>Fast Retransmit</b> — 3 duplicate ACKs → retransmit immediately without waiting for timeout.</li>
+<li><b>Fast Recovery</b> — halve cwnd to ssthresh, then congestion avoidance.</li>
+</ol>
+<p><b>AIMD</b> = Additive Increase, Multiplicative Decrease (+1 MSS/RTT, halve on loss). TCP Reno = AIMD. TCP Cubic = time-based growth (Linux default, better for high-BDP).</p>
+<p><b>Terms:</b> cwnd = sender's congestion estimate; rwnd = receiver's buffer; effective window = min(cwnd, rwnd). MSS = max segment data (~1460B). RTT = round-trip time. BDP = bandwidth × RTT = bytes in flight on a link.</p>
+</div>
+
+<h2>4. HTTP Versions</h2>
+<div class="card">
+<table><tr><th></th><th>HTTP/1.0</th><th>HTTP/1.1</th><th>HTTP/2</th><th>HTTP/3</th></tr>
+<tr><td>Connection</td><td>new TCP per request</td><td>persistent (keep-alive)</td><td>multiplexed streams</td><td>QUIC (over UDP)</td></tr>
+<tr><td>Head-of-line</td><td>request level</td><td>request level</td><td>TCP level</td><td>none</td></tr>
+<tr><td>Header compression</td><td>no</td><td>no</td><td>HPACK</td><td>QPACK</td></tr>
+<tr><td>Server push</td><td>no</td><td>no</td><td>yes</td><td>yes</td></tr>
+</table>
+<h3>HTTP methods &amp; status codes</h3>
+<ul>
+<li><b>Methods:</b> GET (read), POST (create), PUT (replace whole), PATCH (partial update), DELETE. <b>Safe</b> = no state change (GET, HEAD). <b>Idempotent</b> = same effect repeated (GET, PUT, DELETE). POST is neither.</li>
+<li><b>Status:</b> 200 OK, 201 Created, 301 moved, 304 not modified, 400 bad request, 401 unauthorized, 403 forbidden, 404 not found, 429 too many, 500 server error, 502 bad gateway, 503, 504 timeout.</li>
+</ul>
+</div>
+
+<h2>5. DNS &amp; DHCP</h2>
+<div class="card">
+<ul>
+<li><b>DNS resolution:</b> cache (browser→OS→router) → recursive resolver → Root → TLD (.com) → Authoritative. Cached per TTL.</li>
+<li><b>Record types:</b> A = IPv4, AAAA = IPv6, CNAME = alias, MX = mail, NS = nameserver, TXT = verification.</li>
+<li><b>Ports:</b> HTTP 80, HTTPS 443, SSH 22, DNS 53, FTP 21, DHCP 67/68, MySQL 3306.</li>
+</ul>
+</div>
+
+<h2>6. TLS &amp; Security</h2>
+<div class="card">
+<h3>TLS handshake</h3>
+<p>ClientHello → ServerHello + Cert → ClientKeyExchange (pre-master with public key) → ChangeCipherSpec → Finished → symmetric encryption.</p>
+<ul>
+<li><b>mTLS</b> — both client AND server present certs (inter-bank API standard).</li>
+<li><b>Attack → defense:</b> SQL injection → parameterized queries · XSS → sanitize + CSP · CSRF → token + SameSite · DDoS → rate limit + CDN · MITM → TLS + cert validation · Replay → nonce + timestamp.</li>
+<li><b>Firewall types:</b> Packet filter (L3-4) → Stateful (tracks connection state) → Application L7 (DPI, WAF).</li>
+</ul>
+</div>
+
+<h2>7. IP Addressing</h2>
+<div class="card">
+<ul>
+<li><b>IPv4:</b> 32 bits, 4 octets. <b>Private ranges (RFC 1918):</b> 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 — not routable on public internet.</li>
+<li><b>Subnet mask:</b> 255.255.255.0 = /24. <b>CIDR:</b> 192.168.1.0/24. Hosts = 2^(32−prefix) − 2. /24 → 254 usable.</li>
+<li><b>NAT:</b> maps private IP+port → public IP+port; lets an office share one public IP.</li>
+</ul>
+</div>
+
+<h2>8. Networking Flashcard Essentials</h2>
+<div class="card">
+<div class="qablock"><b>TCP vs UDP — pick one?</b><p>TCP: reliable/ordered (web, email, transfers). UDP: fast/loss-tolerant (streaming, DNS, VoIP, price feeds).</p></div>
+<div class="qablock"><b>Congestion vs flow control?</b><p>Congestion control (cwnd) prevents overloading the NETWORK; flow control (rwnd) prevents overloading the RECEIVER. Effective window = min(cwnd, rwnd).</p></div>
+<div class="qablock"><b>What is a nonce?</b><p>A random value used once; prevents replay attacks — replaying the message fails because the nonce is stale.</p></div>
+<div class="qablock"><b>select/poll/epoll?</b><p>Let one thread monitor many sockets and wake only when one is ready. epoll = Linux, scalable to 100k connections.</p></div>
+<div class="qablock"><b>Kafka vs RabbitMQ?</b><p>Kafka = append-only log, pull, persists, replayable (audit logs). RabbitMQ = push queue, message consumed once.</p></div>
+<div class="qablock"><b>Server socket flow?</b><p>socket → bind → listen → accept → recv → send → close. Client: socket → connect → send → recv → close.</p></div>
+</div>
+
+<footer>Page 5 · Networks · <a href="index.html">← Home</a> · <a href="06_dbms_oop.html">Next: DBMS + OOP →</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11 · Low-Level Design (LLD) — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a><a href="11_lld_master.html">11. LLD</a><a href="12_hld_master.html">12. HLD</a></div>
+<div class="wrap">
+<header><h1>LOW-LEVEL DESIGN — COMPLETE INTERVIEW GUIDE</h1><div class="sub">Zero to mastery: OOP pillars, SOLID, GOF design patterns, UML, object modeling, a step-by-step interview framework, and 10 fully-solved LLD problems with class diagrams + Java skeletons.</div></header>
+
+<h2>1. What is LLD &amp; How the Round Works</h2>
+<div class="card">
+<p><b>Low-Level Design</b> = turning a requirement into concrete <b>classes, interfaces, and relationships</b> — the blueprint that maps 1:1 to code. It's about <i>object-oriented modeling and clean code</i>, not databases or servers.</p>
+<table><tr><th></th><th>High-Level Design (HLD)</th><th>Low-Level Design (LLD)</th></tr>
+<tr><td>Question</td><td>"How does the whole system fit together?"</td><td>"How do I model this one feature/module in code?"</td></tr>
+<tr><td>Artifacts</td><td>Components, servers, DBs, message queues</td><td>Classes, interfaces, UML class diagram</td></tr>
+<tr><td>Scale</td><td>Millions of users, distributed</td><td>Single application, single process</td></tr>
+<tr><td>Skills tested</td><td>Capacity planning, trade-offs</td><td>OOP, SOLID, design patterns, extensibility</td></tr>
+</table>
+<div class="qablock"><b>What is an interviewer actually testing in an LLD round?</b><p>① Can you <b>extract entities</b> from an ambiguous prompt? ② Can you model <b>relationships</b> (has-a, is-a) correctly? ③ Do you apply <b>SOLID &amp; patterns</b> to keep it extensible? ④ Is your code <b>clean, readable, and testable</b>? ⑤ Do you handle <b>edge cases</b> (invalid inputs, concurrency)?</p></div>
+<p><b>Typical round format (45 min):</b> 5 min clarify requirements → 10 min list entities/relationships → 10 min class diagram (on whiteboard/paper) → 15 min code the core classes → 5 min edge cases + trade-offs. Speak while you draw — narrate <i>why</i> you make each choice.</p>
+</div>
+
+<h2>2. OOP Fundamentals (Refresh Before Patterns)</h2>
+<div class="card">
+<p>LLD is OOP applied. The 4 pillars are the vocabulary of every design conversation.</p>
+<table><tr><th>Pillar</th><th>Idea</th><th>How</th><th>Example</th></tr>
+<tr><td>Encapsulation</td><td>Hide internal state; expose behavior</td><td>private fields + public methods</td><td><code>BankAccount.balance</code> is private; only <code>deposit()/withdraw()</code> change it</td></tr>
+<tr><td>Inheritance</td><td>Is-a relationship, code reuse</td><td><code>extends</code></td><td><code>Car extends Vehicle</code></td></tr>
+<tr><td>Polymorphism</td><td>Same interface, many behaviors</td><td>overriding + interfaces</td><td>all <code>Payment</code> impls implement <code>pay()</code> differently</td></tr>
+<tr><td>Abstraction</td><td>Expose contract, hide details</td><td><code>interface</code> / <code>abstract class</code></td><td><code>PaymentProcessor</code> interface; impls: CreditCard, UPI</td></tr>
+</table>
+<div class="qablock"><b>Composition over inheritance — why is it a rule in interviews?</b><p>Deep inheritance (A extends B extends C) creates fragile coupling — change C, and A breaks silently. Composition (<code>has-a</code>: a Car <i>has</i> an Engine) is flexible, testable (mock the Engine), and swaps behavior at runtime. Favor composition unless there is a true is-a contract with shared logic.</p></div>
+<p><b>Interface vs abstract class (interview classic):</b> interface = pure contract, no state, multiple inheritance allowed, Java 8+ default methods; abstract class = can hold fields + constructor + shared code, single inheritance only. Rule of thumb: <i>"is-a + shared code" → abstract; "can-do / capability" → interface.</i></p>
+</div>
+
+<h2>3. SOLID Principles</h2>
+<div class="card">
+<p>SOLID is the grading rubric of every LLD interview. Memorize each with a "violation vs fix".</p>
+<table><tr><th>Letter</th><th>Name</th><th>Violation (Bad)</th><th>Fix (Good)</th></tr>
+<tr><td>S</td><td><b>S</b>ingle Responsibility</td><td>One class does validation + DB + email + logging</td><td>One class = one reason to change; split into validators, repository, notifier, logger</td></tr>
+<tr><td>O</td><td><b>O</b>pen/Closed</td><td>Adding a new shape edits <code>AreaCalculator</code> with if-else</td><td>Open for extension: <code>Shape</code> interface + each shape computes its own <code>area()</code></td></tr>
+<tr><td>L</td><td><b>L</b>iskov Substitution</td><td><code>Square extends Rectangle</code> breaks <code>setWidth()</code> semantics</td><td>Subtypes must be substitutable for base type without breaking behavior</td></tr>
+<tr><td>I</td><td><b>I</b>nterface Segregation</td><td>One fat <code>Worker</code> interface with <code>code()</code> and <code>manage()</code></td><td>Split into <code>Coder</code> and <code>Manager</code>; classes implement only what they need</td></tr>
+<tr><td>D</td><td><b>D</b>ependency Inversion</td><td>High-level class calls a concrete <code>MySQLRepo</code></td><td>Depend on abstraction <code>Repository</code> interface; inject the concrete one</td></tr>
+</table>
+<div class="qablock"><b>Quick spot-the-violation test</b><p>If a class has 3+ "and"s in its description ("handles payments AND notifications AND reports") it violates S. If switching DB means editing business logic, it violates D. If adding a feature means editing old code, it violates O.</p></div>
+</div>
+
+<h2>4. Design Patterns (GOF)</h2>
+<div class="card">
+<p>Patterns are <b>proven solutions to recurring problems</b>. In interviews you use them <i>implicitly</i> — name them when they appear so the interviewer sees your vocabulary. ~12 patterns cover 95% of LLD questions.</p>
+
+<h3>4.1 Creational — how objects are created</h3>
+<table><tr><th>Pattern</th><th>Problem it solves</th><th>When to use</th><th>Real use</th></tr>
+<tr><td>Singleton</td><td>Exactly one instance shared globally</td><td>Logger, config, DB connection pool, cache</td><td><code>Runtime.getRuntime()</code></td></tr>
+<tr><td>Factory Method</td><td>Create objects without naming the concrete class</td><td>One family; creation logic varies</td><td>Notification factory by channel (email/sms/push)</td></tr>
+<tr><td>Abstract Factory</td><td>Families of related objects</td><td>UI toolkit: Windows buttons + checkboxes together</td><td><code>DocumentBuilderFactory</code></td></tr>
+<tr><td>Builder</td><td>Construct complex objects step-by-step</td><td>Many optional params / immutable objects</td><td>StringBuilder, Kotlin data classes</td></tr>
+<tr><td>Prototype</td><td>Clone existing instance instead of rebuilding</td><td>Construction is expensive; many similar objects</td><td>Cell division in a spreadsheet app</td></tr>
+</table>
+<h3>4.2 Structural — how classes compose</h3>
+<table><tr><th>Pattern</th><th>Problem it solves</th><th>When to use</th><th>Real use</th></tr>
+<tr><td>Adapter</td><td>Make two incompatible interfaces talk</td><td>Wrap a legacy/3rd-party API</td><td>Reading XML and exposing JSON</td></tr>
+<tr><td>Decorator</td><td>Add behavior to an object dynamically, without subclassing</td><td>Layered responsibilities (logging, caching, auth)</td><td><code>BufferedReader</code> wrapping <code>FileReader</code>; Java IO</td></tr>
+<tr><td>Facade</td><td>Simplified interface over a complex subsystem</td><td>Hide a mess of classes behind one method</td><td>ORM's session API over JDBC</td></tr>
+<tr><td>Proxy</td><td>Placeholder controlling access to the real object</td><td>Lazy loading, access control, remote call</td><td>Spring AOP proxies, Hibernate lazy entities</td></tr>
+<tr><td>Composite</td><td>Tree structures where leaf &amp; container share interface</td><td>File system, menu, organization chart</td><td>File/Folder both <code>getSize()</code></td></tr>
+</table>
+<h3>4.3 Behavioral — how objects collaborate</h3>
+<table><tr><th>Pattern</th><th>Problem it solves</th><th>When to use</th><th>Real use</th></tr>
+<tr><td>Strategy</td><td>Swap algorithms at runtime</td><td>Payment methods, sorting modes, pricing rules</td><td><code>Comparator</code> passed to sort</td></tr>
+<tr><td>Observer</td><td>One-to-many: notify subscribers on change</td><td>Event systems, stock ticker, UI updates</td><td>Java <code>EventListener</code>, pub/sub</td></tr>
+<tr><td>Command</td><td>Encapsulate an action as an object</td><td>Undo/redo, task queues, macros</td><td>Editor undo stack, Runnable</td></tr>
+<tr><td>State</td><td>Object changes behavior when its state changes</td><td>Order lifecycle (placed→paid→shipped)</td><td>Vending machine, TCP connection</td></tr>
+<tr><td>Template Method</td><td>Fixed algorithm skeleton, subclasses fill steps</td><td>Processes with steps that vary</td><td><code>InputStream.read()</code> pattern</td></tr>
+<tr><td>Iterator</td><td>Traverse a collection without exposing internals</td><td>Any custom collection</td><td><code>for (x : list)</code></td></tr>
+<tr><td>Chain of Responsibility</td><td>Pass a request down a chain until handled</td><td>Log levels, approval workflows, middleware</td><td>Spring interceptor chain</td></tr>
+</table>
+<div class="qablock"><b>Top 5 for interviews (memorize these deeply):</b><p>Singleton, Factory, Strategy, Observer, Decorator. Next tier: Builder, Command, State, Adapter, Facade. Name the pattern + the problem it removes (e.g. "I'll use Strategy so adding a payment method doesn't touch Order — Open/Closed").</p></div>
+</div>
+
+<h2>5. UML Essentials</h2>
+<div class="card">
+<p><b>UML</b> (Unified Modeling Language) = the drawing language for LLD. You must be able to <i>draw</i> and <i>read</i> a class diagram, and sketch a sequence diagram.</p>
+<h3>5.1 Class diagram notation</h3>
+<p>A class box has 3 compartments: <b>Name | Attributes | Methods</b>. Modifiers: <code>+</code> public, <code>-</code> private, <code>#</code> protected, <code>_underlined</code> = static.</p>
+<h3>5.2 Relationships (the part that gets you marks)</h3>
+<table><tr><th>Relationship</th><th>Arrow</th><th>Meaning</th><th>Example</th></tr>
+<tr><td>Inheritance / is-a</td><td>Solid line, hollow triangle → parent</td><td>Subclass</td><td>Car —▷ Vehicle</td></tr>
+<tr><td>Interface realization</td><td>Dashed line, hollow triangle → interface</td><td>Implements</td><td>Car - - ▷ Drivable</td></tr>
+<tr><td>Association</td><td>Plain solid line</td><td>Uses another class (has a reference)</td><td>Doctor —— Patient</td></tr>
+<tr><td>Aggregation (weak has-a)</td><td>Solid line, hollow diamond → container</td><td>Part can outlive container</td><td>Team ◇— Player (player survives team deletion)</td></tr>
+<tr><td>Composition (strong has-a)</td><td>Solid line, filled diamond → container</td><td>Part dies with container</td><td>House ◆— Room</td></tr>
+<tr><td>Dependency</td><td>Dashed arrow → used thing</td><td>Uses only as method parameter</td><td>Report - - &gt; Printer</td></tr>
+</table>
+<p><b>Multiplicity:</b> 1, 0..1, *, 1..*, 0..* — put next to each end ("a ParkingLot has 1..* Spots").</p>
+<div class="qablock"><b>Aggregation vs Composition — the safest interview answer</b><p>Composition = the part has no independent life ("a Room is meaningless without its House"). Aggregation = the part has its own life ("a Player still exists if the Team is disbanded"). When unsure, default to composition only if lifecycle is clearly coupled; otherwise aggregation or plain association.</p></div>
+<h3>5.3 Sequence diagram</h3>
+<p>Shows <b>message flow over time</b> for one use case. Lifelines are vertical dashed lines; messages are arrows between them; activation bars show when an object is busy. Example: <code>Client → Controller.checkout() → OrderService.create() → PaymentService.pay() → DB.save()</code> then return arrows back. Useful when an interviewer asks "walk me through the flow" — draw the happy path + one failure.</p>
+</div>
+
+<h2>6. Object Modeling — Entities, Relationships, Multiplicity</h2>
+<div class="card">
+<p>The single most important LLD skill: <b>reading an ambiguous prompt and extracting clean entities</b>.</p>
+<p><b>Step 1 — Nouns → Entities:</b> circle every noun in the prompt. "Parking lot has floors, spots, vehicles, tickets, hourly rates, attendants." Candidate entities: ParkingLot, Floor, Spot, Vehicle, Ticket, RateCard.</p>
+<p><b>Step 2 — Verbs → Behaviors:</b> "park a car, exit, pay, reserve" → methods on entities (ParkingLot.park(), Spot.release(), Ticket.calculateAmount()).</p>
+<p><b>Step 3 — Relationships &amp; cardinality:</b> ask "how many?" ParkingLot has 1..* Floor; Floor has 1..* Spot; Spot is assigned to 0..1 Vehicle (nullable — spot can be empty).</p>
+<p><b>Step 4 — Separate is-a from has-a:</b> Bike/Car/Truck are Vehicles (is-a). A ParkingLot has Floors (has-a). Don't force inheritance where has-a is natural.</p>
+<div class="qablock"><b>Common modeling mistakes that kill interviews</b><p>① Modeling <b>UI/DB as classes</b> (no — classes are domain entities). ② Making everything a <b>String</b> — use enums (<code>VehicleType.BIKE</code>, <code>SpotStatus.OCCUPIED</code>). ③ <b>God classes</b> doing everything — violates S. ④ Forgetting <b>nullability</b> (a spot can be empty). ⑤ Duplicating data that should be a reference (store Vehicle <i>id</i>, not a copy).</p></div>
+</div>
+
+<h2>7. The LLD Interview Framework (Follow This Every Time)</h2>
+<div class="card">
+<ol>
+<li><b>Clarify requirements</b> — read the prompt aloud, ask: scope, users, key operations, constraints (single/multi user, concurrency, memory vs DB). Write a 3-line summary.</li>
+<li><b>Extract entities</b> — nouns of the problem. List them.</li>
+<li><b>Draw relationships</b> — is-a and has-a, with multiplicity. This is your class diagram skeleton.</li>
+<li><b>Add methods to entities</b> — verbs, with clear signatures + return types.</li>
+<li><b>Introduce interfaces where variability exists</b> — payments, notifications, pricing, storage → Strategy pattern.</li>
+<li><b>Write the core classes in code</b> — start with the domain model, then the orchestrator/service. Speak as you type.</li>
+<li><b>Edge cases</b> — invalid input, empty collections, concurrency (two users take last item), nulls, overflow.</li>
+<li><b>Trade-offs &amp; extensions</b> — "how would you add a new requirement?" This is where SOLID + patterns earn marks.</li>
+</ol>
+<div class="qablock"><b>The verbal script that works</b><p>"I'll model X as an entity because… It <i>has</i> Y and Z (aggregation), and A <i>is a</i> B (inheritance). I'll make this an interface because multiple implementations may vary — using Strategy keeps it Open/Closed. For concurrency I'll use a lock/atomic counter here." Narrating <i>reasons</i> converts your diagram into marks.</p></div>
+</div>
+
+<h2>8. Solved LLD Problems (10)</h2>
+
+<h3>P1 · Parking Lot</h3>
+<div class="card">
+<p><b>Requirements:</b> multi-floor parking; spots of type (Bike/Car/Truck); assign nearest empty spot; ticket with entry/exit; fee by duration × type rate; no spot → reject; thread-safe.</p>
+<p><b>Entities:</b> ParkingLot(1..* Floor 1..* Spot), Vehicle (abstract: VehicleType), Ticket, FeeCalculator (Strategy).</p>
+<pre><code>enum VehicleType { BIKE, CAR, TRUCK }
+
+class Vehicle { String regNo; VehicleType type; }
+
+class Spot {
+  String id; VehicleType type; SpotStatus status; // OCCUPIED / FREE
+  synchronized boolean assign(Vehicle v);        // race-safe
+}
+
+class Floor { List&lt;Spot&gt; spots; Spot findNearestFree(VehicleType t); }
+
+class Ticket { String id; Spot spot; LocalDateTime entryTime; }
+
+class ParkingLot {
+  List&lt;Floor&gt; floors;
+  synchronized Ticket park(Vehicle v) {
+    for (Floor f : floors) {
+      Spot s = f.findNearestFree(v.type);
+      if (s != null) { s.assign(v); return new Ticket(s); }
+    }
+    throw new RuntimeException("Lot full");
+  }
+  double exit(Ticket t, FeeCalculator calc) { return calc.calculate(t); }
+}
+
+interface FeeCalculator { double calculate(Ticket t); }
+class PerHourFee implements FeeCalculator {
+  Map&lt;VehicleType, Double&gt; rates = Map.of(BIKE, 10.0, CAR, 30.0, TRUCK, 50.0);
+  public double calculate(Ticket t) {
+    long h = Duration.between(t.entryTime, LocalDateTime.now()).toHours() + 1;
+    return h * rates.get(t.spot.vehicleType);
+  }
+}</code></pre>
+<p><b>Edge cases:</b> null vehicle, lot full, ticket not found, spot already occupied, free exit (grace period). <b>Extension:</b> parking on random-spot-allocation, electric charging spots → new VehicleType enum value = Open/Closed (enum switch is the only place to change).</p>
+</div>
+
+<h3>P2 · Elevator</h3>
+<div class="card">
+<p><b>Requirements:</b> N elevators; riders request floor from outside (directional) and inside (target); always move to the highest-priority request; prevent starvation; open/close with safety.</p>
+<p><b>Entities:</b> Elevator (state machine: IDLE/MOVING_UP/MOVING_DOWN/DOOR_OPEN), Button (ElevatorButton, FloorButton), Floor, ElevatorController (Scheduler strategy).</p>
+<pre><code>enum ElevatorState { IDLE, MOVING_UP, MOVING_DOWN, DOOR_OPEN }
+
+class Elevator implements Runnable {
+  int currentFloor; ElevatorState state = IDLE;
+  TreeSet&lt;Integer&gt; upQueue = new TreeSet<>();
+  TreeSet&lt;Integer&gt; downQueue = new TreeSet<>(Comparator.reverseOrder());
+  void requestInside(int floor) { (floor &gt; currentFloor ? upQueue : downQueue).add(floor); }
+  synchronized void move() {
+    if (state == IDLE &amp;&amp; !upQueue.isEmpty()) state = MOVING_UP;
+    if (state == MOVING_UP) { currentFloor++; if (upQueue.remove(currentFloor)) stopAndOpen(); }
+    if (upQueue.isEmpty() &amp;&amp; downQueue.isEmpty()) state = IDLE;
+  }
+  void stopAndOpen() { state = DOOR_OPEN; /* open door, wait, close */ }
+}
+
+class ElevatorController {
+  List&lt;Elevator&gt; elevators;
+  Elevator findBest(int floor) {
+    // Strategy: closest idle elevator, or one already passing in same direction
+    return elevators.stream().min(Comparator.comparingInt(e -> Math.abs(e.currentFloor - floor))).get();
+  }
+  void handleExternalRequest(int floor, Direction dir) { findBest(floor).requestInside(floor); }
+}</code></pre>
+<p><b>Design decisions:</b> two TreeSets keep it O(log n) per request and give direction behavior free. Look-ahead scheduling (serve in same direction first) is what real elevators do. <b>Edge cases:</b> same-floor request, both queues empty, multiple elevators (distribute, avoid two elevators answering the same call), last floor bounds.</p>
+</div>
+
+<h3>P3 · Library Management System</h3>
+<div class="card">
+<p><b>Requirements:</b> members borrow/return books; catalog search by title/author; book has copies (some available); overdue tracking + fine; limits per member (e.g. 5 books).</p>
+<p><b>Entities:</b> Book (BookDetails + copies), Member, BookCopy (status AVAILABLE/BORROWED/RESERVED), Library, Loan (member, copy, dueDate), FineCalculator.</p>
+<pre><code>class BookCopy { String id; Book book; CopyStatus status; }
+
+class Book {
+  String title; List&lt;String&gt; authors; String isbn;
+  List&lt;BookCopy&gt; copies = new ArrayList&lt;&gt;();
+  synchronized BookCopy borrowAvailable() {
+    return copies.stream().filter(c -> c.status == AVAILABLE).findFirst().orElse(null);
+  }
+}
+
+class Member {
+  String id; String name; List&lt;Loan&gt; loans = new ArrayList&lt;&gt;();
+  static final int MAX_LOANS = 5;
+  boolean canBorrow() { return loans.size() &lt; MAX_LOANS; }
+}
+
+class Library {
+  Map&lt;String, Book&gt; booksByIsbn;
+  synchronized Loan borrow(Member m, Book b) {
+    if (!m.canBorrow()) throw new RuntimeException("Loan limit reached");
+    BookCopy c = b.borrowAvailable();
+    if (c == null) throw new RuntimeException("No available copy");
+    c.status = BORROWED;
+    Loan loan = new Loan(m, c, LocalDate.now().plusDays(14));
+    m.loans.add(loan);
+    return loan;
+  }
+  double returnBook(Member m, Loan l) {
+    l.copy.status = AVAILABLE; m.loans.remove(l);
+    long overdue = ChronoUnit.DAYS.between(l.dueDate, LocalDate.now());
+    return overdue > 0 ? overdue * 5.0 : 0;
+  }
+}</code></pre>
+<p><b>Patterns used:</b> Book has BookCopy (composition) — copies share book metadata (avoids duplication). Reserve system is the classic follow-up (copy RESERVED until the reserving member takes it). <b>Edge cases:</b> returning someone else's loan, renew, book not found, concurrent borrowing of the last copy (synchronized handles it).</p>
+</div>
+
+<h3>P4 · Vending Machine</h3>
+<div class="card">
+<p><b>Requirements:</b> items in slots (code, price, qty); insert coins/notes; select item; dispense + change; cancel refunds; only one transaction at a time.</p>
+<p><b>This is THE state-machine problem.</b> Entities: VendingMachine, State (interface), Item, Inventory, Coin enum.</p>
+<pre><code>enum Coin { PENNY(1), DIME(10), NICKEL(5), QUARTER(25); int value; Coin(int v){value=v;} }
+
+class Item { String code; String name; double price; }
+
+interface MachineState {
+  MachineState insertCoin(Coin c, VendingMachine vm);
+  MachineState selectItem(String code, VendingMachine vm);
+  MachineState dispense(VendingMachine vm);
+  MachineState cancel(VendingMachine vm);
+}
+
+class IdleState implements MachineState {           // no coin inserted yet
+  public MachineState insertCoin(Coin c, VendingMachine vm) {
+    vm.accumulate(c.value);
+    return vm.hasSelection ? new SelectionMadeState() : new HasMoneyState();
+  }
+  public MachineState selectItem(String code, VendingMachine vm) { vm.select(code); return this; }
+  public MachineState dispense(VendingMachine vm) { throw new IllegalStateException(); }
+  public MachineState cancel(VendingMachine vm) { return this; }
+}
+// HasMoneyState: accumulates coins; if enough -> DispenseState
+// DispenseState: decrement qty, give change, reset -> IdleState
+
+class VendingMachine {
+  MachineState state = new IdleState();
+  Inventory inventory; double balance; double collectedMoney; String selectedCode;
+  void insertCoin(Coin c) { state = state.insertCoin(c, this); }
+  void selectItem(String code) { state = state.selectItem(code, this); }
+  void pressDispense() { state = state.dispense(this); }
+}</code></pre>
+<p><b>Why the State pattern:</b> each state's allowed actions are explicit; invalid actions throw instead of if-else sprawl; adding a "Maintenance" state = one new class. <b>Edge cases:</b> insufficient money, item sold out, exact-change-only machine, coin reject, timeout between coins.</p>
+</div>
+
+<h3>P5 · Splitwise (Expense Sharing)</h3>
+<div class="card">
+<p><b>Requirements:</b> users; groups; add expense (equal or exact/percent split); show balances between users; settle debts; net balances should be minimized.</p>
+<p><b>Entities:</b> User, Group, Expense (paidBy, splitType), Split (per-user amount owed), BalanceSheet, SplitStrategy.</p>
+<pre><code>enum SplitType { EQUAL, EXACT, PERCENT }
+
+interface SplitStrategy { List&lt;Split&gt; split(Expense e, List&lt;Double&gt; values); }
+
+class EqualSplit implements SplitStrategy {
+  public List&lt;Split&gt; split(Expense e, List&lt;Double&gt; values) {
+    double per = e.amount / e.participants.size();
+    return e.participants.stream().map(u -> new Split(u, per)).toList();
+  }
+}
+
+class BalanceSheet {
+  Map&lt;String, Map&lt;String, Double&gt;&gt; net;   // from -> to -> amount
+  void record(Expense e) {
+    double paid = e.paidBy;
+    for (Split s : e.splits) {
+      if (s.user == e.payer) continue;
+      addEdge(e.payer, s.user, s.amount);  // payer is owed
+    }
+  }
+  // Settle: build a min-flow / greedy two-pointer:
+  // 1) net[user] = sum(owed) - sum(lent)
+  // 2) sort debtors &amp; creditors; while both non-empty, transfer min
+}</code></pre>
+<p><b>Key interview point — minimizing transactions:</b> after netting everyone, use a two-pointer greedy: order by net amount, match biggest debtor to biggest creditor, transfer <code>min(debt, credit)</code> → O(n) transactions (close to optimal). <b>Edge cases:</b> self-payment, rounding in percent splits (assign remainder to last user), user not in group, expense with 0 participants.</p>
+</div>
+
+<h3>P6 · ATM Machine</h3>
+<div class="card">
+<p><b>Requirements:</b> card → PIN verify → menu: balance / deposit / withdraw / change PIN; dispense denominations (100/500/2000); insufficient funds or notes → reject; session timeout.</p>
+<p><b>Entities:</b> ATM, Card, Account, BankDatabase, CashDispenser, ATMState (state machine again: Idle→CardInserted→PinEntered→Transaction→EjectingCard).</p>
+<pre><code>class CashDispenser {
+  Map&lt;Integer, Integer&gt; notes;  // denomination -> count
+  synchronized void dispense(double amount) {   // greedy largest-first
+    int remaining = (int) amount;
+    for (int denom : new int[]{2000, 500, 100}) {
+      int need = remaining / denom;
+      int give = Math.min(need, notes.getOrDefault(denom, 0));
+      notes.put(denom, notes.get(denom) - give);
+      remaining -= give * denom;
+    }
+    if (remaining != 0) throw new RuntimeException("Cannot dispense exact amount");
+  }
+}
+
+class Account {
+  String number; double balance; String pinHash;
+  boolean validatePin(String pin) { return hash(pin).equals(pinHash); }
+  synchronized void withdraw(double amt) {
+    if (amt > balance) throw new RuntimeException("Insufficient funds");
+    balance -= amt;
+  }
+}
+
+class ATM {
+  CashDispenser dispenser; BankDatabase db; ATMState state = new IdleState();
+  void insertCard(Card c) { state = state.insertCard(c, this); }
+  void enterPin(String pin) { state = state.enterPin(pin, this); }
+  void withdraw(double amt) {
+    state.withdraw(amt, this);   // validate -> account.withdraw -> dispenser.dispense
+    dispenser.dispense(amt);
+  }
+}</code></pre>
+<p><b>Critical ordering:</b> <i>account.balance check → dispense notes → debit account</i>. Dispense after debit loses money on machine failure; dispense before debit risks inconsistency — use a transaction. <b>Edge cases:</b> wrong PIN (3 attempts → card retained), withdrawal > daily limit, amount not a multiple of 100, zero balance, deposit validation.</p>
+</div>
+
+<h3>P7 · Movie Ticket Booking</h3>
+<div class="card">
+<p><b>Requirements:</b> shows at theatres; select show → seat layout; pick seats → 5-min payment hold → book; concurrent seat selection must not double-book; cancellations release seats.</p>
+<p><b>Entities:</b> Theatre, Screen, Show, Seat, Booking (status: PENDING/PAID/CANCELLED), PaymentService, SeatLockService.</p>
+<pre><code>class Show {
+  Screen screen; LocalDateTime start; Map&lt;String, Seat&gt; seats;  // "A1", "A2"
+}
+
+class Seat {
+  String id; SeatStatus status;   // AVAILABLE, LOCKED, BOOKED
+  synchronized boolean lock(User u) {
+    if (status != AVAILABLE) return false;
+    status = LOCKED; return true;
+  }
+  synchronized void book() { if (status == LOCKED) status = BOOKED; }
+}
+
+class BookingService {
+  Map&lt;String, Booking&gt; bookings;
+  synchronized Booking createBooking(Show s, List&lt;String&gt; seatIds, User u) {
+    for (String id : seatIds) if (!s.seats.get(id).lock(u)) throw new RuntimeException("Seat taken");
+    Booking b = new Booking(s, u, seatIds); b.status = PENDING;
+    scheduleExpiry(b, 5, MINUTES);   // after 5 min, release lock if unpaid
+    return b;
+  }
+  synchronized void confirm(Booking b, PaymentService ps) {
+    ps.charge(b.total); b.status = PAID;
+    b.seatIds.forEach(id -> b.show.seats.get(id).book());
+  }
+  synchronized void cancel(Booking b) {
+    b.seatIds.forEach(id -> b.show.seats.get(id).status = AVAILABLE);
+    b.status = CANCELLED; refund();
+  }
+}</code></pre>
+<p><b>Concurrency answer:</b> per-seat lock + <code>synchronized</code> on booking guarantees two users never hold the same seat. Real systems use Redis <code>SETNX</code>/locks with TTL — mention that. <b>Extensions:</b> seat categories (Premium/Standard) with price multipliers (Strategy), waitlist, partial seat release. <b>Edge cases:</b> expired booking being paid (reject), seat already locked by self, duplicate seat in request, show already started.</p>
+</div>
+
+<h3>P8 · Restaurant / Food Delivery</h3>
+<div class="card">
+<p><b>Requirements:</b> menu items (veg/non-veg); cart; place order → track states (PLACED→PREPARING→READY→OUT_FOR_DELIVERY→DELIVERED); notifications on state change; cancel before preparation.</p>
+<p><b>Entities:</b> Restaurant, Menu, MenuItem, Cart, Order, OrderState (State pattern — perfect fit), NotificationService (Observer).</p>
+<pre><code>interface OrderState {
+  OrderState next();        // PLACED->PREPARING->...->DELIVERED
+  boolean canCancel();
+  String name();
+}
+class PlacedState implements OrderState {
+  public OrderState next() { return new PreparingState(); }
+  public boolean canCancel() { return true; }
+}
+// ... Preparing (cancel=false), Ready, OutForDelivery, Delivered (terminal)
+
+class Order {
+  OrderState state = new PlacedState();
+  List&lt;OrderItem&gt; items; double total;
+  void advance() {
+    state = state.next();
+    notifier.notify(NotificationType.toMessage(state));
+  }
+  void cancel() {
+    if (!state.canCancel()) throw new RuntimeException("Cannot cancel now");
+    state = new CancelledState();
+  }
+}
+
+interface NotificationChannel { void send(String msg); }
+class EmailChannel implements NotificationChannel { ... }
+class SmsChannel implements NotificationChannel { ... }
+class NotificationService {          // Observer: subscribes channels to order events
+  List&lt;NotificationChannel&gt; channels;
+  void notify(String msg) { channels.forEach(c -> c.send(msg)); }
+}</code></pre>
+<p><b>Patterns showcase:</b> State (order lifecycle), Observer/Strategy (notification channels), Factory (channels built by type). <b>Edge cases:</b> cancel an already-paid order (refund path), advance past delivered, empty cart, duplicate items in cart (merge quantities).</p>
+</div>
+
+<h3>P9 · Tic-Tac-Toe</h3>
+<div class="card">
+<p><b>Requirements:</b> two players (X/O), 3×3 board, alternate turns, detect win/draw, prevent moves on filled cells, replay + game history for extensions.</p>
+<p><b>Entities:</b> Board, Player (enum or class), Game (orchestrator), Move, WinChecker (Strategy — supports N×N).</p>
+<pre><code>enum Mark { X, O, EMPTY }
+
+class Board {
+  Mark[][] grid = new Mark[3][3];
+  boolean place(int r, int c, Mark m) {
+    if (grid[r][c] != EMPTY) return false;
+    grid[r][c] = m; return true;
+  }
+}
+
+interface WinChecker { boolean hasWon(Board b, Mark m, int lastR, int lastC); }
+class BoardWinChecker implements WinChecker {
+  public boolean hasWon(Board b, Mark m, int r, int c) {
+    boolean row = true, col = true, diag = r == c, anti = r + c == 2;
+    for (int i = 0; i < 3; i++) {
+      row &= b.grid[r][i] == m; col &= b.grid[i][c] == m;
+      diag &= b.grid[i][i] == m; anti &= b.grid[i][2 - i] == m;
+    }
+    return row || col || diag || anti;
+  }
+}
+
+class Game {
+  Board board; Player current = Player.X; WinChecker checker;
+  GameStatus play(int r, int c) {
+    if (board.place(r, c, current.mark)) {
+      if (checker.hasWon(board, current.mark, r, c)) return current == Player.X ? X_WINS : O_WINS;
+      if (movesPlayed() == 9) return DRAW;
+      current = other(current); return ONGOING;
+    }
+    throw new IllegalArgumentException("Cell occupied");
+  }
+}</code></pre>
+<p><b>Why WinChecker is an interface:</b> generalize to 4-in-a-row / N×N Connect-4 later without touching Game (Open/Closed). <b>Edge cases:</b> out-of-bounds, cell occupied, game already over, move after win, draw detection ordering (check win before draw).</p>
+</div>
+
+<h3>P10 · Logging Framework</h3>
+<div class="card">
+<p><b>Requirements:</b> log levels (DEBUG/INFO/WARN/ERROR); multiple appenders (console/file); message formatting; thread-safe; configurable level filter; Singleton facade.</p>
+<p><b>Patterns: Singleton + Decorator + Chain of Responsibility + Factory.</b> This one question can showcase 4 patterns.</p>
+<pre><code>enum LogLevel { DEBUG(0), INFO(1), WARN(2), ERROR(3); int weight; }
+
+abstract class Logger {                     // Chain of Responsibility
+  protected LogLevel level;
+  protected Logger next;                    // e.g. DEBUG -> INFO -> WARN -> ERROR
+  Logger setNext(Logger n) { this.next = n; return this; }
+  void log(LogLevel l, String msg) {
+    if (l.weight >= level.weight) write(l, msg);
+    if (next != null) next.log(l, msg);
+  }
+  abstract void write(LogLevel l, String msg);
+}
+class ConsoleLogger extends Logger { void write(LogLevel l, String msg) { System.out.println(ts() + " " + l + " " + msg); } }
+class FileLogger extends Logger { void write(LogLevel l, String msg) { fileWriter.append(ts() + " " + l + " " + msg + "\n"); } }
+
+class LogManager {                          // Singleton
+  private static volatile LogManager instance;
+  Logger root;
+  static LogManager getInstance() {
+    if (instance == null) synchronized (LogManager.class) { if (instance == null) instance = new LogManager(); }
+    return instance;
+  }
+  void info(String m) { root.log(LogLevel.INFO, m); }
+}</code></pre>
+<p><b>Concurrency:</b> message formatting with <code>ThreadLocal</code> timestamp + synchronized <code>write()</code> on appenders to avoid interleaved lines. <b>Extensions:</b> JSON formatter (Decorator), async buffer queue (Producer–Consumer), pattern-layout config. <b>Edge cases:</b> null message, writing to closed file, level filtering at root vs per-appender.</p>
+</div>
+
+<h2>9. LLD Quick Revision Flashcards</h2>
+<div class="card">
+<details><summary>What are the 4 pillars of OOP?</summary><p>Encapsulation (hide state), Inheritance (is-a reuse), Polymorphism (one contract, many behaviors), Abstraction (expose contract, hide detail).</p></details>
+<details><summary>Composition over inheritance — when do you actually use inheritance?</summary><p>Only when there is a true is-a relationship with shared concrete behavior. Otherwise use composition (has-a) which is more flexible and testable.</p></details>
+<details><summary>Which pattern makes adding a new payment method require zero changes to Order?</summary><p>Strategy — Order depends on a PaymentStrategy interface; new methods implement the interface (Open/Closed).</p></details>
+<details><summary>Aggregation vs Composition?</summary><p>Aggregation = part has independent life (Team◇—Player). Composition = part dies with container (House◆—Room).</p></details>
+<details><summary>How do you prevent two users from booking the same movie seat?</summary><p>Per-seat lock: synchronized lock() on the seat object (or Redis SETNX with TTL in a real system) so only one user can transition AVAILABLE→LOCKED.</p></details>
+<details><summary>Name the state machine pattern and when it fits.</summary><p>State pattern. When an object's behavior depends on its state and there are many transitions — Vending machine, Order lifecycle, Elevator, ATM.</p></details>
+<details><summary>What is a God class and why is it bad?</summary><p>A class that handles far too many responsibilities — violates Single Responsibility; hard to test, change, and understand. Split into focused classes + orchestrate.</p></details>
+<details><summary>Class diagram relationship arrows quick recall?</summary><p>Solid hollow-triangle = inheritance; dashed hollow-triangle = implements; solid line = association; hollow diamond = aggregation; filled diamond = composition; dashed arrow = dependency.</p></details>
+<details><summary>What does multiplicity "1..*" mean?</summary><p>One-to-many: the referenced object appears at least once, unbounded above (e.g. a Floor holds 1..* Spots).</p></details>
+<details><summary>Interview golden rule for LLD?</summary><p>Narrate WHY you model each class, relationship, interface, and pattern. The reasons are worth more than the code itself.</p></details>
+</div>
+
+<footer>Master Software SDE Guide · Page 11 · Low-Level Design (LLD)</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 · OA Strategy + Checklists — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>OA STRATEGY + CHECKLISTS</h1><div class="sub">Real Coupa OA questions, pre-submit checklist, test-case mastery, timeboxing, universal 2-week plan, night-before checklist.</div></header>
+
+<h2>1. Real Coupa OA Coding Questions (from recent drives)</h2>
+<div class="card">
+<h3>Q1. Equal Subarrays (Array, Counting, Math) — Medium</h3>
+<p>Given array <code>A</code> of size <code>N</code> (non-negative ints). A subarray is any contiguous segment. Call a subarray <b>equal</b> if every entry has the same value. Return the total count of equal subarrays.</p>
+<p><b>Solution:</b> run-length encoding. Every maximal run of length <code>L</code> contributes <code>L*(L+1)/2</code> subarrays. Sum over runs → O(N).</p>
+<pre><code>long count = 0; int run = 1;
+for (int i = 1; i &lt; n; i++) {
+  if (a[i] == a[i-1]) run++;
+  else { count += run*(run+1L)/2; run = 1; }
+}
+count += run*(run+1L)/2;</code></pre>
+<h3>Q2. Sum of Subarray (Array, DP, Math) — Medium</h3>
+<p>Variant of "sum of all subarrays" / "sum of subarray minimums (907)" / "maximum subarray (53)". Read the problem carefully.</p>
+<p><b>All-subarrays-sum formula:</b> element <code>A[i]</code> (0-indexed) appears in <code>(i+1)*(N-i)</code> subarrays → contributes <code>A[i]*(i+1)*(N-i)</code>. Use <code>long</code>.</p>
+<h3>Q3. Router Busy Light (String, Simulation, Counting) — Medium</h3>
+<p>Simulate network/router busy/idle intervals from string/range inputs; count overlapping busy ranges or total busy duration.</p>
+<p><b>Practice:</b> Merge Intervals (56), Meeting Rooms II (253), sweep-line counting, string parsing.</p>
+</div>
+
+<h2>2. How to Attack Any OA Coding Problem</h2>
+<div class="card">
+<ol>
+<li><b>Read the problem 3×.</b> Underline input format, constraints, expected output.</li>
+<li><b>Name the pattern</b> before coding: array → sort/two-pointer/window/prefix; tree/graph → BFS/DFS/topo/DSU; "max/min/count of ways" → DP; "smallest/largest value satisfying a condition" → binary search.</li>
+<li><b>Brute force first.</b> Any correct answer then optimize. Partial credit beats a blank editor.</li>
+<li><b>Handle edge cases mentally:</b> empty, single element, all same, negatives, overflow → long.</li>
+<li><b>Dry-run</b> on the sample input on paper first.</li>
+<li><b>Timebox.</b> Stuck &gt;25–30 min → submit a stub/brute force, move on, return later.</li>
+</ul>
+<p class="attention"><b>Common OA traps:</b> integer overflow (use 64-bit), dividing by zero, off-by-one in window edges, not sorting before binary search, forgetting to reset state between test cases, O(n²) when n=10⁶.</p>
+</div>
+
+<h2>3. THE PRE-SUBMIT CHECKLIST (30 seconds before submitting)</h2>
+<div class="attention">
+<ul>
+<li>Loop bounds: n vs n−1, &lt;= vs &lt;, length vs length−1</li>
+<li>Overflow: sum → <code>long</code>, 2×sum → <code>long</code></li>
+<li>Defensive copy: <code>new ArrayList&lt;&gt;(list)</code> before storing in Set</li>
+<li>Fresh state per iteration: new copy inside loop</li>
+<li>Empty input: n=0, arr=[] → handled?</li>
+<li>Single element: n=1 → handled?</li>
+<li>All same / all zeros / max values</li>
+<li>Set vs List for dedup (Set O(1))</li>
+<li>Return type matches (int vs long)</li>
+<li>Guard clauses at top: <code>if (arr == null || n == 0) return ...;</code></li>
+</ul>
+</div>
+
+<h2>4. Test-Case Mastery</h2>
+<div class="card">
+<h3>Categories to generate (the 4-box method)</h3>
+<table><tr><th>Box</th><th>Examples</th></tr>
+<tr><td>Happy path</td><td>normal case from the sample</td></tr>
+<tr><td>Edge cases</td><td>empty [], single element, n=1</td></tr>
+<tr><td>Extremes</td><td>0, Integer.MIN/MAX, Long.MAX, large N (10⁵–10⁶)</td></tr>
+<tr><td>Adversarial</td><td>duplicates, all same value, sorted/reverse, negatives+positives mix, hidden traps in wording</td></tr>
+</table>
+<h3>Output questions (C/C++ MCQs)</h3>
+<ul>
+<li>Trace the code line by line with concrete values — never eyeball.</li>
+<li>Two's complement: use range bounds (−128..127 for int8).</li>
+<li>Watch: unsigned conversion, sizeof vs strlen, struct padding, pre/post increment, macro expansion.</li>
+</ul>
+</div>
+
+<h2>5. Timeboxing Strategy</h2>
+<div class="card">
+<table><tr><th>Block</th><th>Time</th><th>Rule</th></tr>
+<tr><td>Skim all problems</td><td>60 sec</td><td>tag easy/medium/hard</td></tr>
+<tr><td>MCQs first</td><td>~60–90s each</td><td>cheapest points per minute; negative marking −0.25? Eliminate 2 → guess; else skip</td></tr>
+<tr><td>SQL / battery wins</td><td>bank wins</td><td>do after MCQs</td></tr>
+<tr><td>Hard coding last</td><td>25–30 min cap</td><td>submit even a brute force</td></tr>
+</table>
+<p class="note">3-problem plan: Q1 0–20 min, Q2 20–40 min, Q3 40–60 min. Stuck &gt;15 min → brute-force stub, submit, return later.</p>
+</div>
+
+<h2>6. Universal 2-Week Plan (reuse for every company)</h2>
+<div class="card">
+<table><tr><th>Phase</th><th>Focus</th><th>Effect</th></tr>
+<tr><td>Day 1–2</td><td>Aptitude + Verbal daily (1h each) + warm-up coding</td><td>secures compulsory rounds</td></tr>
+<tr><td>Day 3–5</td><td>Arrays/binary search + strings + core list</td><td>70% of company OAs</td></tr>
+<tr><td>Day 6–8</td><td>DP + trees</td><td>mid-tier OAs</td></tr>
+<tr><td>Day 9–11</td><td>Graphs + stacks/LL + greedy</td><td>product/FAANG OAs</td></tr>
+<tr><td>Day 12–13</td><td>SQL + CS MCQs + patterns</td><td>SDET/mass recruiter extras</td></tr>
+<tr><td>Day 14</td><td>3 timed mock OAs</td><td>stamina + speed</td></tr>
+</table>
+</div>
+
+<h2>7. Night-Before / On-the-Day Checklist</h2>
+<div class="card chk">
+<ul>
+<li><input type="checkbox" id="c1"><label for="c1">Platform confirmed (HackerRank/AMCAT/Cocubes/HirePro) + sections + time limit from PPT/email</label></li>
+<li><input type="checkbox" id="c2"><label for="c2">Language + I/O template ready (BufferedReader, fast I/O)</label></li>
+<li><input type="checkbox" id="c3"><label for="c3">IDE open, stable internet, charger, water bottle</label></li>
+<li><input type="checkbox" id="c4"><label for="c4">Time split planned (Q1 20m, Q2 20m, Q3 15m, aptitude leftover)</label></li>
+<li><input type="checkbox" id="c5"><label for="c5">Edge cases in mind: empty, n=1, negatives, duplicates, overflow → long</label></li>
+<li><input type="checkbox" id="c6"><label for="c6">Verbal rules + vocab sheet refreshed this morning</label></li>
+<li><input type="checkbox" id="c7"><label for="c7">Brute force first if stuck — partial credit beats blank</label></li>
+<li><input type="checkbox" id="c8"><label for="c8">STAR bank picked + self-intro said aloud 3×</label></li>
+<li><input type="checkbox" id="c9"><label for="c9">Sleep by 11 PM — calm brain beats crammed one</label></li>
+</ul>
+</div>
+
+<h2>8. Final Mindset</h2>
+<div class="card">
+<ol>
+<li>One bad result ≠ you're bad — first shot, not last.</li>
+<li>Check code first, submit second.</li>
+<li>Interviewers want you to succeed.</li>
+</ol>
+</div>
+
+<footer>Page 10 · OA Strategy · <a href="index.html">← Home</a> · <a href="../index.html">Master Guide Home</a></footer>
+</div>
+</body>
+</html>

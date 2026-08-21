@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6 · OS + Linux + Toolchain — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_digital_analog.html">1. Digital+Analog</a><a href="02_c_language.html">2. C Language</a><a href="03_riscv_arch.html">3. RISC-V+MIPS</a><a href="04_memory_mastery.html">4. Memory</a><a href="05_embedded_rtos.html">5. Embedded+RTOS</a><a href="06_os_linux.html">6. OS+Linux</a><a href="07_networking.html">7. Networking</a><a href="08_aptitude_verbal.html">8. Apt+Verbal</a><a href="09_oa_strategy.html">9. Strategy</a></div>
+<div class="wrap">
+<header><h1>OPERATING SYSTEMS + LINUX + TOOLCHAIN</h1><div class="sub">Process/thread, scheduling, deadlock, sync, virtual memory, IPC + Linux filesystem/commands, cross-compilation, kernel/drivers, debugging.</div></header>
+
+<h2>1. OS Basics &amp; Process vs Thread</h2>
+<div class="card">
+<p>OS layers: Applications → Libraries (libc) → Kernel → Hardware. <b>Kernel mode</b> = full hardware access; <b>user mode</b> = restricted; apps request services via <b>system calls</b>.</p>
+<table><tr><th></th><th>Process</th><th>Thread</th></tr>
+<tr><td>Memory</td><td>own address space (isolated)</td><td>shares process memory</td></tr>
+<tr><td>Communication</td><td>IPC (slow)</td><td>shared memory (fast)</td></tr>
+<tr><td>Crash</td><td>only itself</td><td>can take down process</td></tr>
+<tr><td>Switch cost</td><td>high (TLB flush)</td><td>low</td></tr>
+<tr><td>Owns</td><td>PCB, page tables, file table</td><td>stack + registers</td></tr>
+</table>
+<h3>Process states</h3>
+<p>New → Ready → Running → Blocked/Waiting → Ready → ... → Terminated. <b>PCB</b> = PID, state, registers, PC, memory info, open files, scheduling info.</p>
+</div>
+
+<h2>2. CPU Scheduling</h2>
+<div class="card">
+<table><tr><th>Algorithm</th><th>Idea</th><th>Cons</th></tr>
+<tr><td>FCFS</td><td>first come first served</td><td>convoy effect</td></tr>
+<tr><td>SJF / SRTF</td><td>shortest job first</td><td>starvation, needs future knowledge</td></tr>
+<tr><td>Round Robin</td><td>fixed time slice</td><td>overhead, quantum tuning</td></tr>
+<tr><td>Priority</td><td>highest priority runs</td><td>starvation → fix with aging</td></tr>
+<tr><td>MLFQ</td><td>multiple queues/levels</td><td>complex</td></tr>
+</table>
+<p><b>RTOS:</b> priority-based preemptive — highest-priority ready task always runs.</p>
+<p><b>Formulas:</b> Turnaround = completion − arrival · Waiting = turnaround − burst · Response = first CPU − arrival.</p>
+</div>
+
+<h2>3. System Calls &amp; IPC</h2>
+<div class="card">
+<pre><code>open() read() write() close()   // files
+fork() exec() exit() wait()     // processes
+// malloc() internally uses brk/mmap
+
+pid_t pid = fork();
+if (pid == 0) { /* child */ } else { /* parent, pid = child's pid */ }</code></pre>
+<table><tr><th>IPC</th><th>Description</th></tr>
+<tr><td>Pipe</td><td>unidirectional byte stream, parent-child</td></tr>
+<tr><td>Named pipe (FIFO)</td><td>pipe with filesystem name</td></tr>
+<tr><td>Message queue</td><td>structured messages</td></tr>
+<tr><td>Shared memory</td><td>fastest, both map same memory</td></tr>
+<tr><td>Semaphore</td><td>synchronization</td></tr>
+<tr><td>Signal</td><td>async notification (SIGINT)</td></tr>
+<tr><td>Socket</td><td>network IPC</td></tr>
+</table>
+</div>
+
+<h2>4. Synchronization &amp; Deadlock</h2>
+<div class="card">
+<ul>
+<li><b>Race condition:</b> two threads access shared data; result depends on timing. Fix: lock the critical section.</li>
+<li><b>Critical section requirements:</b> mutual exclusion, progress, bounded waiting.</li>
+<li><b>Mutex:</b> ownership (only locker unlocks), priority inheritance. <b>Semaphore:</b> counter, no ownership, binary (signal) or counting (N resources).</li>
+<li><b>Priority inversion:</b> low task holds lock a high task needs while mediums run → high starves. Fix: priority inheritance.</li>
+</ul>
+<h3>Deadlock — 4 necessary conditions (ALL must hold)</h3>
+<ol><li>Mutual exclusion</li><li>Hold and wait</li><li>No preemption</li><li>Circular wait</li></ol>
+<p>Prevention: break any one — consistent lock ordering, timeouts, lock all at once. <b>Producer-Consumer:</b> mutex + full + empty semaphores.</p>
+</div>
+
+<h2>5. Virtual Memory &amp; Paging</h2>
+<div class="card">
+<ul>
+<li>Each process gets a virtual address space mapped via page tables. Benefits: isolation, protection, larger-than-RAM.</li>
+<li><b>Paging:</b> fixed 4KB pages. <b>Page fault:</b> page not in RAM → load from disk (demand paging).</li>
+<li><b>TLB:</b> small cache of recent translations.</li>
+<li><b>Fragmentation:</b> external (scattered free holes) vs internal (wasted space inside blocks).</li>
+<li><b>General OS vs RTOS:</b> Linux = complex timeslice scheduling, virtual memory/MMU, MB-GB. FreeRTOS = deterministic priority preemption, no MMU/MPU only, KB.</li>
+</ul>
+</div>
+
+<h2>6. Linux Filesystem Hierarchy</h2>
+<div class="card">
+<p>/bin /sbin /usr /etc /home /dev (device files) /proc /sys /var /tmp /lib /boot /mnt /media</p>
+</div>
+
+<h2>7. Essential Linux Commands</h2>
+<div class="card">
+<pre><code>ls -la · cd · pwd · cat · touch · mkdir · rm -r · cp · mv
+chmod 755 file   # rwx r-x r--  (7=rwx,5=r-x,4=r--,6=rw-)
+chown user file · grep pattern file · find / -name "*.c"
+ps aux · top/htop · kill PID · man cmd · echo $VAR · export VAR=val
+ifconfig / ip a · ping · traceroute · netstat -tulnp · tcpdump · strace</code></pre>
+</div>
+
+<h2>8. Toolchain &amp; Cross-Compilation (critical for embedded)</h2>
+<div class="card">
+<p>Steps: <b>preprocess → compile → assemble → link</b>.</p>
+<pre><code>gcc -E main.c          # preprocess only
+gcc -S main.c          # assembly output
+gcc -c main.c          # compile to object (main.o)
+gcc -o prog main.o util.o -lm   # link
+gcc -O2 -Wall -Wextra -g main.c -o prog
+gcc -static -march=mips32r2 -DDEBUG</code></pre>
+<ul>
+<li><b>Cross-compiler:</b> runs on x86, produces binaries for target (mips-linux-gnu-gcc, arm-linux-gnueabihf-gcc, aarch64-linux-gnu-gcc).</li>
+<li>Triplet: <code>&lt;arch&gt;-&lt;vendor&gt;-&lt;os&gt;-&lt;abi&gt;</code>.</li>
+<li><b>Static</b> linking: code copied in, self-contained, bigger. <b>Dynamic</b>: links against .so at runtime, smaller, needs libs present.</li>
+<li>Tools: objdump (disassemble), readelf (ELF headers), nm (symbols), strip, objcopy (raw binary for flashing), file (verify arch).</li>
+</ul>
+<h3>Makefile example</h3>
+<pre><code>CC=gcc
+CFLAGS=-Wall -O2
+TARGET=hello
+$(TARGET): main.o util.o
+	$(CC) -o $@ main.o util.o
+main.o: main.c
+	$(CC) $(CFLAGS) -c main.c
+clean:
+	rm -f *.o $(TARGET)</code></pre>
+</div>
+
+<h2>9. Linux Kernel &amp; Device Drivers</h2>
+<div class="card">
+<ul>
+<li><b>User vs kernel space:</b> apps call the kernel via syscalls; drivers exposed as /dev/xxx; procfs/sysfs (/proc, /sys).</li>
+<li><b>Driver types:</b> Character (byte stream: UART, GPIO, keyboard) · Block (fixed-size: flash, eMMC, SD) · Network (packet: Ethernet, WiFi).</li>
+<li><b>Modules:</b> insmod / rmmod / lsmod / dmesg.</li>
+<li><b>copy_to_user / copy_from_user:</b> validated user↔kernel data transfer.</li>
+<li><b>Device tree (.dts → .dtb):</b> compatible, reg (base+size), interrupts — how the kernel knows about hardware.</li>
+<li><b>Register access in drivers:</b> ioremap + readl/writel.</li>
+</ul>
+<pre><code>void __iomem *base;
+base = ioremap(0x1f000000, 0x1000);
+writel(0x1, base + 0x14);
+uint32_t v = readl(base + 0x00);
+iounmap(base);</code></pre>
+</div>
+
+<h2>10. Debugging</h2>
+<div class="card">
+<pre><code>gdb ./prog
+(gdb) break main · run · print x · next/step · backtrace · continue
+# remote embedded: gdbserver :2345 ./app on target; gdb target remote ip:2345 on host
+strace ./app          # trace system calls
+valgrind ./app        # memory errors/leaks
+gdb ./app core        # analyze crash</code></pre>
+</div>
+
+<h2>11. OS Flashcard Essentials</h2>
+<div class="card">
+<div class="qablock"><b>Process vs thread?</b><p>Process = own address space, PCB, heavy switch, isolated. Thread = shares memory, cheap switch.</p></div>
+<div class="qablock"><b>Round robin vs priority?</b><p>RR gives each process a fixed time slice in a cycle (fair, good response). Priority runs highest-priority ready process (may starve → aging).</p></div>
+<div class="qablock"><b>Mutex vs semaphore?</b><p>Mutex has ownership + priority inheritance, exclusive access. Semaphore is a counter for signaling/counting resources.</p></div>
+<div class="qablock"><b>Deadlock 4 conditions?</b><p>Mutual exclusion, hold-and-wait, no preemption, circular wait. Prevent by breaking one (lock ordering).</p></div>
+<div class="qablock"><b>What is a system call? Examples?</b><p>The API from user to kernel (open, read, write, fork, exec). Kernel performs privileged work.</p></div>
+</div>
+
+<footer>Page 6 · OS + Linux · <a href="index.html">← Home</a> · <a href="07_networking.html">Next: Networking →</a></footer>
+</div>
+</body>
+</html>

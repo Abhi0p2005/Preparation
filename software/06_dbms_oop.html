@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6 · DBMS + OOP + Java — Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. LC Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>DBMS + OOP + JAVA — COMPLETE GUIDE</h1><div class="sub">Transactions, normalisation, isolation levels, indexing + SOLID, OOP pillars, Java internals + full flashcards.</div></header>
+
+<h2>1. DBMS Core Concepts</h2>
+<div class="card">
+<h3>ACID (and how each is enforced)</h3>
+<table><tr><th>Property</th><th>Meaning</th><th>Enforced by</th></tr>
+<tr><td><b>A</b>tomicity</td><td>all or nothing</td><td>WAL (write-ahead log)</td></tr>
+<tr><td><b>C</b>onsistency</td><td>valid state → valid state</td><td>constraints</td></tr>
+<tr><td><b>I</b>solation</td><td>concurrent txns don't interfere</td><td>locking / MVCC</td></tr>
+<tr><td><b>D</b>urability</td><td>committed survives crashes</td><td>WAL flushed before COMMIT</td></tr>
+</table>
+<h3>Keys</h3>
+<ul>
+<li><b>Primary key</b> — unique row ID, not null, one per table</li>
+<li><b>Foreign key</b> — references another table's PK → relationship</li>
+<li><b>Unique</b> — no duplicates, can be null, multiple per table</li>
+<li><b>Candidate / Super / Composite</b> (multi-column)</li>
+</ul>
+<h3>Normalisation</h3>
+<table><tr><th>Form</th><th>Fixes</th></tr>
+<tr><td>1NF</td><td>atomic values, no repeating groups</td></tr>
+<tr><td>2NF</td><td>no partial dependency (composite key)</td></tr>
+<tr><td>3NF</td><td>no transitive dependency (A→B→C)</td></tr>
+<tr><td>BCNF</td><td>every determinant is a candidate key</td></tr>
+</table>
+<p>Denormalisation = trade space/consistency for read speed (OLAP/star schemas).</p>
+</div>
+
+<h2>2. Transactions &amp; Isolation</h2>
+<div class="card">
+<h3>Isolation levels &amp; anomalies</h3>
+<table><tr><th>Level</th><th>Anomalies allowed</th></tr>
+<tr><td>Read Uncommitted</td><td>all (dirty, non-repeatable, phantom)</td></tr>
+<tr><td>Read Committed</td><td>no dirty read (still non-repeatable, phantom)</td></tr>
+<tr><td>Repeatable Read</td><td>no dirty / non-repeatable (still phantom)</td></tr>
+<tr><td>Serializable</td><td>none (phantom fixed by range locks)</td></tr>
+</table>
+<ul>
+<li><b>Dirty read</b> — reading uncommitted data that may roll back.</li>
+<li><b>Phantom read</b> — same range query twice; another TX inserts a row. Fixed by range locks / Serializable.</li>
+<li><b>Lost update</b> — two TX read the same value and both write stale. Fix: locking or version check (MVCC).</li>
+<li><b>MVCC</b> — multiple row versions; readers see a snapshot, writers make new versions → no blocking.</li>
+<li><b>2PL</b> — growing (acquire) then shrinking (release) phase. Strict 2PL holds write locks till commit.</li>
+<li><b>WAL</b> — log written BEFORE the data change. Recovery: REDO committed, UNDO uncommitted.</li>
+<li><b>Default isolation:</b> MySQL = Repeatable Read, Postgres = Read Committed.</li>
+</ul>
+</div>
+
+<h2>3. Indexing &amp; Performance</h2>
+<div class="card">
+<table><tr><th>Index type</th><th>O(log n)</th><th>Use</th></tr>
+<tr><td>B+ tree</td><td>range/equality/sort, linked leaves</td><td>most indexes</td></tr>
+<tr><td>Hash</td><td>O(1) equality only</td><td>exact-match lookups</td></tr>
+</table>
+<ul>
+<li><b>Clustered</b> = rows physically ordered by key, 1 per table. <b>Non-clustered</b> = key + pointer to row, many allowed.</li>
+<li><b>Leftmost prefix rule:</b> INDEX(a,b,c) needs a first, then a+b, then a+b+c. WHERE b=5 alone can't use it.</li>
+<li><b>When an index is NOT used:</b> function(col), LIKE '%x', cast(col), low cardinality, small tables.</li>
+<li><b>Cardinality</b> = number of distinct values. Low cardinality (gender, status) → index barely helps.</li>
+</ul>
+<h3>RAID / Replication / Sharding</h3>
+<ul>
+<li>RAID: 0=striping · 1=mirror · 5=striping+parity (1 fail) · 6=dual parity · 10=mirror+stripe.</li>
+<li>Sync replication = no loss, higher latency; async = faster, possible loss.</li>
+<li>Sharding: hash (even, no range), range (range queries, hot spots), directory (flexible, extra hop).</li>
+<li>OLTP = many small normalized transactions; OLAP = big denormalized analytical queries (star schema).</li>
+</ul>
+</div>
+
+<h2>4. OOP — Four Pillars (with banking examples)</h2>
+<div class="card">
+<table><tr><th>Pillar</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><b>Encapsulation</b></td><td>bundle data + methods, hide internal state (private fields)</td><td>BankAccount keeps balance private; only deposit()/withdraw() change it</td></tr>
+<tr><td><b>Inheritance</b></td><td>class inherits fields/methods from parent</td><td>SavingsAccount extends Account</td></tr>
+<tr><td><b>Polymorphism</b></td><td>same name, different behaviour</td><td>draw() renders Circle vs Square; toString() works on any object</td></tr>
+<tr><td><b>Abstraction</b></td><td>hide implementation, expose only what's needed</td><td>use a remote without knowing the circuits</td></tr>
+</table>
+<ul>
+<li><b>Encapsulation vs Abstraction:</b> encapsulation hides DATA (private fields + accessors); abstraction hides IMPLEMENTATION (interface vs concrete).</li>
+<li><b>Overloading</b> — same name, different params, compile-time. <b>Overriding</b> — subclass reimplements parent, runtime (via vtable).</li>
+<li><b>Abstract class</b> — state + concrete methods, single inheritance. <b>Interface</b> — contract, multiple implements, default/static methods (Java 8+).</li>
+<li><b>Inheritance vs Composition:</b> IS-A vs HAS-A. Favor composition (loose coupling, swappable, mockable).</li>
+<li><b>Liskov violation example:</b> Square extends Rectangle — setWidth(5)+setHeight(10) breaks area()==50. Subtype must honor the base contract.</li>
+</ul>
+</div>
+
+<h2>5. SOLID &amp; Design Patterns</h2>
+<div class="card">
+<h3>SOLID (one line each)</h3>
+<ul>
+<li><b>S</b>ingle responsibility — one reason to change</li>
+<li><b>O</b>pen/closed — open for extension, closed for modification</li>
+<li><b>L</b>iskov — subtype substitutable for base</li>
+<li><b>I</b>nterface segregation — no unused methods</li>
+<li><b>D</b>ependency inversion — depend on abstractions</li>
+</ul>
+<h3>Patterns + banking use</h3>
+<table><tr><th>Pattern</th><th>Use</th></tr>
+<tr><td>Singleton</td><td>config</td></tr>
+<tr><td>Factory</td><td>TradeFactory</td></tr>
+<tr><td>Strategy</td><td>fee calculation</td></tr>
+<tr><td>Observer</td><td>trade → risk/P&L updates</td></tr>
+<tr><td>Builder</td><td>TradeOrder</td></tr>
+</table>
+</div>
+
+<h2>6. Java Internals</h2>
+<div class="card">
+<ul>
+<li><b>HashMap internals:</b> array of buckets; get/put via hash(key); collisions → chaining (linked list → tree past 8); resize at load factor 0.75 (rehash, O(n)).</li>
+<li><b>equals/hashCode contract:</b> if a.equals(b) then a.hashCode()==b.hashCode() MUST hold — override both together or HashMap breaks.</li>
+<li><b>ConcurrentHashMap vs synchronizedMap:</b> CHM = CAS, lock-free reads, per-bucket locks; synchronizedMap = single global lock, serializes everything.</li>
+<li><b>volatile vs atomic:</b> volatile = visibility only, NOT atomic; AtomicInteger = CAS, thread-safe counters.</li>
+<li><b>fail-fast vs fail-safe:</b> fail-fast throws ConcurrentModificationException; fail-safe iterates a snapshot.</li>
+<li><b>Why String is immutable:</b> security, thread-safety, String pool caching, safe hash caching.</li>
+<li><b>StringBuilder vs StringBuffer:</b> both mutable; StringBuilder not thread-safe (fast), StringBuffer synchronized (slow).</li>
+<li><b>transient:</b> skips the field during serialization.</li>
+<li><b>try-with-resources:</b> auto-closes AutoCloseable. Yes, try without catch is legal (try-finally).</li>
+<li><b>Record (16+):</b> immutable data carrier — auto constructor, getters, equals, hashCode, toString.</li>
+<li><b>Checked vs unchecked:</b> checked must be declared/handled (IOException); unchecked = runtime (NullPointer, Arithmetic).</li>
+<li><b>ExecutorService:</b> FixedThreadPool(n), CachedThreadPool (grows), ScheduledThreadPool — reuse threads.</li>
+<li><b>CompletableFuture:</b> <code>supplyAsync().thenApply().thenAccept()</code> — async pipeline, avoids blocking.</li>
+<li><b>effectively final:</b> not declared final but never reassigned — required in lambdas/anonymous classes.</li>
+<li><b>GC generational heap:</b> Young gen (minor GC — most die young) → Old gen (major GC). Never force GC.</li>
+<li><b>Deadlock in Java — avoid:</b> consistent lock ordering, tryLock with timeout, single lock.</li>
+</ul>
+</div>
+
+<h2>7. Flashcard Essentials (DBMS + OOP + Java)</h2>
+<div class="card">
+<div class="qablock"><b>1NF / 2NF / 3NF / BCNF?</b><p>1NF atomic values · 2NF no partial dep · 3NF no transitive dep · BCNF every determinant is a candidate key.</p></div>
+<div class="qablock"><b>DELETE vs TRUNCATE?</b><p>DELETE = DML, rollback-able, fires triggers, slow. TRUNCATE = DDL, can't rollback, no triggers, fast.</p></div>
+<div class="qablock"><b>Overloading vs overriding?</b><p>Overloading = same name, different params (compile-time). Overriding = subclass reimplements parent (runtime, vtable).</p></div>
+<div class="qablock"><b>HashMap vs HashTable?</b><p>HashMap not synchronized, allows null; HashTable synchronized, slower.</p></div>
+<div class="qablock"><b>Volatile vs atomic?</b><p>volatile = visibility only, NOT atomic. AtomicInteger = CAS, thread-safe counters.</p></div>
+</div>
+
+<footer>Page 6 · DBMS + OOP + Java · <a href="index.html">← Home</a> · <a href="07_aptitude_verbal.html">Next: Aptitude + Verbal →</a></footer>
+</div>
+</body>
+</html>

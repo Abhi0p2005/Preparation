@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2. DSA Problem Lists | Master Guide</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="topnav"><a href="index.html">🏠 Home</a><a href="01_coding_patterns.html">1. Patterns</a><a href="02_leetcode_lists.html">2. Lists</a><a href="03_sql_master.html">3. SQL</a><a href="04_os_master.html">4. OS</a><a href="05_networks_master.html">5. Networks</a><a href="06_dbms_oop.html">6. DBMS+OOP</a><a href="07_aptitude_verbal.html">7. Apt+Verbal</a><a href="08_behavioral_hr.html">8. Behavioral</a><a href="09_ds_ml.html">9. DS/ML</a><a href="10_oa_strategy.html">10. Strategy</a></div>
+<div class="wrap">
+<header><h1>DSA PROBLEM LISTS</h1><div class="sub">Curated problem sets organized by patterns and difficulty. Focus on understanding approaches rather than memorizing solutions. E=Easy, M=Medium, H=Hard.</div></header>
+
+<h2>1. Must-Do Fundamentals (Start Here)</h2>
+<div class="card">
+<p>Core problems covering essential patterns. Master these before moving to harder categories.</p>
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Longest Substring Without Repeating Chars</td><td>Sliding Window</td><td>M</td><td>Use hashset + two pointers. Expand right, shrink left when duplicate found. Track max length.</td></tr>
+<tr><td>Find Missing Number in Array</td><td>Array/Bit</td><td>E</td><td>Sum formula: expected_sum - actual_sum. Or XOR all indices and values.</td></tr>
+<tr><td>Reverse String In-Place</td><td>Two Pointers</td><td>E</td><td>Two pointers from ends, swap and move toward center.</td></tr>
+<tr><td>Remove Duplicates from Sorted Array</td><td>Two Pointers</td><td>E</td><td>Slow pointer tracks unique position, fast pointer scans. Overwrite duplicates.</td></tr>
+<tr><td>Maximum Depth of Binary Tree</td><td>Tree DFS</td><td>E</td><td>Recursive: 1 + max(left_depth, right_depth). Base case: null returns 0.</td></tr>
+<tr><td>Minimum Depth of Binary Tree</td><td>Tree BFS</td><td>E</td><td>BFS level-by-level. Return depth when first leaf node found.</td></tr>
+<tr><td>Lowest Common Ancestor in Binary Tree</td><td>Tree DFS</td><td>M</td><td>Recursive: if node is p or q return node. If both left and right non-null, current is LCA.</td></tr>
+<tr><td>Binary Tree Inorder Traversal (Iterative)</td><td>Stack</td><td>E</td><td>Use stack. Go left till null, pop and visit, then go right. Repeat.</td></tr>
+<tr><td>Sort Array (Merge Sort)</td><td>Divide & Conquer</td><td>M</td><td>Split array in half recursively. Merge sorted halves using two pointers.</td></tr>
+<tr><td>Maximum Subarray Sum</td><td>Kadane's Algorithm</td><td>M</td><td>Track current_sum and max_sum. Reset current_sum to 0 if negative.</td></tr>
+</table>
+</div>
+
+<h2>2. Array & HashMap Essentials</h2>
+<div class="card">
+<p>Foundation problems for array manipulation and hash-based lookups.</p>
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Two Sum</td><td>HashMap</td><td>E</td><td>Store {value: index} in hashmap. For each num, check if target-num exists.</td></tr>
+<tr><td>Contains Duplicate</td><td>HashSet</td><td>E</td><td>Add elements to set. If element already in set, return true.</td></tr>
+<tr><td>Majority Element</td><td>Counting</td><td>E</td><td>Boyer-Moore voting: track candidate and count. Reset when count=0.</td></tr>
+<tr><td>Subarray Sum Equals K</td><td>Prefix Sum + HashMap</td><td>M</td><td>Store prefix_sum counts in hashmap. Check if (current_sum - k) exists.</td></tr>
+<tr><td>Sum of Subarray Minimums</td><td>Monotonic Stack</td><td>M</td><td>Use stack to find left/right boundaries where element is minimum. Calculate contribution.</td></tr>
+<tr><td>Maximum Product Subarray</td><td>DP</td><td>M</td><td>Track both max and min products (negatives flip). Answer is max of all max_products.</td></tr>
+<tr><td>Word Break</td><td>DP</td><td>M</td><td>dp[i] = can we break s[0..i-1]? Check if dp[j] && s[j..i] in dict.</td></tr>
+<tr><td>House Robber</td><td>DP</td><td>M</td><td>dp[i] = max(rob_i + dp[i-2], skip_i + dp[i-1]). Or two variables.</td></tr>
+<tr><td>Climbing Stairs</td><td>DP (Fibonacci)</td><td>E</td><td>ways[i] = ways[i-1] + ways[i-2]. Can optimize to O(1) space.</td></tr>
+<tr><td>Min Cost Climbing Stairs</td><td>DP</td><td>E</td><td>dp[i] = cost[i] + min(dp[i-1], dp[i-2]). Start from index 0 or 1.</td></tr>
+<tr><td>Best Time to Buy/Sell Stock</td><td>Greedy</td><td>E</td><td>Track min_price seen so far. Update max_profit = price - min_price.</td></tr>
+<tr><td>Merge Intervals</td><td>Sorting + Greedy</td><td>M</td><td>Sort by start time. Merge if current.start <= prev.end.</td></tr>
+<tr><td>Max Length Concatenated String</td><td>Backtracking + Bitmask</td><td>M</td><td>DFS with bitmask to track used characters. Prune if duplicate chars.</td></tr>
+<tr><td>Group Anagrams</td><td>HashMap</td><td>M</td><td>Use sorted string as key. Group words with same sorted form.</td></tr>
+</table>
+</div>
+
+<h2>3. Trees & Graph Traversals</h2>
+<div class="card">
+<p>Essential tree and graph problems for BFS/DFS mastery.</p>
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Same Tree</td><td>Tree DFS</td><td>E</td><td>Recursive: check if both null, both have same value, and recurse left/right.</td></tr>
+<tr><td>Diameter of Binary Tree</td><td>Tree DFS</td><td>E</td><td>Track max of (left_height + right_height) at each node. Return height up.</td></tr>
+<tr><td>Level Order Traversal</td><td>BFS</td><td>M</td><td>Use queue. Process nodes level by level. Track level size.</td></tr>
+<tr><td>Number of Islands</td><td>Grid DFS/BFS</td><td>M</td><td>Scan grid. When '1' found, DFS/BFS to mark connected land. Count islands.</td></tr>
+<tr><td>Max Area of Island</td><td>Grid DFS</td><td>M</td><td>Similar to islands. Track area during DFS and return max area.</td></tr>
+<tr><td>Valid Anagram</td><td>HashMap/Array</td><td>E</td><td>Count chars in both strings. Compare counts. Or sort both and compare.</td></tr>
+<tr><td>Find All Anagrams in String</td><td>Sliding Window</td><td>M</td><td>Use char frequency map. Slide window of pattern length, compare frequencies.</td></tr>
+</table>
+</div>
+
+<h2>4. Sliding Window & Two Pointers</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Maximum Average Subarray (Fixed Size)</td><td>Sliding Window</td><td>E</td><td>Calculate sum of first k elements. Slide: add right, subtract left. Track max.</td></tr>
+<tr><td>Longest Substring Without Repeating</td><td>Sliding Window</td><td>M</td><td>Hashset + two pointers. Expand right, shrink left on duplicate. Track max.</td></tr>
+<tr><td>Number of Ways to Split Array</td><td>Prefix Sum</td><td>M</td><td>Calculate total sum. Iterate left_sum, check if left_sum >= right_sum.</td></tr>
+<tr><td>3Sum</td><td>Two Pointers</td><td>M</td><td>Sort array. Fix one element, use two pointers on remaining. Skip duplicates.</td></tr>
+<tr><td>Container With Most Water</td><td>Two Pointers</td><td>M</td><td>Start from ends. Area = min(height) * width. Move pointer with smaller height.</td></tr>
+<tr><td>Move Zeroes</td><td>Two Pointers</td><td>E</td><td>Slow pointer tracks non-zero position. Fast scans. Swap when non-zero found.</td></tr>
+<tr><td>Minimum Size Subarray Sum</td><td>Sliding Window</td><td>M</td><td>Expand right until sum >= target. Shrink left while valid. Track min length.</td></tr>
+<tr><td>Subarray Sums Divisible by K</td><td>Prefix Sum + HashMap</td><td>M</td><td>Store remainder counts. If same remainder seen, subarray divisible by k.</td></tr>
+<tr><td>Contiguous Array (0s and 1s)</td><td>Prefix Sum + HashMap</td><td>M</td><td>Treat 0 as -1. Find longest subarray with sum=0 using prefix sum map.</td></tr>
+</table>
+</div>
+
+<h2>5. Stack & Monotonic Stack Problems</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Valid Parentheses</td><td>Stack</td><td>E</td><td>Push opening brackets. Pop and match on closing. Stack should be empty at end.</td></tr>
+<tr><td>Min Stack</td><td>Stack + Auxiliary</td><td>M</td><td>Maintain two stacks: main and min_stack. Min_stack tracks minimum at each level.</td></tr>
+<tr><td>Daily Temperatures</td><td>Monotonic Stack</td><td>M</td><td>Stack stores indices. Pop when warmer day found. Answer = current_index - stack_top.</td></tr>
+<tr><td>Largest Rectangle in Histogram</td><td>Monotonic Stack</td><td>H</td><td>Stack maintains increasing heights. On smaller height, pop and calculate area.</td></tr>
+<tr><td>Next Greater Element II</td><td>Monotonic Stack</td><td>M</td><td>Process array twice (circular). Stack stores indices, pop when greater found.</td></tr>
+<tr><td>Remove K Digits</td><td>Greedy + Stack</td><td>M</td><td>Maintain increasing stack. Remove digit if next is smaller and removals left.</td></tr>
+<tr><td>Remove Duplicate Letters</td><td>Greedy + Stack</td><td>H</td><td>Stack with visited set. Pop if char smaller and appears later. Keep lexicographically smallest.</td></tr>
+<tr><td>Gas Station</td><td>Greedy</td><td>M</td><td>Track total and current gas. If current < 0, reset start. Check if total >= 0.</td></tr>
+</table>
+</div>
+
+<h2>6. Heap & Priority Queue</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Last Stone Weight</td><td>Max Heap</td><td>E</td><td>Max heap. Pop two largest, push difference back if non-zero.</td></tr>
+<tr><td>Kth Largest Element</td><td>Min Heap</td><td>M</td><td>Maintain min heap of size k. Answer is heap top. Or quickselect O(n) average.</td></tr>
+<tr><td>Top K Frequent Elements</td><td>HashMap + Heap</td><td>M</td><td>Count frequencies in hashmap. Use min heap of size k or bucket sort.</td></tr>
+<tr><td>K Closest Points to Origin</td><td>Min Heap</td><td>M</td><td>Calculate distance. Use max heap of size k to maintain k closest.</td></tr>
+<tr><td>Kth Smallest in Sorted Matrix</td><td>Min Heap</td><td>M</td><td>Min heap with (value, row, col). Start with first column. Pop k times.</td></tr>
+<tr><td>Merge K Sorted Lists</td><td>Min Heap</td><td>H</td><td>Min heap with list heads. Pop smallest, add next node from that list.</td></tr>
+<tr><td>Find Median from Data Stream</td><td>Two Heaps</td><td>H</td><td>Max heap (lower half) + min heap (upper half). Balance sizes. Median from tops.</td></tr>
+<tr><td>Top K Frequent Words</td><td>HashMap + Heap</td><td>M</td><td>Count frequencies. Min heap of size k with custom comparator (freq, then lexicographic).</td></tr>
+<tr><td>Meeting Rooms II</td><td>Min Heap</td><td>M</td><td>Sort by start. Min heap tracks end times. Pop if meeting ended. Size = rooms needed.</td></tr>
+</table>
+</div>
+
+<h2>7. Linked Lists</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Reverse Linked List</td><td>Iterative/Recursive</td><td>E</td><td>Iterative: prev, curr, next pointers. Reverse links. Recursive: reverse rest, fix links.</td></tr>
+<tr><td>Merge Two Sorted Lists</td><td>Two Pointers</td><td>E</td><td>Dummy node. Compare heads, attach smaller, move pointer. Handle remaining.</td></tr>
+<tr><td>Detect Cycle in Linked List</td><td>Fast & Slow Pointers</td><td>E</td><td>Slow moves 1 step, fast moves 2. If they meet, cycle exists.</td></tr>
+<tr><td>Find Cycle Start</td><td>Fast & Slow Pointers</td><td>M</td><td>After meeting, reset one to head. Move both 1 step. Meeting point is cycle start.</td></tr>
+<tr><td>Sort Linked List</td><td>Merge Sort</td><td>M</td><td>Find mid using slow/fast. Split, recursively sort, merge sorted halves.</td></tr>
+<tr><td>Reverse Nodes in k-Group</td><td>Recursion</td><td>H</td><td>Reverse first k nodes. Recursively reverse rest. Connect reversed groups.</td></tr>
+<tr><td>Copy List with Random Pointer</td><td>HashMap</td><td>M</td><td>First pass: create nodes in hashmap. Second pass: set next and random using map.</td></tr>
+<tr><td>Reorder List</td><td>Multiple Steps</td><td>M</td><td>Find mid. Reverse second half. Merge two halves alternately.</td></tr>
+</table>
+</div>
+
+<h2>8. Trees & BST</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Maximum Depth of Binary Tree</td><td>DFS/BFS</td><td>E</td><td>DFS: 1 + max(left, right). BFS: count levels.</td></tr>
+<tr><td>Invert Binary Tree</td><td>DFS</td><td>E</td><td>Swap left and right children. Recursively invert subtrees.</td></tr>
+<tr><td>Level Order Traversal</td><td>BFS</td><td>M</td><td>Queue-based BFS. Track level size to group nodes by level.</td></tr>
+<tr><td>Diameter of Binary Tree</td><td>DFS</td><td>E</td><td>At each node: diameter = left_height + right_height. Return height up.</td></tr>
+<tr><td>Construct Tree from Pre/Inorder</td><td>Recursion + HashMap</td><td>M</td><td>Preorder gives root. Find root in inorder to split left/right. Recurse.</td></tr>
+<tr><td>Validate BST</td><td>DFS + Range</td><td>M</td><td>Pass min/max range down. Check if node.val in (min, max). Update ranges for children.</td></tr>
+<tr><td>Lowest Common Ancestor</td><td>DFS</td><td>M</td><td>If node is p or q, return node. If both children non-null, current is LCA.</td></tr>
+<tr><td>Kth Smallest in BST</td><td>Inorder Traversal</td><td>M</td><td>Inorder gives sorted order. Return kth element during traversal.</td></tr>
+<tr><td>Binary Tree Maximum Path Sum</td><td>DFS</td><td>H</td><td>At each node: max_path through node = node + left + right. Update global max. Return max single path.</td></tr>
+<tr><td>Serialize and Deserialize Tree</td><td>BFS/DFS</td><td>H</td><td>Serialize: level-order with null markers. Deserialize: reconstruct using queue.</td></tr>
+<tr><td>All Nodes Distance K from Target</td><td>Graph + BFS</td><td>M</td><td>Build parent pointers (make it undirected graph). BFS from target for k steps.</td></tr>
+<tr><td>Maximum Width of Binary Tree</td><td>BFS + Indexing</td><td>M</td><td>Assign indices to nodes (left=2*i, right=2*i+1). Width = rightmost - leftmost + 1.</td></tr>
+</table>
+</div>
+
+<h2>9. Graph Algorithms</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Number of Islands</td><td>DFS/BFS</td><td>M</td><td>Scan grid. DFS/BFS from each '1' to mark island. Count starts.</td></tr>
+<tr><td>Rotting Oranges</td><td>Multi-source BFS</td><td>M</td><td>Add all rotten oranges to queue. BFS layer by layer. Track time.</td></tr>
+<tr><td>Clone Graph</td><td>DFS/BFS + HashMap</td><td>M</td><td>HashMap {old_node: new_node}. DFS/BFS to clone nodes and edges.</td></tr>
+<tr><td>Course Schedule (Detect Cycle)</td><td>Topological Sort</td><td>M</td><td>DFS with 3 states (unvisited, visiting, visited). Cycle if visiting node reached.</td></tr>
+<tr><td>Course Schedule II (Order)</td><td>Topological Sort</td><td>M</td><td>Kahn's algorithm: track indegree. Process nodes with indegree=0. Add to result.</td></tr>
+<tr><td>Word Ladder</td><td>BFS</td><td>H</td><td>BFS from start word. For each word, try all char changes. Track visited.</td></tr>
+<tr><td>Network Delay Time (Dijkstra)</td><td>Shortest Path</td><td>M</td><td>Dijkstra's: min heap with (time, node). Update distances. Return max distance.</td></tr>
+<tr><td>Cheapest Flights Within K Stops</td><td>Modified Dijkstra/BFS</td><td>M</td><td>BFS with (cost, node, stops). Relax edges if stops <= k.</td></tr>
+<tr><td>Number of Provinces</td><td>Union-Find/DFS</td><td>M</td><td>DFS from each unvisited city to mark province. Or union-find count components.</td></tr>
+<tr><td>Redundant Connection</td><td>Union-Find</td><td>M</td><td>Union-find. Add edges. If both nodes already connected, edge creates cycle.</td></tr>
+<tr><td>Accounts Merge</td><td>Union-Find/DFS</td><td>M</td><td>Union emails by account. Group connected emails. Sort within groups.</td></tr>
+<tr><td>Graph Valid Tree</td><td>Union-Find/DFS</td><td>M</td><td>Check: n-1 edges AND no cycle AND connected. Use union-find or DFS.</td></tr>
+<tr><td>Minimum Cost to Connect Cities (MST)</td><td>Kruskal/Prim</td><td>M</td><td>Kruskal: sort edges by cost. Union-find to add edges without cycle.</td></tr>
+</table>
+</div>
+
+<h2>10. Dynamic Programming (Core)</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Climbing Stairs</td><td>1D DP</td><td>E</td><td>dp[i] = dp[i-1] + dp[i-2]. Base: dp[0]=1, dp[1]=1.</td></tr>
+<tr><td>House Robber</td><td>1D DP</td><td>M</td><td>dp[i] = max(nums[i] + dp[i-2], dp[i-1]). Can optimize to two variables.</td></tr>
+<tr><td>House Robber II (Circular)</td><td>1D DP</td><td>M</td><td>Two cases: rob [0..n-2] or [1..n-1]. Return max of both.</td></tr>
+<tr><td>Coin Change</td><td>Unbounded Knapsack</td><td>M</td><td>dp[amount] = min coins to make amount. dp[i] = min(dp[i], dp[i-coin] + 1).</td></tr>
+<tr><td>Longest Increasing Subsequence</td><td>1D DP</td><td>M</td><td>dp[i] = LIS ending at i. Check all j < i where nums[j] < nums[i]. Or binary search O(n log n).</td></tr>
+<tr><td>Maximum Product Subarray</td><td>1D DP</td><td>M</td><td>Track max and min (negatives flip sign). Update both at each step.</td></tr>
+<tr><td>Word Break</td><td>1D DP</td><td>M</td><td>dp[i] = can break s[0..i-1]. Check if dp[j] AND s[j..i] in dict.</td></tr>
+<tr><td>Longest Palindromic Substring</td><td>2D DP / Expand</td><td>M</td><td>Expand around center (odd/even length). Or 2D dp[i][j] = is s[i..j] palindrome.</td></tr>
+<tr><td>Palindromic Substrings</td><td>Expand Around Center</td><td>M</td><td>For each center (single char / two chars), expand while palindrome. Count.</td></tr>
+<tr><td>Maximal Square</td><td>2D DP</td><td>M</td><td>dp[i][j] = side length of square ending at (i,j). dp[i][j] = min(top, left, diag) + 1.</td></tr>
+<tr><td>Unique Paths</td><td>2D DP</td><td>M</td><td>dp[i][j] = ways to reach (i,j). dp[i][j] = dp[i-1][j] + dp[i][j-1].</td></tr>
+<tr><td>Minimum Path Sum</td><td>2D DP</td><td>M</td><td>dp[i][j] = min cost to reach (i,j). dp[i][j] = grid[i][j] + min(top, left).</td></tr>
+<tr><td>Longest Common Subsequence</td><td>2D DP</td><td>M</td><td>If s1[i] == s2[j]: dp[i][j] = dp[i-1][j-1] + 1. Else: max(dp[i-1][j], dp[i][j-1]).</td></tr>
+<tr><td>Edit Distance</td><td>2D DP</td><td>H</td><td>If chars match: dp[i][j] = dp[i-1][j-1]. Else: 1 + min(insert, delete, replace).</td></tr>
+<tr><td>Regular Expression Matching</td><td>2D DP</td><td>H</td><td>Handle '*' matching 0 or more. dp[i][j] = does s[0..i-1] match p[0..j-1].</td></tr>
+<tr><td>Distinct Subsequences</td><td>2D DP</td><td>H</td><td>Count ways to form t from s. If match: dp[i][j] = dp[i-1][j-1] + dp[i-1][j].</td></tr>
+<tr><td>Partition Equal Subset Sum</td><td>0/1 Knapsack</td><td>M</td><td>Check if subset with sum = total/2 exists. dp[sum] = can we make this sum.</td></tr>
+<tr><td>Target Sum</td><td>0/1 Knapsack</td><td>M</td><td>Convert to subset sum: find subset with sum = (total + target) / 2.</td></tr>
+<tr><td>Last Stone Weight II</td><td>0/1 Knapsack</td><td>M</td><td>Minimize difference between two groups. Find subset closest to total/2.</td></tr>
+<tr><td>Ones and Zeroes</td><td>2D Knapsack</td><td>M</td><td>2D dp[m][n] = max strings with m zeros and n ones. Iterate strings backwards.</td></tr>
+<tr><td>Burst Balloons</td><td>Interval DP</td><td>H</td><td>dp[i][j] = max coins bursting balloons i..j. Try each as last balloon to burst.</td></tr>
+<tr><td>Best Time to Buy/Sell Stock IV</td><td>State Machine DP</td><td>H</td><td>Track max profit with k transactions. dp[i][k][0/1] = cash after i days, k trans, holding/not.</td></tr>
+<tr><td>Best Time to Buy/Sell Stock III</td><td>State Machine DP</td><td>H</td><td>Special case of k=2. Track 4 states: buy1, sell1, buy2, sell2.</td></tr>
+<tr><td>Max Sum of 3 Non-Overlapping Subarrays</td><td>DP + Precompute</td><td>H</td><td>Precompute sums. Track best left, best right indices. Check middle positions.</td></tr>
+<tr><td>Word Break II</td><td>DP + Backtracking</td><td>H</td><td>Memoized DFS. At each position, try all valid words. Build sentences recursively.</td></tr>
+<tr><td>Russian Doll Envelopes</td><td>LIS Variant</td><td>H</td><td>Sort by width asc, height desc. Find LIS on heights using binary search.</td></tr>
+<tr><td>Substring with Largest Variance</td><td>Kadane Variant</td><td>H</td><td>For each pair of chars (a, b), run Kadane treating a as +1, b as -1.</td></tr>
+<tr><td>Maximum Profit in Job Scheduling</td><td>DP + Binary Search</td><td>H</td><td>Sort by end time. dp[i] = max profit up to job i. Binary search for last non-overlapping.</td></tr>
+</table>
+</div>
+
+<h2>11. Bit Manipulation, Strings & Intervals</h2>
+<div class="card">
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Single Number</td><td>XOR</td><td>E</td><td>XOR all numbers. Duplicates cancel out. Result is the single number.</td></tr>
+<tr><td>Number of 1 Bits</td><td>Bit Manipulation</td><td>E</td><td>n & (n-1) removes rightmost 1 bit. Count iterations until n=0.</td></tr>
+<tr><td>Single Number III</td><td>XOR + Grouping</td><td>M</td><td>XOR all to get xor of two singles. Find differing bit. Group numbers by this bit.</td></tr>
+<tr><td>Palindrome Partitioning</td><td>Backtracking</td><td>M</td><td>DFS. At each position, try all palindromic prefixes. Recurse on remaining.</td></tr>
+<tr><td>Letter Case Permutation</td><td>Backtracking</td><td>M</td><td>For each letter, branch: lowercase and uppercase. Recurse for rest.</td></tr>
+<tr><td>Max Length of Concatenated String</td><td>Backtracking + Bitmask</td><td>M</td><td>DFS with bitmask for used chars. Skip if duplicate chars. Track max length.</td></tr>
+<tr><td>Merge Intervals</td><td>Sorting + Greedy</td><td>M</td><td>Sort by start. Merge if current.start <= prev.end.</td></tr>
+<tr><td>Insert Interval</td><td>Three Phases</td><td>M</td><td>Add non-overlapping before. Merge overlapping. Add remaining after.</td></tr>
+<tr><td>Non-overlapping Intervals</td><td>Greedy + Sorting</td><td>M</td><td>Sort by end time. Greedy: keep interval with earliest end. Count removals.</td></tr>
+<tr><td>Smallest Range Covering K Lists</td><td>Min Heap</td><td>H</td><td>Min heap with (value, list_idx, elem_idx). Track max. Update min range.</td></tr>
+<tr><td>Integer to English Words</td><td>Simulation</td><td>H</td><td>Handle in groups of 3 digits (thousand, million, billion). Use lookup tables.</td></tr>
+<tr><td>Basic Calculator</td><td>Stack</td><td>H</td><td>Stack for numbers and signs. Handle parentheses by pushing/popping context.</td></tr>
+<tr><td>Basic Calculator II</td><td>Stack</td><td>M</td><td>Track last operator. For * and /, pop and compute immediately. Push results.</td></tr>
+<tr><td>Number of Atoms</td><td>Stack + Parsing</td><td>H</td><td>Stack for nested formulas. Parse atom, count, handle parentheses with multiplier.</td></tr>
+</table>
+</div>
+
+<h2>12. Advanced & Hard Problems</h2>
+<div class="card">
+<p>Challenging problems that combine multiple techniques. Study these after mastering fundamentals.</p>
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Diff</th><th>Simplified Approach</th></tr>
+<tr><td>Sliding Window Maximum</td><td>Monotonic Deque</td><td>H</td><td>Deque stores indices in decreasing order of values. Remove out-of-window and smaller elements.</td></tr>
+<tr><td>Minimum Window Substring</td><td>Sliding Window + HashMap</td><td>H</td><td>Expand right until all chars met. Shrink left while valid. Track min window.</td></tr>
+<tr><td>Find Median from Data Stream</td><td>Two Heaps</td><td>H</td><td>Max heap (lower half) + min heap (upper half). Balance sizes. Median from tops.</td></tr>
+<tr><td>First Missing Positive</td><td>Array as HashMap</td><td>H</td><td>Swap each num to its correct position (num-1). Find first position where num != i+1.</td></tr>
+<tr><td>Trapping Rain Water</td><td>Two Pointers / Stack</td><td>H</td><td>Two pointers: water = min(left_max, right_max) - height. Move pointer with smaller max.</td></tr>
+<tr><td>Longest Valid Parentheses</td><td>Stack / DP</td><td>H</td><td>Stack with sentinel -1. Push indices of '('. On ')', pop and calculate length.</td></tr>
+<tr><td>Median of Two Sorted Arrays</td><td>Binary Search</td><td>H</td><td>Binary search on smaller array to partition. Balance left/right halves. O(log min(m,n)).</td></tr>
+<tr><td>LFU Cache</td><td>HashMap + Freq Lists</td><td>H</td><td>HashMap {key: node} + HashMap {freq: doubly linked list}. Track min_freq.</td></tr>
+<tr><td>Text Justification</td><td>Simulation</td><td>H</td><td>Greedy: pack words per line. Distribute spaces evenly (extra to left).</td></tr>
+<tr><td>Concatenated Words</td><td>Trie + DFS + Memo</td><td>H</td><td>Build trie from words. For each word, DFS to check if made from other words.</td></tr>
+<tr><td>K-th Smallest Pair Distance</td><td>Binary Search + Sliding Window</td><td>H</td><td>Binary search on distance. Count pairs with distance <= mid using two pointers.</td></tr>
+<tr><td>Shortest Subarray with Sum >= K</td><td>Deque + Prefix Sum</td><td>H</td><td>Monotonic deque on prefix sums. Remove if current - front >= K. Track min length.</td></tr>
+</table>
+</div>
+
+<h2>13. One-Day Intensive Drill Plan</h2>
+<div class="card">
+<p>Structured practice plan for comprehensive DSA revision in a single day.</p>
+<ul>
+<li><b>Block A (90 min) - Pattern Mastery:</b> Two Sum, Longest Substring Without Repeating, Valid Parentheses, Min Stack, Daily Temperatures, Level Order Traversal, Course Schedule, Coin Change, Merge Intervals, Single Number.</li>
+<li><b>Block B (60 min) - Hard Problems:</b> Sliding Window Maximum, Minimum Window Substring, Find Median from Data Stream, Burst Balloons.</li>
+<li><b>Block C (45 min) - Pattern Combination:</b> Create hybrid problems (e.g., "sliding window max on a stream", "median in rolling window").</li>
+<li><b>Block D (30 min) - Speed Round:</b> Re-solve Reverse Linked List, Merge Two Sorted Lists, Detect Cycle, Maximum Depth mentally without coding.</li>
+</ul>
+<p class="note"><b>OA Strategy:</b> If stuck on hard problem: (1) Read problem 3 times (2) Map to pattern (3) Write brute force first for partial credit (4) Optimize after samples pass (5) If blocked >25-30 min, submit working solution and move on.</p>
+</div>
+
+<h2>14. Pattern Recognition Quick Reference</h2>
+<div class="card">
+<table>
+<tr><th>If Problem Has...</th><th>Consider Pattern</th><th>Example Technique</th></tr>
+<tr><td>Contiguous subarray/substring</td><td>Sliding Window</td><td>Two pointers, expand/shrink window</td></tr>
+<tr><td>"Find pair/triplet that..."</td><td>Two Pointers / HashMap</td><td>Sort + two pointers, or hashmap lookup</td></tr>
+<tr><td>Matching pairs, nested structure</td><td>Stack</td><td>Push/pop with matching logic</td></tr>
+<tr><td>"Next greater/smaller"</td><td>Monotonic Stack</td><td>Maintain increasing/decreasing stack</td></tr>
+<tr><td>Top K, Kth largest/smallest</td><td>Heap</td><td>Min/max heap of size K</td></tr>
+<tr><td>Tree traversal, path finding</td><td>DFS / BFS</td><td>Recursion or queue-based traversal</td></tr>
+<tr><td>Connected components, cycles</td><td>Union-Find / DFS</td><td>Group elements, detect cycles</td></tr>
+<tr><td>Shortest path, all paths</td><td>BFS / Dijkstra / Bellman-Ford</td><td>Level-by-level exploration</td></tr>
+<tr><td>Subproblems overlap, optimal choice</td><td>Dynamic Programming</td><td>Memoization or tabulation</td></tr>
+<tr><td>Prefix/subarray sum queries</td><td>Prefix Sum</td><td>Precompute cumulative sums</td></tr>
+<tr><td>Permutations, combinations, subsets</td><td>Backtracking</td><td>DFS with pruning</td></tr>
+<tr><td>Binary decision, sorted space</td><td>Binary Search</td><td>Search answer space, not just arrays</td></tr>
+</table>
+</div>
+
+<footer>Page 2: DSA Problem Lists | <a href="index.html">← Home</a> | <a href="03_sql_master.html">Next: SQL →</a></footer>
+</div>
+</body>
+</html>

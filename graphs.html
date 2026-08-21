@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graphs - DSA Master Guide</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#273449;--txt:#e2e8f0;--muted:#94a3b8;--acc:#38bdf8;--green:#4ade80;--amber:#fbbf24;--danger:#f87171;--line:#334155;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.65;padding:20px;}
+.topnav{background:#0b1220;border-bottom:1px solid var(--line);padding:12px 16px;margin:-20px -20px 20px;position:sticky;top:0;z-index:50;}
+.topnav a{color:var(--acc);text-decoration:none;margin-right:14px;font-size:.9rem;}
+.topnav a:hover{text-decoration:underline;}
+.wrap{max-width:1200px;margin:0 auto;}
+header{text-align:center;padding:30px 20px;border-bottom:2px solid var(--acc);margin-bottom:30px;}
+h1{font-size:2rem;color:var(--acc);letter-spacing:.5px;margin-bottom:10px;}
+.subtitle{color:var(--muted);font-size:1rem;}
+h2{color:var(--acc);font-size:1.5rem;margin:40px 0 20px;padding:12px 16px;background:var(--card2);border-left:4px solid var(--acc);border-radius:0 8px 8px 0;}
+h3{color:var(--green);font-size:1.2rem;margin:25px 0 15px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;margin:15px 0;font-size:.92rem;}
+th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;}
+th{background:var(--card2);color:var(--acc);font-weight:600;}
+a{color:var(--acc);text-decoration:none;}
+a:hover{text-decoration:underline;}
+.note{background:#1a3a52;border-left:4px solid var(--amber);padding:15px 18px;border-radius:0 8px 8px 0;margin:15px 0;font-size:.95rem;}
+.tip{background:#1a4d2e;border-left:4px solid var(--green);padding:15px 18px;border-radius:0 8px 8px 0;margin:15px 0;}
+pre{background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:15px;overflow-x:auto;font-size:.88rem;margin:12px 0;color:#d6e4ff;}
+code{background:#0b1220;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:.9em;color:#7dd3fc;}
+pre code{background:none;border:none;padding:0;}
+ul,ol{margin:10px 0 10px 25px;}
+li{margin:8px 0;}
+.lc-link{display:inline-block;background:var(--acc);color:#0b1220;padding:3px 10px;border-radius:5px;font-weight:600;font-size:.85rem;}
+.lc-link:hover{background:#7dd3fc;text-decoration:none;}
+.diff-e{color:var(--green);font-weight:600;}
+.diff-m{color:var(--amber);font-weight:600;}
+.diff-h{color:var(--danger);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="topnav">
+<a href="index.html">← Back to Home</a>
+<a href="#basics">Graph Basics</a>
+<a href="#bfs-dfs">BFS/DFS</a>
+<a href="#shortest">Shortest Path</a>
+<a href="#topo">Topological Sort</a>
+<a href="#union-find">Union-Find</a>
+</div>
+
+<div class="wrap">
+<header>
+<h1>Graphs</h1>
+<div class="subtitle">Master graph traversal, shortest paths, topological sort, and union-find</div>
+</header>
+
+<h2 id="basics">1. Graph Fundamentals</h2>
+
+<div class="card">
+<h3>Core Concepts</h3>
+<ul>
+<li><b>Graph:</b> Set of vertices (nodes) connected by edges.</li>
+<li><b>Directed vs Undirected:</b> Edges have direction or not.</li>
+<li><b>Weighted vs Unweighted:</b> Edges have weights or all equal.</li>
+<li><b>Connected:</b> Path exists between every pair of vertices.</li>
+<li><b>Cycle:</b> Path that starts and ends at same vertex.</li>
+<li><b>DAG:</b> Directed Acyclic Graph - directed with no cycles.</li>
+</ul>
+
+<h4>Graph Representations</h4>
+<pre><code>// Adjacency List (most common for sparse graphs)
+Map<Integer, List<Integer>> graph = new HashMap<>();
+// For node u -> v: graph.get(u).add(v);
+
+// Adjacency Matrix (for dense graphs)
+int[][] graph = new int[n][n];
+// For edge u -> v: graph[u][v] = 1 (or weight);
+
+// Edge List (for some algorithms like Kruskal's)
+List<int[]> edges = new ArrayList<>();
+// edges.add(new int[]{u, v, weight});</code></pre>
+
+<div class="tip">
+<b>💡 Space Complexity:</b> Adjacency List: O(V + E). Adjacency Matrix: O(V²). Prefer adjacency list unless graph is dense (E ≈ V²).
+</div>
+</div>
+
+<h2 id="bfs-dfs">2. BFS & DFS Traversal</h2>
+
+<div class="card">
+<h3>Breadth-First Search (BFS)</h3>
+<p>Explores level by level. Uses queue. Finds shortest path in unweighted graph.</p>
+<pre><code>void bfs(int start) {
+    Queue<Integer> q = new LinkedList<>();
+    Set<Integer> visited = new HashSet<>();
+    q.offer(start);
+    visited.add(start);
+    
+    while (!q.isEmpty()) {
+        int node = q.poll();
+        // Process node
+        
+        for (int neighbor : graph.get(node)) {
+            if (!visited.contains(neighbor)) {
+                visited.add(neighbor);
+                q.offer(neighbor);
+            }
+        }
+    }
+}</code></pre>
+
+<h3>Depth-First Search (DFS)</h3>
+<p>Explores as deep as possible. Uses recursion or stack. Detects cycles, finds components.</p>
+<pre><code>void dfs(int node, Set<Integer> visited) {
+    visited.add(node);
+    // Process node
+    
+    for (int neighbor : graph.get(node)) {
+        if (!visited.contains(neighbor)) {
+            dfs(neighbor, visited);
+        }
+    }
+}</code></pre>
+
+<div class="note">
+<b>⚠️ When to use BFS vs DFS:</b>
+<ul>
+<li><b>BFS:</b> Shortest path (unweighted), level-order, minimum steps</li>
+<li><b>DFS:</b> Cycle detection, topological sort, component finding, backtracking</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<h3>Graph Traversal Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/number-of-islands/" target="_blank" class="lc-link">200</a></td>
+<td>Number of Islands</td>
+<td class="diff-m">Medium</td>
+<td>Scan grid. For each '1', DFS/BFS to mark entire island as visited. Count number of DFS/BFS calls. Time O(m*n), Space O(m*n) for recursion.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/clone-graph/" target="_blank" class="lc-link">133</a></td>
+<td>Clone Graph</td>
+<td class="diff-m">Medium</td>
+<td>HashMap {oldNode: newNode}. DFS/BFS: for each node, create clone if not exists. Clone all neighbors recursively. Return cloned start node.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/pacific-atlantic-water-flow/" target="_blank" class="lc-link">417</a></td>
+<td>Pacific Atlantic Water Flow</td>
+<td class="diff-m">Medium</td>
+<td>DFS from pacific borders (top, left) and atlantic borders (bottom, right). Track cells reachable from each. Return intersection. Reverse flow: high to low.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/surrounded-regions/" target="_blank" class="lc-link">130</a></td>
+<td>Surrounded Regions</td>
+<td class="diff-m">Medium</td>
+<td>DFS from border 'O's, mark as safe. Flip all remaining 'O's to 'X' (surrounded). Restore safe 'O's. Don't flip border-connected regions.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/max-area-of-island/" target="_blank" class="lc-link">695</a></td>
+<td>Max Area of Island</td>
+<td class="diff-m">Medium</td>
+<td>Similar to Number of Islands. DFS returns area count. Track area during traversal. Return max area across all islands.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="shortest">3. Shortest Path Algorithms</h2>
+
+<div class="card">
+<h3>BFS for Unweighted Graphs</h3>
+<p>BFS naturally finds shortest path in unweighted graphs. Track distance or parent to reconstruct path.</p>
+
+<h3>Dijkstra's Algorithm (Non-negative Weights)</h3>
+<pre><code>// Priority Queue (min-heap) with (distance, node)
+int[] dijkstra(int start, int n) {
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[start] = 0;
+    
+    PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> a[0] - b[0]);
+    pq.offer(new int[]{0, start}); // {distance, node}
+    
+    while (!pq.isEmpty()) {
+        int[] curr = pq.poll();
+        int d = curr[0], u = curr[1];
+        
+        if (d > dist[u]) continue; // outdated entry
+        
+        for (int[] edge : graph.get(u)) {
+            int v = edge[0], weight = edge[1];
+            if (dist[u] + weight < dist[v]) {
+                dist[v] = dist[u] + weight;
+                pq.offer(new int[]{dist[v], v});
+            }
+        }
+    }
+    return dist;
+}</code></pre>
+
+<h3>Bellman-Ford (Handles Negative Weights)</h3>
+<pre><code>// Relax all edges V-1 times
+int[] bellmanFord(int start, int V, List<int[]> edges) {
+    int[] dist = new int[V];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[start] = 0;
+    
+    for (int i = 0; i < V - 1; i++) {
+        for (int[] edge : edges) {
+            int u = edge[0], v = edge[1], w = edge[2];
+            if (dist[u] != INF && dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+            }
+        }
+    }
+    
+    // Check negative cycle
+    for (int[] edge : edges) {
+        int u = edge[0], v = edge[1], w = edge[2];
+        if (dist[u] + w < dist[v]) return null; // negative cycle
+    }
+    return dist;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Shortest Path Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/network-delay-time/" target="_blank" class="lc-link">743</a></td>
+<td>Network Delay Time</td>
+<td class="diff-m">Medium</td>
+<td>Dijkstra from start node. Min-heap with (time, node). Update distances, add neighbors to heap. Return max distance (time for all nodes to receive signal). If any unreachable, return -1.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/cheapest-flights-within-k-stops/" target="_blank" class="lc-link">787</a></td>
+<td>Cheapest Flights Within K Stops</td>
+<td class="diff-m">Medium</td>
+<td>Modified Dijkstra/BFS with (cost, node, stops). Only relax if stops <= k. Or Bellman-Ford: relax edges k+1 times. Track min cost to reach destination.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/path-with-minimum-effort/" target="_blank" class="lc-link">1631</a></td>
+<td>Path With Minimum Effort</td>
+<td class="diff-m">Medium</td>
+<td>Dijkstra with effort = max absolute difference on path. Min-heap with (effort, row, col). Update effort to neighbors. Return effort to reach bottom-right.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/swim-in-rising-water/" target="_blank" class="lc-link">778</a></td>
+<td>Swim in Rising Water</td>
+<td class="diff-h">Hard</td>
+<td>Binary search on time OR Dijkstra with max elevation on path. For each path, track max elevation seen. Return min of such max elevations.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/shortest-path-in-binary-matrix/" target="_blank" class="lc-link">1091</a></td>
+<td>Shortest Path in Binary Matrix</td>
+<td class="diff-m">Medium</td>
+<td>BFS from (0,0) to (n-1,n-1). 8 directions. Track distance. Return distance when destination reached. Or -1 if impossible.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/word-ladder/" target="_blank" class="lc-link">127</a></td>
+<td>Word Ladder</td>
+<td class="diff-h">Hard</td>
+<td>BFS from beginWord. For each word, try changing each character to a-z. If in wordDict and not visited, add to queue with distance+1. Return distance when endWord reached.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="topo">4. Topological Sort & Cycle Detection</h2>
+
+<div class="card">
+<h3>Topological Sort (DAG only)</h3>
+<p>Linear ordering where for edge u→v, u comes before v.</p>
+
+<h4>Kahn's Algorithm (BFS-based)</h4>
+<pre><code>List<Integer> topologicalSort(int n, List<int[]> edges) {
+    int[] indegree = new int[n];
+    Map<Integer, List<Integer>> graph = new HashMap<>();
+    
+    // Build graph and compute indegree
+    for (int[] edge : edges) {
+        graph.putIfAbsent(edge[0], new ArrayList<>());
+        graph.get(edge[0]).add(edge[1]);
+        indegree[edge[1]]++;
+    }
+    
+    // Add nodes with indegree 0
+    Queue<Integer> q = new LinkedList<>();
+    for (int i = 0; i < n; i++) {
+        if (indegree[i] == 0) q.offer(i);
+    }
+    
+    List<Integer> result = new ArrayList<>();
+    while (!q.isEmpty()) {
+        int node = q.poll();
+        result.add(node);
+        
+        for (int neighbor : graph.getOrDefault(node, new ArrayList<>())) {
+            indegree[neighbor]--;
+            if (indegree[neighbor] == 0) q.offer(neighbor);
+        }
+    }
+    
+    return result.size() == n ? result : new ArrayList<>(); // cycle if size < n
+}</code></pre>
+
+<h4>DFS-based (with cycle detection)</h4>
+<pre><code>// 3 states: 0=unvisited, 1=visiting, 2=visited
+boolean dfs(int node, int[] state, List<Integer> result) {
+    if (state[node] == 1) return false; // cycle (back edge)
+    if (state[node] == 2) return true;  // already processed
+    
+    state[node] = 1; // mark visiting
+    for (int neighbor : graph.get(node)) {
+        if (!dfs(neighbor, state, result)) return false;
+    }
+    state[node] = 2; // mark visited
+    result.add(0, node); // add to front (reverse postorder)
+    return true;
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Topological Sort Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/course-schedule/" target="_blank" class="lc-link">207</a></td>
+<td>Course Schedule</td>
+<td class="diff-m">Medium</td>
+<td>Detect cycle in directed graph. Use DFS with 3 states or Kahn's algorithm. If cycle exists (visiting node reached or result.size < n), return false.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/course-schedule-ii/" target="_blank" class="lc-link">210</a></td>
+<td>Course Schedule II</td>
+<td class="diff-m">Medium</td>
+<td>Topological sort. Kahn's algorithm: process nodes with indegree 0, add to result. If result.size < n, cycle exists. Return empty array.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/alien-dictionary/" target="_blank" class="lc-link">269</a></td>
+<td>Alien Dictionary</td>
+<td class="diff-h">Hard</td>
+<td>Build graph from word pairs: first differing char creates edge. Topological sort gives character order. Handle invalid cases: cycle, prefix violation.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/sequence-reconstruction/" target="_blank" class="lc-link">444</a></td>
+<td>Sequence Reconstruction</td>
+<td class="diff-m">Medium</td>
+<td>Check if sequences uniquely determine org. Build graph, use Kahn's. At each step, queue size must be 1 (unique next). Reconstruct and compare.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/minimum-height-trees/" target="_blank" class="lc-link">310</a></td>
+<td>Minimum Height Trees</td>
+<td class="diff-m">Medium</td>
+<td>Find tree centroid(s). Remove leaves layer by layer (like topological sort). Last 1 or 2 nodes remaining are centroids. Use degree count.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="union-find">5. Union-Find (Disjoint Set Union)</h2>
+
+<div class="card">
+<h3>Union-Find Data Structure</h3>
+<p>Efficiently tracks connected components. Supports union and find operations.</p>
+
+<pre><code>class UnionFind {
+    int[] parent, rank;
+    int components;
+    
+    UnionFind(int n) {
+        parent = new int[n];
+        rank = new int[n];
+        components = n;
+        for (int i = 0; i < n; i++) parent[i] = i;
+    }
+    
+    // Find with path compression
+    int find(int x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]); // path compression
+        }
+        return parent[x];
+    }
+    
+    // Union by rank
+    boolean union(int x, int y) {
+        int rootX = find(x), rootY = find(y);
+        if (rootX == rootY) return false; // already connected
+        
+        if (rank[rootX] < rank[rootY]) {
+            parent[rootX] = rootY;
+        } else if (rank[rootX] > rank[rootY]) {
+            parent[rootY] = rootX;
+        } else {
+            parent[rootY] = rootX;
+            rank[rootX]++;
+        }
+        components--;
+        return true;
+    }
+    
+    boolean connected(int x, int y) {
+        return find(x) == find(y);
+    }
+}</code></pre>
+
+<div class="tip">
+<b>💡 Time Complexity:</b> With path compression and union by rank, operations are nearly O(1) - precisely O(α(n)) where α is inverse Ackermann function.
+</div>
+</div>
+
+<div class="card">
+<h3>Union-Find Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/number-of-provinces/" target="_blank" class="lc-link">547</a></td>
+<td>Number of Provinces</td>
+<td class="diff-m">Medium</td>
+<td>Union connected cities. For each edge isConnected[i][j]=1, union(i,j). Return number of components. Or DFS to mark visited cities.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/redundant-connection/" target="_blank" class="lc-link">684</a></td>
+<td>Redundant Connection</td>
+<td class="diff-m">Medium</td>
+<td>Union-Find. Process edges in order. If union(u,v) returns false (already connected), that edge creates cycle. Return that edge.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/accounts-merge/" target="_blank" class="lc-link">721</a></td>
+<td>Accounts Merge</td>
+<td class="diff-m">Medium</td>
+<td>Union accounts sharing emails. Map email→account_index. Union accounts with same email. Group emails by root parent. Sort each group.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/" target="_blank" class="lc-link">323</a></td>
+<td>Number of Connected Components</td>
+<td class="diff-m">Medium</td>
+<td>Union-Find: union all edges. Return components count. Or DFS: count number of DFS calls needed to visit all nodes.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/graph-valid-tree/" target="_blank" class="lc-link">261</a></td>
+<td>Graph Valid Tree</td>
+<td class="diff-m">Medium</td>
+<td>Tree iff: (1) n-1 edges, (2) no cycle, (3) connected. Union-Find: if union returns false (cycle) or components != 1, not a tree.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/satisfiability-of-equality-equations/" target="_blank" class="lc-link">990</a></td>
+<td>Satisfiability of Equality Equations</td>
+<td class="diff-m">Medium</td>
+<td>Union all "==" equations. Then check "!=" equations: if both variables in same set, contradiction. Return false.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="mst">6. Minimum Spanning Tree</h2>
+
+<div class="card">
+<h3>Kruskal's Algorithm (Union-Find)</h3>
+<pre><code>int kruskal(int n, List<int[]> edges) {
+    // Sort edges by weight
+    Collections.sort(edges, (a,b) -> a[2] - b[2]);
+    
+    UnionFind uf = new UnionFind(n);
+    int mstCost = 0, edgesUsed = 0;
+    
+    for (int[] edge : edges) {
+        int u = edge[0], v = edge[1], weight = edge[2];
+        if (uf.union(u, v)) {
+            mstCost += weight;
+            edgesUsed++;
+            if (edgesUsed == n - 1) break; // MST complete
+        }
+    }
+    
+    return edgesUsed == n - 1 ? mstCost : -1; // -1 if not connected
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>MST Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/min-cost-to-connect-all-points/" target="_blank" class="lc-link">1584</a></td>
+<td>Min Cost to Connect All Points</td>
+<td class="diff-m">Medium</td>
+<td>Generate all edges with Manhattan distance. Kruskal's: sort edges, union-find. Or Prim's: min-heap, greedily add nearest unvisited point.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/connecting-cities-with-minimum-cost/" target="_blank" class="lc-link">1135</a></td>
+<td>Connecting Cities With Minimum Cost</td>
+<td class="diff-m">Medium</td>
+<td>Standard MST with Kruskal's. Sort edges, union-find to avoid cycles. Return total cost if all cities connected (n-1 edges used).</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/optimize-water-distribution-in-a-village/" target="_blank" class="lc-link">1168</a></td>
+<td>Optimize Water Distribution</td>
+<td class="diff-h">Hard</td>
+<td>Add virtual node 0 (water source). Wells become edges 0→house with well cost. Pipes are existing edges. Run Kruskal's MST.</td>
+</tr>
+</table>
+</div>
+
+<h2>7. Advanced Graph Patterns</h2>
+
+<div class="card">
+<h3>Bipartite & Coloring</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/is-graph-bipartite/" target="_blank" class="lc-link">785</a></td>
+<td>Is Graph Bipartite</td>
+<td class="diff-m">Medium</td>
+<td>Color graph with 2 colors using BFS/DFS. If neighbor has same color, not bipartite. Handle disconnected components.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/possible-bipartition/" target="_blank" class="lc-link">886</a></td>
+<td>Possible Bipartition</td>
+<td class="diff-m">Medium</td>
+<td>Build graph from dislikes. Check if bipartite. Each group must have different color. If conflict (neighbor same color), return false.</td>
+</tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Matrix as Graph</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/rotting-oranges/" target="_blank" class="lc-link">994</a></td>
+<td>Rotting Oranges</td>
+<td class="diff-m">Medium</td>
+<td>Multi-source BFS. Add all rotten oranges to queue with time=0. BFS to neighbors, increment time. Track fresh count. Return time if all rotten, else -1.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/walls-and-gates/" target="_blank" class="lc-link">286</a></td>
+<td>Walls and Gates</td>
+<td class="diff-m">Medium</td>
+<td>Multi-source BFS from all gates (0s). Update distance to empty rooms (INF). Each step increases distance by 1. Nearest gate found first.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/01-matrix/" target="_blank" class="lc-link">542</a></td>
+<td>01 Matrix</td>
+<td class="diff-m">Medium</td>
+<td>Multi-source BFS from all 0s. Update distance to 1s. Or DP: two passes (top-left to bottom-right, then reverse) to propagate distances.</td>
+</tr>
+</table>
+</div>
+
+<h2>8. Practice Strategy</h2>
+
+<div class="card">
+<h3>Learning Path (4 Weeks)</h3>
+<ol>
+<li><b>Week 1 - Traversal:</b> Number of Islands, Clone Graph, Max Area of Island, Pacific Atlantic</li>
+<li><b>Week 2 - Shortest Path:</b> Network Delay Time, Shortest Path in Binary Matrix, Word Ladder, Dijkstra practice</li>
+<li><b>Week 3 - Topological Sort:</b> Course Schedule I & II, Alien Dictionary</li>
+<li><b>Week 4 - Union-Find & MST:</b> Number of Provinces, Redundant Connection, Accounts Merge, Min Cost Connect Points</li>
+</ol>
+
+<div class="note">
+<b>📝 Interview Tips:</b>
+<ul>
+<li>Always clarify: directed or undirected? weighted? cycles allowed?</li>
+<li>Ask about graph size: affects choice of representation</li>
+<li>Discuss time/space: BFS O(V+E) time, O(V) space; Dijkstra O((V+E)logV)</li>
+<li>For matrix problems, mention treating as graph with 4/8 directions</li>
+<li>Topological sort only works on DAGs - mention cycle detection</li>
+<li>Union-Find optimal for dynamic connectivity, component queries</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<h3>Algorithm Cheatsheet</h3>
+<table>
+<tr><th>Problem Type</th><th>Algorithm</th><th>Time Complexity</th></tr>
+<tr><td>Shortest path (unweighted)</td><td>BFS</td><td>O(V + E)</td></tr>
+<tr><td>Shortest path (non-negative)</td><td>Dijkstra</td><td>O((V + E) log V)</td></tr>
+<tr><td>Shortest path (negative edges)</td><td>Bellman-Ford</td><td>O(V * E)</td></tr>
+<tr><td>All pairs shortest path</td><td>Floyd-Warshall</td><td>O(V³)</td></tr>
+<tr><td>Cycle detection (directed)</td><td>DFS with 3 states</td><td>O(V + E)</td></tr>
+<tr><td>Topological sort</td><td>Kahn's or DFS</td><td>O(V + E)</td></tr>
+<tr><td>Connected components</td><td>DFS/BFS or Union-Find</td><td>O(V + E) or O(E·α(V))</td></tr>
+<tr><td>Minimum spanning tree</td><td>Kruskal's or Prim's</td><td>O(E log E) or O(E log V)</td></tr>
+<tr><td>Strongly connected components</td><td>Kosaraju's or Tarjan's</td><td>O(V + E)</td></tr>
+</table>
+</div>
+
+<div class="topnav" style="position:relative;margin:40px -20px -20px;">
+<a href="index.html">← Back to Home</a>
+<a href="#top">↑ Back to Top</a>
+</div>
+</div>
+</body>
+</html>

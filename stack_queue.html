@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stack & Queue - DSA Master Guide</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#273449;--txt:#e2e8f0;--muted:#94a3b8;--acc:#38bdf8;--green:#4ade80;--amber:#fbbf24;--danger:#f87171;--line:#334155;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.65;padding:20px;}
+.topnav{background:#0b1220;border-bottom:1px solid var(--line);padding:12px 16px;margin:-20px -20px 20px;position:sticky;top:0;z-index:50;}
+.topnav a{color:var(--acc);text-decoration:none;margin-right:14px;font-size:.9rem;}
+.topnav a:hover{text-decoration:underline;}
+.wrap{max-width:1200px;margin:0 auto;}
+header{text-align:center;padding:30px 20px;border-bottom:2px solid var(--acc);margin-bottom:30px;}
+h1{font-size:2rem;color:var(--acc);letter-spacing:.5px;margin-bottom:10px;}
+.subtitle{color:var(--muted);font-size:1rem;}
+h2{color:var(--acc);font-size:1.5rem;margin:40px 0 20px;padding:12px 16px;background:var(--card2);border-left:4px solid var(--acc);border-radius:0 8px 8px 0;}
+h3{color:var(--green);font-size:1.2rem;margin:25px 0 15px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;margin:15px 0;font-size:.92rem;}
+th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;}
+th{background:var(--card2);color:var(--acc);font-weight:600;}
+a{color:var(--acc);text-decoration:none;}
+a:hover{text-decoration:underline;}
+.note{background:#1a3a52;border-left:4px solid var(--amber);padding:15px 18px;border-radius:0 8px 8px 0;margin:15px 0;font-size:.95rem;}
+.tip{background:#1a4d2e;border-left:4px solid var(--green);padding:15px 18px;border-radius:0 8px 8px 0;margin:15px 0;}
+pre{background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:15px;overflow-x:auto;font-size:.88rem;margin:12px 0;color:#d6e4ff;}
+code{background:#0b1220;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:.9em;color:#7dd3fc;}
+pre code{background:none;border:none;padding:0;}
+ul,ol{margin:10px 0 10px 25px;}
+li{margin:8px 0;}
+.lc-link{display:inline-block;background:var(--acc);color:#0b1220;padding:3px 10px;border-radius:5px;font-weight:600;font-size:.85rem;}
+.lc-link:hover{background:#7dd3fc;text-decoration:none;}
+.diff-e{color:var(--green);font-weight:600;}
+.diff-m{color:var(--amber);font-weight:600;}
+.diff-h{color:var(--danger);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="topnav">
+<a href="index.html">← Back to Home</a>
+<a href="#stack-basics">Stack Basics</a>
+<a href="#monotonic">Monotonic Stack</a>
+<a href="#queue">Queue</a>
+<a href="#design">Design Problems</a>
+</div>
+
+<div class="wrap">
+<header>
+<h1>Stack & Queue</h1>
+<div class="subtitle">Master LIFO and FIFO data structures with monotonic stack patterns</div>
+</header>
+
+<h2 id="stack-basics">1. Stack Fundamentals</h2>
+
+<div class="card">
+<h3>Core Concepts</h3>
+<ul>
+<li><b>Stack:</b> LIFO (Last In First Out) data structure. Think of a stack of plates.</li>
+<li><b>Operations:</b> push(x) - add to top O(1), pop() - remove from top O(1), peek() - view top O(1)</li>
+<li><b>Implementation:</b> Array (dynamic array) or Linked List</li>
+<li><b>Use Cases:</b> Function call stack, undo/redo, parsing expressions, backtracking, matching pairs</li>
+</ul>
+
+<pre><code>// Stack implementation using array (Python)
+stack = []
+stack.append(x)    # push
+top = stack.pop()  # pop
+peek = stack[-1]   # peek (no removal)
+is_empty = len(stack) == 0
+
+// Java Stack
+Stack<Integer> stack = new Stack<>();
+stack.push(x);
+int top = stack.pop();
+int peek = stack.peek();</code></pre>
+
+<div class="tip">
+<b>💡 Pattern Recognition:</b> If you see "matching pairs", "valid nesting", "nearest greater/smaller element", or "process in reverse order" - think Stack.
+</div>
+</div>
+
+<div class="card">
+<h3>Basic Stack Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/valid-parentheses/" target="_blank" class="lc-link">20</a></td>
+<td>Valid Parentheses</td>
+<td class="diff-e">Easy</td>
+<td>Push opening brackets to stack. On closing bracket, check if stack top matches. Pop matched pair. Stack should be empty at end. Return false if mismatch or stack not empty.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/min-stack/" target="_blank" class="lc-link">155</a></td>
+<td>Min Stack</td>
+<td class="diff-m">Medium</td>
+<td>Use two stacks: main stack and min_stack. min_stack stores minimum value at each level. Push: add to both if <= current min. Pop: remove from both if equal to min. getMin() returns min_stack top.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/evaluate-reverse-polish-notation/" target="_blank" class="lc-link">150</a></td>
+<td>Evaluate Reverse Polish Notation</td>
+<td class="diff-m">Medium</td>
+<td>Push numbers to stack. On operator, pop two operands, compute result, push back. Order matters: second_pop operator first_pop. Return final stack value.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/baseball-game/" target="_blank" class="lc-link">682</a></td>
+<td>Baseball Game</td>
+<td class="diff-e">Easy</td>
+<td>Stack tracks valid scores. '+': sum of last 2, 'D': double last, 'C': remove last, else: add integer. Return sum of all scores in stack.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/backspace-string-compare/" target="_blank" class="lc-link">844</a></td>
+<td>Backspace String Compare</td>
+<td class="diff-e">Easy</td>
+<td>Use stack for each string. Push char if not '#', pop if '#' and stack not empty. Compare final stacks. O(1) space: iterate backwards, skip chars after backspaces.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="monotonic">2. Monotonic Stack</h2>
+
+<div class="card">
+<h3>What is Monotonic Stack?</h3>
+<p>A stack that maintains elements in monotonic (increasing or decreasing) order.</p>
+
+<h4>Monotonic Increasing Stack</h4>
+<pre><code>// Maintains increasing order (bottom to top)
+for each element:
+    while stack not empty and top >= element:
+        pop()  // remove elements breaking monotonic property
+    push(element)
+    
+// Use case: Find next smaller element</code></pre>
+
+<h4>Monotonic Decreasing Stack</h4>
+<pre><code>// Maintains decreasing order (bottom to top)
+for each element:
+    while stack not empty and top <= element:
+        pop()  // found answer for popped element
+    push(element)
+    
+// Use case: Find next greater element</code></pre>
+
+<div class="note">
+<b>⚠️ Key Insight:</b> Monotonic stack processes each element exactly once. Time complexity: O(n) despite nested loop. Each element pushed and popped at most once.
+</div>
+</div>
+
+<div class="card">
+<h3>Monotonic Stack Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/daily-temperatures/" target="_blank" class="lc-link">739</a></td>
+<td>Daily Temperatures</td>
+<td class="diff-m">Medium</td>
+<td>Stack stores indices. For each temp, while stack not empty and current temp > stack_top temp: pop index, answer[index] = current - index. Push current index. Remaining indices get 0.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/next-greater-element-i/" target="_blank" class="lc-link">496</a></td>
+<td>Next Greater Element I</td>
+<td class="diff-e">Easy</td>
+<td>Build hashmap for nums2: for each element, use monotonic stack to find next greater, store in map. Query map for nums1 elements. Return result array.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/next-greater-element-ii/" target="_blank" class="lc-link">503</a></td>
+<td>Next Greater Element II (Circular)</td>
+<td class="diff-m">Medium</td>
+<td>Process array twice to simulate circular. Stack stores indices. For i in range(2*n): idx = i % n. While top < current: pop and set result. Push index if first pass.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/largest-rectangle-in-histogram/" target="_blank" class="lc-link">84</a></td>
+<td>Largest Rectangle in Histogram</td>
+<td class="diff-h">Hard</td>
+<td>Monotonic increasing stack (indices). When smaller height found: pop index, height = heights[popped], width = current - stack_top - 1 (or current if empty). Calculate area. Push current index.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/trapping-rain-water/" target="_blank" class="lc-link">42</a></td>
+<td>Trapping Rain Water (Stack Solution)</td>
+<td class="diff-h">Hard</td>
+<td>Stack stores indices. When current > top: pop, calculate bounded height = min(left, current) - popped_height, width = current - new_top - 1. Add water. Push current.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/sum-of-subarray-minimums/" target="_blank" class="lc-link">907</a></td>
+<td>Sum of Subarray Minimums</td>
+<td class="diff-m">Medium</td>
+<td>Find left and right boundaries where element is minimum using two monotonic stacks. Contribution of element = value * left_count * right_count. Sum all contributions mod 10^9+7.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/online-stock-span/" target="_blank" class="lc-link">901</a></td>
+<td>Online Stock Span</td>
+<td class="diff-m">Medium</td>
+<td>Stack stores (price, span) pairs. While stack not empty and top price <= current: pop and add span to current span. Push (current_price, current_span). Return span.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="expression">3. Expression Parsing & Evaluation</h2>
+
+<div class="card">
+<h3>Calculator Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/basic-calculator/" target="_blank" class="lc-link">224</a></td>
+<td>Basic Calculator (I)</td>
+<td class="diff-h">Hard</td>
+<td>Stack stores (result, sign) when entering parentheses. Track current number and sign. On '(': push context. On ')': pop context, apply to result. Handle +/- operators.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/basic-calculator-ii/" target="_blank" class="lc-link">227</a></td>
+<td>Basic Calculator II</td>
+<td class="diff-m">Medium</td>
+<td>Stack + last operator. For */: pop and compute immediately. For +-: push (potentially negative) number. Handle last number after loop. Return sum of stack.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/basic-calculator-iii/" target="_blank" class="lc-link">772</a></td>
+<td>Basic Calculator III</td>
+<td class="diff-h">Hard</td>
+<td>Combine approaches: recursion for parentheses, stack for operators. When '(' found, recursively evaluate inner expression. Track operator precedence (* / before + -).</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/decode-string/" target="_blank" class="lc-link">394</a></td>
+<td>Decode String</td>
+<td class="diff-m">Medium</td>
+<td>Stack stores (current_string, repeat_count). Build number and string. On '[': push context, reset. On ']': pop context, repeat string, append to prev string. Return final string.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="greedy">4. Greedy Stack Problems</h2>
+
+<div class="card">
+<h3>Optimization Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/remove-k-digits/" target="_blank" class="lc-link">402</a></td>
+<td>Remove K Digits</td>
+<td class="diff-m">Medium</td>
+<td>Greedy + monotonic increasing stack. For each digit, while k > 0 and stack not empty and top > digit: pop (remove larger digit). Push digit. Remove remaining k from end. Handle leading zeros.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/remove-duplicate-letters/" target="_blank" class="lc-link">316</a></td>
+<td>Remove Duplicate Letters</td>
+<td class="diff-h">Hard</td>
+<td>Stack + visited set + last occurrence map. For each char, skip if visited. While top > char and top appears later: pop and unmark. Push char, mark visited. Return stack as string.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/create-maximum-number/" target="_blank" class="lc-link">321</a></td>
+<td>Create Maximum Number</td>
+<td class="diff-h">Hard</td>
+<td>Try all splits: i from nums1, k-i from nums2. For each array, use greedy stack to get max subsequence of length i. Merge two sequences keeping relative order. Return lexicographically largest.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="queue">5. Queue Fundamentals</h2>
+
+<div class="card">
+<h3>Core Concepts</h3>
+<ul>
+<li><b>Queue:</b> FIFO (First In First Out) data structure. Think of a line of people.</li>
+<li><b>Operations:</b> enqueue(x) - add to back O(1), dequeue() - remove from front O(1), peek() - view front O(1)</li>
+<li><b>Implementation:</b> Circular array or Doubly Linked List</li>
+<li><b>Use Cases:</b> BFS, level-order traversal, scheduling, buffering</li>
+</ul>
+
+<pre><code>// Queue implementation (Python)
+from collections import deque
+queue = deque()
+queue.append(x)        # enqueue (add to back)
+front = queue.popleft() # dequeue (remove from front)
+peek = queue[0]        # peek
+
+// Java Queue
+Queue<Integer> queue = new LinkedList<>();
+queue.offer(x);        // enqueue
+int front = queue.poll(); // dequeue
+int peek = queue.peek();</code></pre>
+</div>
+
+<div class="card">
+<h3>Deque (Double-Ended Queue)</h3>
+<p>Can add/remove from both ends in O(1). More powerful than stack or queue.</p>
+
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/sliding-window-maximum/" target="_blank" class="lc-link">239</a></td>
+<td>Sliding Window Maximum</td>
+<td class="diff-h">Hard</td>
+<td>Monotonic decreasing deque stores indices. Remove out-of-window indices from front. Remove smaller elements from back (never useful). Front is window maximum. Add to result.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/shortest-subarray-with-sum-at-least-k/" target="_blank" class="lc-link">862</a></td>
+<td>Shortest Subarray Sum >= K</td>
+<td class="diff-h">Hard</td>
+<td>Monotonic increasing deque on prefix sums. If current - front >= k: update min length, remove front. Remove larger prefix sums from back (never optimal). Push current index.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="design">6. Design Problems</h2>
+
+<div class="card">
+<h3>Custom Data Structures</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/implement-queue-using-stacks/" target="_blank" class="lc-link">232</a></td>
+<td>Implement Queue Using Stacks</td>
+<td class="diff-e">Easy</td>
+<td>Two stacks: input and output. Push to input. Pop/Peek: if output empty, transfer all from input (reverses order). Pop/peek from output. Amortized O(1) for all operations.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/implement-stack-using-queues/" target="_blank" class="lc-link">225</a></td>
+<td>Implement Stack Using Queues</td>
+<td class="diff-e">Easy</td>
+<td>Single queue. Push: add element, then rotate queue (dequeue and enqueue) n-1 times to move new element to front. Pop/Top: dequeue from front. O(n) push, O(1) pop.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/design-circular-queue/" target="_blank" class="lc-link">622</a></td>
+<td>Design Circular Queue</td>
+<td class="diff-m">Medium</td>
+<td>Array with head, tail pointers and size/capacity. Use modulo for circular indexing. isEmpty: size==0, isFull: size==capacity. Enqueue: arr[tail], tail=(tail+1)%cap. Dequeue: head=(head+1)%cap.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/max-stack/" target="_blank" class="lc-link">716</a></td>
+<td>Max Stack</td>
+<td class="diff-h">Hard</td>
+<td>Two stacks (main, max) OR TreeMap + Doubly Linked List. TreeMap tracks value→list of nodes. DLL maintains stack order. O(log n) operations. popMax: find max in TreeMap, remove from DLL.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/design-a-stack-with-increment-operation/" target="_blank" class="lc-link">1381</a></td>
+<td>Stack With Increment Operation</td>
+<td class="diff-m">Medium</td>
+<td>Array + top pointer. Increment: lazy propagation using auxiliary array. inc[i] stores pending increment. Pop: apply inc[i], transfer to inc[i-1]. O(1) all operations.</td>
+</tr>
+</table>
+</div>
+
+<h2>7. Advanced Stack Patterns</h2>
+
+<div class="card">
+<h3>Nested Structures</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/valid-parenthesis-string/" target="_blank" class="lc-link">678</a></td>
+<td>Valid Parenthesis String</td>
+<td class="diff-m">Medium</td>
+<td>Track min and max open count. '(': min++, max++. ')': min--, max--. '*': min-- (treat as ')'), max++ (treat as '('). If max < 0, invalid. Keep min >= 0. Return min == 0.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/longest-valid-parentheses/" target="_blank" class="lc-link">32</a></td>
+<td>Longest Valid Parentheses</td>
+<td class="diff-h">Hard</td>
+<td>Stack with base index (-1). Push indices of '('. On ')': pop. If empty, push current (new base). Else: length = current - stack_top. Track max. Alternative: DP approach.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/score-of-parentheses/" target="_blank" class="lc-link">856</a></td>
+<td>Score of Parentheses</td>
+<td class="diff-m">Medium</td>
+<td>Stack tracks current score at each depth. On '(': push 0 (start new level). On ')': pop cur_score, if 0 (empty pair) score=1, else score=2*cur_score. Add to stack top.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/remove-invalid-parentheses/" target="_blank" class="lc-link">301</a></td>
+<td>Remove Invalid Parentheses</td>
+<td class="diff-h">Hard</td>
+<td>BFS: start with original string. For each state, try removing one parenthesis at each position (avoid duplicates). Check if valid. First valid level found = minimum removals. Return all valid strings.</td>
+</tr>
+</table>
+</div>
+
+<h2>8. Practice Strategy</h2>
+
+<div class="card">
+<h3>Learning Path</h3>
+<ol>
+<li><b>Day 1-2 - Stack Basics:</b> Valid Parentheses, Min Stack, Baseball Game</li>
+<li><b>Day 3-5 - Monotonic Stack:</b> Daily Temperatures, Next Greater Element I & II</li>
+<li><b>Day 6-8 - Hard Monotonic:</b> Largest Rectangle, Trapping Rain Water, Sum of Subarray Minimums</li>
+<li><b>Day 9-10 - Calculators:</b> Basic Calculator II, Decode String</li>
+<li><b>Day 11-12 - Greedy:</b> Remove K Digits, Remove Duplicate Letters</li>
+<li><b>Day 13-14 - Deque:</b> Sliding Window Maximum</li>
+<li><b>Day 15 - Design:</b> Queue Using Stacks, Circular Queue</li>
+</ol>
+
+<div class="note">
+<b>📝 Interview Tips:</b>
+<ul>
+<li>Draw the stack state step-by-step for first few elements</li>
+<li>Clarify: what to return if stack empty? Handle edge cases</li>
+<li>Monotonic stack: decide increasing or decreasing based on problem</li>
+<li>When to pop: "while" vs "if" - usually "while" to clear all invalid elements</li>
+<li>Don't forget to process remaining elements in stack after main loop</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<h3>Common Mistakes</h3>
+<ul>
+<li>❌ Not checking if stack is empty before pop/peek</li>
+<li>❌ Confusing when to push index vs value (monotonic stack often needs indices)</li>
+<li>❌ Forgetting to handle remaining elements in stack after loop</li>
+<li>❌ Wrong monotonic order (increasing vs decreasing)</li>
+<li>❌ Not initializing result array properly (especially for "next greater" problems)</li>
+<li>❌ In circular array problems, forgetting to use modulo for indices</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Quick Reference</h3>
+<table>
+<tr><th>Problem Type</th><th>Pattern</th><th>Stack Type</th></tr>
+<tr><td>Matching pairs/brackets</td><td>Basic Stack</td><td>Store opening symbols</td></tr>
+<tr><td>Next Greater Element</td><td>Monotonic Decreasing</td><td>Pop when current > top</td></tr>
+<tr><td>Next Smaller Element</td><td>Monotonic Increasing</td><td>Pop when current < top</td></tr>
+<tr><td>Expression evaluation</td><td>Operator Stack</td><td>Handle precedence</td></tr>
+<tr><td>Sliding Window Max</td><td>Monotonic Deque</td><td>Decreasing order</td></tr>
+<tr><td>Nearest element on left</td><td>Process left to right</td><td>Check stack top before push</td></tr>
+<tr><td>Nearest element on right</td><td>Process right to left</td><td>Check stack top before push</td></tr>
+</table>
+</div>
+
+<div class="topnav" style="position:relative;margin:40px -20px -20px;">
+<a href="index.html">← Back to Home</a>
+<a href="#top">↑ Back to Top</a>
+</div>
+</div>
+</body>
+</html>

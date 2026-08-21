@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Programming - DSA Master Guide</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#273449;--txt:#e2e8f0;--muted:#94a3b8;--acc:#38bdf8;--green:#4ade80;--amber:#fbbf24;--danger:#f87171;--line:#334155;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.65;padding:20px;}
+.topnav{background:#0b1220;border-bottom:1px solid var(--line);padding:12px 16px;margin:-20px -20px 20px;position:sticky;top:0;z-index:50;}
+.topnav a{color:var(--acc);text-decoration:none;margin-right:14px;font-size:.9rem;}
+.topnav a:hover{text-decoration:underline;}
+.wrap{max-width:1200px;margin:0 auto;}
+header{text-align:center;padding:30px 20px;border-bottom:2px solid var(--acc);margin-bottom:30px;}
+h1{font-size:2rem;color:var(--acc);letter-spacing:.5px;margin-bottom:10px;}
+.subtitle{color:var(--muted);font-size:1rem;}
+h2{color:var(--acc);font-size:1.5rem;margin:40px 0 20px;padding:12px 16px;background:var(--card2);border-left:4px solid var(--acc);border-radius:0 8px 8px 0;}
+h3{color:var(--green);font-size:1.2rem;margin:25px 0 15px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;margin:15px 0;font-size:.92rem;}
+th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;}
+th{background:var(--card2);color:var(--acc);font-weight:600;}
+a{color:var(--acc);text-decoration:none;}
+a:hover{text-decoration:underline;}
+.note{background:#1a3a52;border-left:4px solid var(--amber);padding:15px 18px;border-radius:0 8px 8px 0;margin:15px 0;font-size:.95rem;}
+.tip{background:#1a4d2e;border-left:4px solid var(--green);padding:15px 18px;border-radius:0 8px 8px 0;margin:15px 0;}
+pre{background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:15px;overflow-x:auto;font-size:.88rem;margin:12px 0;color:#d6e4ff;}
+code{background:#0b1220;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:.9em;color:#7dd3fc;}
+pre code{background:none;border:none;padding:0;}
+ul,ol{margin:10px 0 10px 25px;}
+li{margin:8px 0;}
+.lc-link{display:inline-block;background:var(--acc);color:#0b1220;padding:3px 10px;border-radius:5px;font-weight:600;font-size:.85rem;}
+.lc-link:hover{background:#7dd3fc;text-decoration:none;}
+.diff-e{color:var(--green);font-weight:600;}
+.diff-m{color:var(--amber);font-weight:600;}
+.diff-h{color:var(--danger);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="topnav">
+<a href="index.html">← Back to Home</a>
+<a href="#basics">DP Basics</a>
+<a href="#1d">1D DP</a>
+<a href="#2d">2D DP</a>
+<a href="#knapsack">Knapsack</a>
+<a href="#strings">Strings</a>
+</div>
+
+<div class="wrap">
+<header>
+<h1>Dynamic Programming</h1>
+<div class="subtitle">Master optimal substructure and overlapping subproblems</div>
+</header>
+
+<h2 id="basics">1. DP Fundamentals</h2>
+
+<div class="card">
+<h3>What is Dynamic Programming?</h3>
+<ul>
+<li><b>Definition:</b> Optimization technique for problems with overlapping subproblems and optimal substructure.</li>
+<li><b>Optimal Substructure:</b> Optimal solution contains optimal solutions to subproblems.</li>
+<li><b>Overlapping Subproblems:</b> Same subproblems solved multiple times.</li>
+<li><b>Key Idea:</b> Store results of subproblems (memoization) to avoid recomputation.</li>
+</ul>
+
+<h4>Two Approaches</h4>
+<pre><code>// 1. Memoization (Top-Down): Recursion + Cache
+int fib(int n, int[] memo) {
+    if (n <= 1) return n;
+    if (memo[n] != -1) return memo[n];
+    memo[n] = fib(n-1, memo) + fib(n-2, memo);
+    return memo[n];
+}
+
+// 2. Tabulation (Bottom-Up): Iterative + Array
+int fib(int n) {
+    if (n <= 1) return n;
+    int[] dp = new int[n+1];
+    dp[0] = 0; dp[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        dp[i] = dp[i-1] + dp[i-2];
+    }
+    return dp[n];
+}</code></pre>
+
+<div class="tip">
+<b>💡 When to use DP:</b> If you can solve problem recursively but see repeated subproblems (drawing recursion tree shows overlaps), use DP. Ask: "Can I break this into smaller similar problems?"
+</div>
+</div>
+
+<div class="card">
+<h3>DP Problem-Solving Steps</h3>
+<ol>
+<li><b>Define State:</b> What parameters change? dp[i] represents what?</li>
+<li><b>Base Cases:</b> What are the simplest cases? Initialize them.</li>
+<li><b>Recurrence Relation:</b> How to compute dp[i] from previous states?</li>
+<li><b>Iteration Order:</b> Which order ensures dependencies are computed first?</li>
+<li><b>Space Optimization:</b> Can we reduce from 2D to 1D, or to O(1)?</li>
+</ol>
+</div>
+
+<h2 id="1d">2. 1D Dynamic Programming</h2>
+
+<div class="card">
+<h3>Linear DP Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/climbing-stairs/" target="_blank" class="lc-link">70</a></td>
+<td>Climbing Stairs</td>
+<td class="diff-e">Easy</td>
+<td>dp[i] = ways to reach step i = dp[i-1] + dp[i-2]. Base: dp[0]=1, dp[1]=1. Fibonacci pattern. Space optimize: two variables instead of array.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/house-robber/" target="_blank" class="lc-link">198</a></td>
+<td>House Robber</td>
+<td class="diff-m">Medium</td>
+<td>dp[i] = max money robbing up to house i = max(nums[i] + dp[i-2], dp[i-1]). Can't rob adjacent. Base: dp[0]=nums[0], dp[1]=max(nums[0],nums[1]). Optimize to O(1) space.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/house-robber-ii/" target="_blank" class="lc-link">213</a></td>
+<td>House Robber II (Circular)</td>
+<td class="diff-m">Medium</td>
+<td>Houses in circle: can't rob both first and last. Run House Robber I twice: (1) houses [0..n-2], (2) houses [1..n-1]. Return max of both.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/decode-ways/" target="_blank" class="lc-link">91</a></td>
+<td>Decode Ways</td>
+<td class="diff-m">Medium</td>
+<td>dp[i] = ways to decode s[0..i-1]. If s[i-1] valid (1-9): dp[i] += dp[i-1]. If s[i-2:i] valid (10-26): dp[i] += dp[i-2]. Handle '0' carefully.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/coin-change/" target="_blank" class="lc-link">322</a></td>
+<td>Coin Change</td>
+<td class="diff-m">Medium</td>
+<td>dp[amount] = min coins to make amount. For each coin: dp[i] = min(dp[i], dp[i-coin] + 1). Base: dp[0]=0. Return dp[amount] or -1 if impossible.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/maximum-product-subarray/" target="_blank" class="lc-link">152</a></td>
+<td>Maximum Product Subarray</td>
+<td class="diff-m">Medium</td>
+<td>Track max_prod and min_prod (negatives flip). For each num: new_max = max(num, num*max_prod, num*min_prod). Update min similarly. Track global max.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/longest-increasing-subsequence/" target="_blank" class="lc-link">300</a></td>
+<td>Longest Increasing Subsequence</td>
+<td class="diff-m">Medium</td>
+<td>dp[i] = LIS ending at i. For each j < i where nums[j] < nums[i]: dp[i] = max(dp[i], dp[j]+1). O(n²). Optimize: binary search on tails array O(n log n).</td>
+</tr>
+</table>
+</div>
+
+<h2 id="2d">3. 2D Dynamic Programming</h2>
+
+<div class="card">
+<h3>Grid & Matrix DP</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/unique-paths/" target="_blank" class="lc-link">62</a></td>
+<td>Unique Paths</td>
+<td class="diff-m">Medium</td>
+<td>dp[i][j] = ways to reach (i,j) = dp[i-1][j] + dp[i][j-1]. Base: dp[0][j]=1, dp[i][0]=1 (only one way along edges). Space optimize: use 1D array.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/minimum-path-sum/" target="_blank" class="lc-link">64</a></td>
+<td>Minimum Path Sum</td>
+<td class="diff-m">Medium</td>
+<td>dp[i][j] = min cost to reach (i,j) = grid[i][j] + min(dp[i-1][j], dp[i][j-1]). Base: dp[0][0]=grid[0][0]. Can modify grid in-place.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/maximal-square/" target="_blank" class="lc-link">221</a></td>
+<td>Maximal Square</td>
+<td class="diff-m">Medium</td>
+<td>dp[i][j] = side length of max square with bottom-right at (i,j). If matrix[i][j]='1': dp[i][j] = min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) + 1. Track max side.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/triangle/" target="_blank" class="lc-link">120</a></td>
+<td>Triangle</td>
+<td class="diff-m">Medium</td>
+<td>Bottom-up: dp[i][j] = triangle[i][j] + min(dp[i+1][j], dp[i+1][j+1]). Start from bottom row. Return dp[0][0]. Space optimize: use 1D array.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/dungeon-game/" target="_blank" class="lc-link">174</a></td>
+<td>Dungeon Game</td>
+<td class="diff-h">Hard</td>
+<td>Work backwards from (m-1, n-1). dp[i][j] = min health needed at (i,j). dp[i][j] = max(1, min(dp[i+1][j], dp[i][j+1]) - dungeon[i][j]). Must stay > 0.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="knapsack">4. Knapsack Patterns</h2>
+
+<div class="card">
+<h3>0/1 Knapsack (Each item once)</h3>
+<pre><code>// dp[i][w] = max value using first i items with weight limit w
+for (int i = 1; i <= n; i++) {
+    for (int w = 0; w <= capacity; w++) {
+        if (weight[i-1] <= w) {
+            dp[i][w] = max(
+                dp[i-1][w],                          // don't take
+                value[i-1] + dp[i-1][w-weight[i-1]] // take
+            );
+        } else {
+            dp[i][w] = dp[i-1][w]; // can't take
+        }
+    }
+}
+
+// Space optimize: 1D array, iterate backwards
+for (int i = 0; i < n; i++) {
+    for (int w = capacity; w >= weight[i]; w--) {
+        dp[w] = max(dp[w], value[i] + dp[w-weight[i]]);
+    }
+}</code></pre>
+
+<h3>Unbounded Knapsack (Unlimited items)</h3>
+<pre><code>// Can take item multiple times
+for (int i = 0; i < n; i++) {
+    for (int w = weight[i]; w <= capacity; w++) { // iterate forwards
+        dp[w] = max(dp[w], value[i] + dp[w-weight[i]]);
+    }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>Knapsack Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/partition-equal-subset-sum/" target="_blank" class="lc-link">416</a></td>
+<td>Partition Equal Subset Sum</td>
+<td class="diff-m">Medium</td>
+<td>Check if subset with sum = total/2 exists. 0/1 knapsack: dp[sum] = can we make this sum. For each num, update dp[sum] if dp[sum-num] is true. Iterate backwards.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/target-sum/" target="_blank" class="lc-link">494</a></td>
+<td>Target Sum</td>
+<td class="diff-m">Medium</td>
+<td>Convert to subset sum: find subset S where sum(S) - sum(rest) = target. Rearrange: sum(S) = (total + target) / 2. Count subsets with this sum using 0/1 knapsack DP.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/last-stone-weight-ii/" target="_blank" class="lc-link">1049</a></td>
+<td>Last Stone Weight II</td>
+<td class="diff-m">Medium</td>
+<td>Minimize difference between two groups. Find subset closest to total/2. Use knapsack DP to find max sum <= total/2. Answer = total - 2*max_sum.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/ones-and-zeroes/" target="_blank" class="lc-link">474</a></td>
+<td>Ones and Zeroes</td>
+<td class="diff-m">Medium</td>
+<td>2D knapsack: dp[m][n] = max strings with m zeros, n ones. For each string, count zeros/ones. Update dp backwards: dp[i][j] = max(dp[i][j], 1 + dp[i-zeros][j-ones]).</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/coin-change-ii/" target="_blank" class="lc-link">518</a></td>
+<td>Coin Change II</td>
+<td class="diff-m">Medium</td>
+<td>Unbounded knapsack: count ways to make amount. dp[i] = ways to make i. For each coin, for amount from coin to target: dp[amount] += dp[amount - coin]. Iterate forwards.</td>
+</tr>
+</table>
+</div>
+
+<h2 id="strings">5. String DP</h2>
+
+<div class="card">
+<h3>Longest Common Subsequence (LCS)</h3>
+<pre><code>// dp[i][j] = LCS length of s1[0..i-1] and s2[0..j-1]
+for (int i = 1; i <= m; i++) {
+    for (int j = 1; j <= n; j++) {
+        if (s1[i-1] == s2[j-1]) {
+            dp[i][j] = dp[i-1][j-1] + 1;
+        } else {
+            dp[i][j] = max(dp[i-1][j], dp[i][j-1]);
+        }
+    }
+}</code></pre>
+
+<h3>Edit Distance</h3>
+<pre><code>// dp[i][j] = min operations to convert s1[0..i-1] to s2[0..j-1]
+for (int i = 1; i <= m; i++) {
+    for (int j = 1; j <= n; j++) {
+        if (s1[i-1] == s2[j-1]) {
+            dp[i][j] = dp[i-1][j-1]; // no operation
+        } else {
+            dp[i][j] = 1 + min({
+                dp[i-1][j],    // delete from s1
+                dp[i][j-1],    // insert into s1
+                dp[i-1][j-1]   // replace
+            });
+        }
+    }
+}</code></pre>
+</div>
+
+<div class="card">
+<h3>String DP Problems</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/longest-common-subsequence/" target="_blank" class="lc-link">1143</a></td>
+<td>Longest Common Subsequence</td>
+<td class="diff-m">Medium</td>
+<td>2D DP: if chars match, dp[i][j] = dp[i-1][j-1] + 1. Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]). Space optimize: use 1D array.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/edit-distance/" target="_blank" class="lc-link">72</a></td>
+<td>Edit Distance</td>
+<td class="diff-h">Hard</td>
+<td>2D DP: if chars match, no operation. Else: 1 + min(delete, insert, replace). Base: dp[i][0]=i (delete all), dp[0][j]=j (insert all).</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/longest-palindromic-substring/" target="_blank" class="lc-link">5</a></td>
+<td>Longest Palindromic Substring</td>
+<td class="diff-m">Medium</td>
+<td><b>Expand around center:</b> Try each position as center (odd/even length). <b>DP:</b> dp[i][j] = is s[i..j] palindrome. dp[i][j] = (s[i]==s[j]) && dp[i+1][j-1].</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/palindromic-substrings/" target="_blank" class="lc-link">647</a></td>
+<td>Palindromic Substrings</td>
+<td class="diff-m">Medium</td>
+<td>Expand around center: for each center, expand while chars match. Count palindromes. Or 2D DP: count dp[i][j] where is_palindrome is true.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/word-break/" target="_blank" class="lc-link">139</a></td>
+<td>Word Break</td>
+<td class="diff-m">Medium</td>
+<td>dp[i] = can we segment s[0..i-1]. For each i, check all j < i: if dp[j] && s[j..i-1] in dict, dp[i]=true. Base: dp[0]=true (empty string).</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/word-break-ii/" target="_blank" class="lc-link">140</a></td>
+<td>Word Break II</td>
+<td class="diff-h">Hard</td>
+<td>Memoized DFS. At each position, try all valid words from dict. If word matches, recurse on remaining. Build sentences. Use memo to avoid recomputation.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/distinct-subsequences/" target="_blank" class="lc-link">115</a></td>
+<td>Distinct Subsequences</td>
+<td class="diff-h">Hard</td>
+<td>dp[i][j] = count ways to form t[0..j-1] from s[0..i-1]. If s[i-1]==t[j-1]: dp[i][j] = dp[i-1][j-1] (use char) + dp[i-1][j] (skip char). Else: dp[i][j] = dp[i-1][j].</td>
+</tr>
+</table>
+</div>
+
+<h2 id="advanced">6. Advanced DP Patterns</h2>
+
+<div class="card">
+<h3>Interval DP</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/burst-balloons/" target="_blank" class="lc-link">312</a></td>
+<td>Burst Balloons</td>
+<td class="diff-h">Hard</td>
+<td>dp[i][j] = max coins bursting balloons (i..j). For each k in [i..j], assume k is LAST to burst: dp[i][j] = max(nums[i-1]*nums[k]*nums[j+1] + dp[i][k-1] + dp[k+1][j]). Add 1s at boundaries.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/minimum-cost-tree-from-leaf-values/" target="_blank" class="lc-link">1130</a></td>
+<td>Min Cost Tree From Leaf Values</td>
+<td class="diff-m">Medium</td>
+<td>Interval DP: dp[i][j] = min cost for subarray [i..j]. Try each split point k: dp[i][j] = min(dp[i][k] + dp[k+1][j] + max(arr[i..k]) * max(arr[k+1..j])). Or greedy stack.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/remove-boxes/" target="_blank" class="lc-link">546</a></td>
+<td>Remove Boxes</td>
+<td class="diff-h">Hard</td>
+<td>3D DP: dp[i][j][k] = max points removing boxes[i..j] with k same-color boxes before i. Complex state transitions considering merging same colors.</td>
+</tr>
+</table>
+</div>
+
+<div class="card">
+<h3>State Machine DP</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/" target="_blank" class="lc-link">309</a></td>
+<td>Stock with Cooldown</td>
+<td class="diff-m">Medium</td>
+<td>3 states: hold, sold, rest. hold[i] = max(hold[i-1], rest[i-1]-price). sold[i] = hold[i-1]+price. rest[i] = max(rest[i-1], sold[i-1]). Track transitions.</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/" target="_blank" class="lc-link">188</a></td>
+<td>Stock with K Transactions</td>
+<td class="diff-h">Hard</td>
+<td>dp[i][k][0/1] = max profit after i days, k transactions, holding(1) or not(0). Transitions: buy (k-1, 0→1), sell (k, 1→0), rest. Optimize: if k >= n/2, unlimited.</td>
+</tr>
+</table>
+</div>
+
+<div class="card">
+<h3>DP with Binary Search</h3>
+<table>
+<tr><th>LC#</th><th>Problem</th><th>Difficulty</th><th>Solution Approach</th></tr>
+<tr>
+<td><a href="https://leetcode.com/problems/russian-doll-envelopes/" target="_blank" class="lc-link">354</a></td>
+<td>Russian Doll Envelopes</td>
+<td class="diff-h">Hard</td>
+<td>Sort by width asc, height desc. Find LIS on heights using binary search. Descending height ensures same width envelopes don't nest. O(n log n).</td>
+</tr>
+<tr>
+<td><a href="https://leetcode.com/problems/maximum-profit-in-job-scheduling/" target="_blank" class="lc-link">1235</a></td>
+<td>Maximum Profit Job Scheduling</td>
+<td class="diff-h">Hard</td>
+<td>Sort by end time. dp[i] = max profit up to job i. For each job: binary search for last non-overlapping job. dp[i] = max(dp[i-1], profit[i] + dp[last]).</td>
+</tr>
+</table>
+</div>
+
+<h2>7. Practice Strategy</h2>
+
+<div class="card">
+<h3>Learning Path (6 Weeks)</h3>
+<ol>
+<li><b>Week 1 - 1D DP Basics:</b> Climbing Stairs, House Robber, Decode Ways, Coin Change</li>
+<li><b>Week 2 - 1D Advanced:</b> LIS, Max Product Subarray, Jump Game variants</li>
+<li><b>Week 3 - 2D Grid:</b> Unique Paths, Min Path Sum, Maximal Square, Triangle</li>
+<li><b>Week 4 - Knapsack:</b> Partition Equal Subset Sum, Target Sum, Coin Change II</li>
+<li><b>Week 5 - Strings:</b> LCS, Edit Distance, Palindrome problems, Word Break</li>
+<li><b>Week 6 - Advanced:</b> Burst Balloons, Stock problems, Interval DP</li>
+</ol>
+
+<div class="note">
+<b>📝 Interview Tips:</b>
+<ul>
+<li>Always start with recursive solution, identify overlapping subproblems</li>
+<li>Define state clearly: "dp[i] represents..."</li>
+<li>Write down base cases explicitly</li>
+<li>Draw small example (n=4) and fill DP table manually</li>
+<li>State time/space complexity: often O(n²) time, O(n) or O(n²) space</li>
+<li>Mention space optimization if applicable (2D→1D, rolling array)</li>
+<li>For 2D DP, clarify iteration order (usually row-by-row or diagonal)</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<h3>DP Pattern Recognition</h3>
+<table>
+<tr><th>Keywords/Clues</th><th>Pattern</th><th>Example</th></tr>
+<tr><td>"Count ways", "How many"</td><td>Counting DP</td><td>Climbing Stairs, Decode Ways</td></tr>
+<tr><td>"Maximize/Minimize"</td><td>Optimization DP</td><td>House Robber, Max Subarray</td></tr>
+<tr><td>"Subsequence"</td><td>LIS pattern or LCS</td><td>LIS, LCS, Distinct Subsequences</td></tr>
+<tr><td>"Can partition", "Subset sum"</td><td>0/1 Knapsack</td><td>Partition Equal Subset, Target Sum</td></tr>
+<tr><td>"Unlimited use"</td><td>Unbounded Knapsack</td><td>Coin Change II</td></tr>
+<tr><td>"Convert string A to B"</td><td>Edit Distance pattern</td><td>Edit Distance, Delete Operation</td></tr>
+<tr><td>"Palindrome substring/subsequence"</td><td>Interval DP or Expand</td><td>Longest Palindrome, Palindromic Substrings</td></tr>
+<tr><td>"Buy/Sell stock with..."</td><td>State Machine DP</td><td>Stock problems with transactions</td></tr>
+<tr><td>"Path in grid from (0,0) to (m,n)"</td><td>2D Grid DP</td><td>Unique Paths, Min Path Sum</td></tr>
+<tr><td>"Burst/Remove with optimal order"</td><td>Interval DP</td><td>Burst Balloons, Remove Boxes</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Common Mistakes</h3>
+<ul>
+<li>❌ Not initializing base cases correctly</li>
+<li>❌ Off-by-one errors in array indices (especially dp[i-1])</li>
+<li>❌ Wrong iteration order causing access to uncomputed states</li>
+<li>❌ Forgetting to handle edge cases (empty input, n=1)</li>
+<li>❌ In knapsack, iterating forwards when should go backwards (or vice versa)</li>
+<li>❌ Not considering space optimization after solving</li>
+<li>❌ In string DP, confusing i and i-1 indexing between dp array and string</li>
+</ul>
+</div>
+
+<div class="topnav" style="position:relative;margin:40px -20px -20px;">
+<a href="index.html">← Back to Home</a>
+<a href="#top">↑ Back to Top</a>
+</div>
+</div>
+</body>
+</html>

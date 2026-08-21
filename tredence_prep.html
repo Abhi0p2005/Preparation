@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tredence Analyst Preparation Guide</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.section-nav{background:#0b1220;border-bottom:1px solid var(--line);padding:12px 16px;margin:-20px -20px 20px;position:sticky;top:0;z-index:50;}
+.section-nav a{color:var(--acc);text-decoration:none;margin-right:14px;font-size:.9rem;}
+.section-nav a:hover{text-decoration:underline;}
+.highlight-box{background:#112a45;border-left:4px solid var(--acc);padding:16px;margin:20px 0;border-radius:0 8px 8px 0;}
+.qn-card{border-left:4px solid var(--amber);background:var(--card2);border-radius:0 8px 8px 0;padding:16px;margin:16px 0;}
+.qn-card b{color:var(--orange);}
+</style>
+</head>
+<body>
+<div class="section-nav">
+<a href="index.html">← Back to Master Home</a>
+<a href="#blueprint">Blueprint</a>
+<a href="#sql">SQL Drills</a>
+<a href="#python">Python Coding</a>
+<a href="#de-concepts">DE Concepts</a>
+<a href="#cases">Case Studies & Guesstimates</a>
+<a href="#behavioral">Behavioral (STAR)</a>
+</div>
+
+<div class="wrap">
+<header>
+<h1>TREDENCE ANALYST PREPARATION GUIDE</h1>
+<div class="sub">Fully tailored for the Analyst (Data Engineering) Interview Track · CTC: INR 12.5 LPA</div>
+</header>
+
+<h2 id="blueprint">1. The Analyst Interview Blueprint</h2>
+<div class="card">
+<p>Because Tredence is a data science consultancy, their interviews assess a balance of <b>Data Engineering (DE) skills, raw technical coding, logical reasoning, and client communication</b>. Expect the evaluation to split into three core pillars:</p>
+<ul>
+<li><b>Pillar 1: Data Mastery (SQL & Python):</b> Writing optimal SQL queries live (CTEs, joins, window functions) and implementing structured Python scripts.</li>
+<li><b>Pillar 2: Case Studies & Analytics Thinking:</b> Guesstimates (estimating markets/revenues) and solving business optimization problems using mathematics and logic.</li>
+<li><b>Pillar 3: Communication & Collaboration (The STAR Model):</b> Showing how you explain findings, deal with ambiguous requirements, and align with client challenges.</li>
+</ul>
+</div>
+
+<h2 id="sql">2. Top SQL Drills</h2>
+<div class="card">
+<p>SQL is the most critical technical screening filter. Expect live coding where you share your screen and write queries from scratch.</p>
+
+<div class="qn-card">
+<b>Q1. Explain the difference between ROW_NUMBER(), RANK(), and DENSE_RANK() with an illustrative schema.</b>
+<p><b>Approach:</b> Write a query showing the behavior when values are identical (ties).</p>
+<pre><code>-- Let's assume we have identical salaries: 100, 100, 80
+SELECT 
+  employee_id, salary,
+  ROW_NUMBER() OVER (ORDER BY salary DESC) as row_num,   -- 1, 2, 3
+  RANK() OVER (ORDER BY salary DESC) as rnk,             -- 1, 1, 3 (skips rank 2)
+  DENSE_RANK() OVER (ORDER BY salary DESC) as dense_rnk  -- 1, 1, 2 (no gaps)
+FROM employees;</code></pre>
+</div>
+
+<div class="qn-card">
+<b>Q2. Calculate Monthly Active Users (MAU) and month-over-month user retention.</b>
+<p><b>Concept:</b> Self-join on user activity tables offset by 1 month.</p>
+<pre><code>WITH MonthlyActive AS (
+  SELECT DISTINCT 
+    user_id, 
+    DATE_TRUNC('month', login_time) as login_month
+  FROM user_logins
+)
+SELECT 
+  curr.login_month as current_month,
+  COUNT(DISTINCT curr.user_id) as active_users,
+  COUNT(DISTINCT prev.user_id) as retained_users,
+  ROUND(COUNT(DISTINCT prev.user_id) * 100.0 / COUNT(DISTINCT curr.user_id), 2) as retention_percentage
+FROM MonthlyActive curr
+LEFT JOIN MonthlyActive prev 
+  ON curr.user_id = prev.user_id 
+  AND curr.login_month = prev.login_month + INTERVAL '1 month'
+GROUP BY curr.login_month;</code></pre>
+</div>
+
+<div class="qn-card">
+<b>Q3. Explain what happens during Joins on columns containing NULL values.</b>
+<p><b>Trap:</b> <code>NULL = NULL</code> evaluates to <code>UNKNOWN</code> (not <code>TRUE</code>). Joining tables on columns where matches are null will drop those rows. To count or match nulls, you must write explicit null checks (e.g. <code>A.id = B.id OR (A.id IS NULL AND B.id IS NULL)</code>) or use <code>COALESCE</code>.</p>
+</div>
+</div>
+
+<h2 id="python">3. Python for Data Engineering</h2>
+<div class="card">
+<p>Tredence values the ability to write <b>clean, memory-efficient code</b>. You will be asked about basic script composition, grouping, and generators.</p>
+
+<div class="qn-card">
+<b>Q1. Writing a memory-efficient file processor (Generators).</b>
+<p>What if a file is 20GB and your RAM is 8GB? Use generators to process row-by-row without loading the full file in memory.</p>
+<pre><code class="language-python">def read_large_log(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        for line in file:
+            yield line.strip()
+
+# Usage (only reads one line at a time):
+for raw_log in read_large_log("massive_logs.csv"):
+    if "ERROR" in raw_log:
+        process_error(raw_log)</code></pre>
+</div>
+
+<div class="qn-card">
+<b>Q2. Implement a Python function to group transactions and compute total metrics without using external libraries (e.g. Pandas).</b>
+<p><b>Task:</b> Group list of dictionaries `{'user': str, 'amount': float}` by user and sum balances.</p>
+<pre><code class="language-python">def aggregate_transactions(transactions):
+    summary = {}
+    for tx in transactions:
+        user = tx['user']
+        amount = tx['amount']
+        if user not in summary:
+            summary[user] = {'count': 0, 'total': 0.0}
+        summary[user]['count'] += 1
+        summary[user]['total'] += amount
+    return summary</code></pre>
+</div>
+</div>
+
+<h2 id="de-concepts">4. Data Engineering Theory Checklist</h2>
+<div class="card">
+<p>Prepare for theory questions concerning data modeling and storage structures:</p>
+<ul>
+<li><b>OLTP vs OLAP:</b> OLTP (Online Transaction Processing) is optimized for fast, write-heavy, row-oriented operations (e.g., PostgreSQL for transactions). OLAP (Online Analytical Processing) is optimized for read-heavy, column-oriented, analytical queries (e.g., Snowflake, Redshift for data warehouses).</li>
+<li><b>Star Schema vs Snowflake Schema:</b> 
+  <ul>
+    <li><i>Star Schema:</i> Fact tables connect directly to denormalized dimension tables. Fast queries, redundant storage.</li>
+    <li><i>Snowflake Schema:</i> Dimension tables are normalized (split into sub-tables). Saves space, but adds query complexity due to joins.</li>
+  </ul>
+</li>
+<li><b>ETL vs ELT:</b> 
+  <ul>
+    <li><i>ETL (Extract, Transform, Load):</i> Data is transformed before reaching target storage. Good for security/anonymization, but slower.</li>
+    <li><i>ELT (Extract, Load, Transform):</i> Data is loaded directly to a cloud data lake/warehouse, using storage compute to transform it later. Fast and scalable.</li>
+  </ul>
+</li>
+</ul>
+</div>
+
+<h2 id="cases">5. Case Studies & Guesstimates</h2>
+<div class="card">
+<p>These questions evaluate your <b>logical structuring</b> and <b>estimation skills</b> rather than getting a perfectly accurate number.</p>
+
+<div class="highlight-box">
+<b>The Golden Rule for Guesstimates:</b> Always structure your formula first! State assumptions clearly, choose round numbers, and sanity-check your final output.
+</div>
+
+<div class="qn-card">
+<b>Guesstimate 1: Estimate the daily revenue of a Starbucks in Outer Ring Road, Bangalore.</b>
+<p><b>Structuring Strategy:</b></p>
+<ol>
+  <li>Divide by Hours of Operation (e.g., 7 AM to 11 PM = 16 hours). Split into peak hours (8 AM - 11 AM, 4 PM - 7 PM = 6 hours) and non-peak hours (10 hours).</li>
+  <li>State order rate assumptions:
+    <ul>
+      <li>Peak: 1 order every 30 seconds = 120 orders/hour.</li>
+      <li>Non-peak: 1 order every 3 minutes = 20 orders/hour.</li>
+    </ul>
+  </li>
+  <li>Calculate Total Orders: (6 * 120) + (10 * 20) = 720 + 200 = 920 orders/day.</li>
+  <li>Average Order Value (AOV): Coffee + side snacks ≈ ₹300.</li>
+  <li>Estimated Revenue: 920 orders * ₹300 = ₹2,76,000/day.</li>
+</ol>
+</div>
+
+<div class="qn-card">
+<b>Guesstimate 2: How many tennis balls fit inside a Boeing 747?</b>
+<p><b>Structuring Strategy:</b></p>
+<ol>
+  <li>Estimate Volume of Boeing 747: treat it as a cylinder. Length ≈ 70m, Radius ≈ 3m. Volume = &pi; * r² * h ≈ 3 * 9 * 70 ≈ 1900 m³.</li>
+  <li>Adjust for interior (seats, overhead, cargo): Assume 50% usable empty volume ≈ 950 m³.</li>
+  <li>Estimate Volume of a Tennis Ball: Radius ≈ 3.3 cm (0.033m). Volume = 4/3 * &pi; * r³ ≈ 4 * (0.033)³ ≈ 0.00015 m³.</li>
+  <li>Account for packing coefficient (empty air gaps): Random packing allows about 64% bubble efficiency. Usable volume = 950 * 0.64 ≈ 600 m³.</li>
+  <li>Final division: 600 / 0.00015 = 4,000,000 tennis balls.</li>
+</ol>
+</div>
+</div>
+
+<h2 id="behavioral">6. Behavioral & Communication (STAR Method)</h2>
+<div class="card">
+<p>Speak slowly and structure your thoughts. Here are 3 common scenarios Tredence asks, mapped to the STAR method:</p>
+
+<div class="qn-card">
+<b>S1: "Tell me about a time you had to deal with ambiguous requirements."</b>
+<ul>
+  <li><b>S (Situation):</b> For my final year project, we had to build a cloud pipeline but the client details kept changing.</li>
+  <li><b>T (Task):</b> I needed to freeze requirements and design a flexible, scalable architecture.</li>
+  <li><b>A (Action):</b> I scheduled a clarify call, presented a mock dashboard to align expectations, and built a modular pipeline so schema updates wouldn't break it.</li>
+  <li><b>R (Result):</b> We delivered ahead of schedule and the client approved the final system without rework.</li>
+</ul>
+</div>
+
+<div class="qn-card">
+<b>S2: "How would you handle a situation where a client is unhappy with your dashboard/data model?"</b>
+<ul>
+  <li><b>S (Situation):</b> A client complained that our data pipeline updates were too slow.</li>
+  <li><b>T (Task):</b> I had to resolve the bottleneck under pressure of an impending business review.</li>
+  <li><b>A (Action):</b> Instead of being defensive, I checked logs, identified joining traps on unindexed fields, converted nested queries to temp tables, and added comments detailing changes.</li>
+  <li><b>R (Result):</b> Execution speed improved by 60%, and we gained the client's long-term trust.</li>
+</ul>
+</div>
+</div>
+
+<h2>7. Preparation Checklist</h2>
+<div class="card">
+<ul class="chk">
+  <li><input type="checkbox" id="tr-1"><label for="tr-1">Practice writing window functions (RANK, ROW_NUMBER) on hackerRank / LeetCode SQL</label></li>
+  <li><input type="checkbox" id="tr-2"><label for="tr-2">Familiarize yourself with Python script efficiency (generators, list comprehensions, dict lookups)</label></li>
+  <li><input type="checkbox" id="tr-3"><label for="tr-3">Practice 3-5 guesstimates out loud while timing yourself (aim for under 5 minutes each)</label></li>
+  <li><input type="checkbox" id="tr-4"><label for="tr-4">Review the STAR method for behavioral answers: speak 20% slower and use clear transitions</label></li>
+</ul>
+</div>
+
+<footer>Tredence Analyst Preparation Guide · <a href="index.html">← Back to Master Home</a></footer>
+</div>
+</body>
+</html>

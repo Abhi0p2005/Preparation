@@ -169,13 +169,49 @@
 <section class="page" id="page-cp2" data-title="Tredence Prep" data-group="Company Prep">
 <div class="page-head">
   <div class="pn">2</div>
-  <div><div class="tag">Company Prep</div><h2>Tredence Prep</h2></div>
+  <div><div class="tag">Company Prep</div><h2>Tredence Analyst Prep</h2></div>
 </div>
+
+<div class="card" style="border-left: 4px solid var(--orange);">
+<h3>📊 Data Engineering & Analytics Focus</h3>
+<div class="grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
+  <div style="background:var(--card2); padding:15px; border-radius:8px;">
+    <b style="color:var(--orange);">1. SQL Mastery</b>
+    <ul style="font-size:0.85rem; margin-top:8px;">
+      <li>Window Functions (ROW_NUMBER, RANK, DENSE_RANK).</li>
+      <li>CTEs & Recursive Queries.</li>
+      <li>Optimization (Indexing, Query Plans).</li>
+    </ul>
+  </div>
+  <div style="background:var(--card2); padding:15px; border-radius:8px;">
+    <b style="color:var(--orange);">2. Data Warehousing</b>
+    <ul style="font-size:0.85rem; margin-top:8px;">
+      <li>Star vs Snowflake Schema.</li>
+      <li>OLAP vs OLTP.</li>
+      <li>SCD (Slowly Changing Dimensions) Types.</li>
+    </ul>
+  </div>
+  <div style="background:var(--card2); padding:15px; border-radius:8px;">
+    <b style="color:var(--orange);">3. Python for Data</b>
+    <ul style="font-size:0.85rem; margin-top:8px;">
+      <li>Memory efficient data processing.</li>
+      <li>Pandas/NumPy for analytics.</li>
+      <li>Big Data concepts (Sancus tool context).</li>
+    </ul>
+  </div>
+</div>
+</div>
+
 <div class="card">
-  <h3>Tredence Analyst (Data Engineering)</h3>
-  <p>Tailored practice sheet covering SQL window function traps, memory-efficient Python coding, data warehousing theory (OLAP/Star schema), and analytics guesstimates.</p>
-  <a href="tredence_prep.html" target="_blank" style="display:inline-block; background:var(--orange); color:#02141f; padding:8px 16px; border-radius:8px; font-weight:700; text-decoration:none; font-size:0.88rem;">Open Tredence Prep Guide →</a>
+<h3>📝 Interview Checklist</h3>
+<ul>
+<li><b>Business Case Study:</b> Be ready to solve a business problem using data insights (The "Tredence Way").</li>
+<li><b>Guesstimates:</b> Practice volume/market size estimation questions.</li>
+<li><b>Project Deep Dive:</b> Explain how your projects bridge the gap between "insight" and "value".</li>
+</ul>
+<a href="tredence_prep.html" target="_blank" style="display:inline-block; margin-top:10px; background:var(--orange); color:#02141f; padding:8px 16px; border-radius:8px; font-weight:700; text-decoration:none; font-size:0.88rem;">Open Detailed Tredence Prep Guide →</a>
 </div>
+
 <div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
 </section>
 
@@ -5665,29 +5701,45 @@ def knn(Xtr, ytr, Xte, k=3):
   <div><div class="tag">Company Prep</div><h2>Nutanix SDET Preparation</h2></div>
 </div>
 
-<div class="card">
-<h3>1. Role Overview</h3>
-<p>Nutanix focuses on hyperconverged infrastructure (HCI) and cloud software. As an SDET, you'll be test planning, framework development, and leveraging AI/ML for failure triaging.</p>
+<div class="card" style="border-left: 4px solid var(--acc);">
+<h3>🎯 High-Priority Study Areas</h3>
+<div class="grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
+  <div style="background:var(--card2); padding:15px; border-radius:8px;">
+    <b style="color:var(--acc);">1. Cloud Native & Virtualization</b>
+    <ul style="font-size:0.85rem; margin-top:8px;">
+      <li>Hypervisors (AHV), ESXi, KVM basics.</li>
+      <li>Kubernetes (Pod lifecycle, Services, Ingress).</li>
+      <li>Docker networking & storage volumes.</li>
+      <li>Microservices architecture & observability.</li>
+    </ul>
+  </div>
+  <div style="background:var(--card2); padding:15px; border-radius:8px;">
+    <b style="color:var(--acc);">2. Automation & Testing</b>
+    <ul style="font-size:0.85rem; margin-top:8px;">
+      <li>Test Framework Design (Data-driven, POM).</li>
+      <li>Root Cause Analysis (RCA) of distributed failures.</li>
+      <li>Python/Java mastery for automation.</li>
+      <li>Performance testing (Load, Stress, Scalability).</li>
+    </ul>
+  </div>
+  <div style="background:var(--card2); padding:15px; border-radius:8px;">
+    <b style="color:var(--acc);">3. AI-Driven Testing (JD Specific)</b>
+    <ul style="font-size:0.85rem; margin-top:8px;">
+      <li>Prompt Engineering for test case generation.</li>
+      <li>ML for intelligent failure triaging.</li>
+      <li>AI tools for code review & optimization.</li>
+    </ul>
+  </div>
+</div>
 </div>
 
 <div class="card">
-<h3>2. Core Technical Pillars</h3>
-<ul>
-<li><b>Cloud Native:</b> Kubernetes, Docker, OpenShift, Virtualization.</li>
-<li><b>Automation:</b> Java/Python, scalable framework architecture, CI/CD.</li>
-<li><b>Performance:</b> Scalability, workload simulation, metric analysis.</li>
-<li><b>AI/ML:</b> Prompt engineering for test generation, intelligent triage.</li>
-</ul>
+<h3>💡 Expected Technical Questions</h3>
+<div class="qablock"><b>Explain Nutanix HCI (Hyper-Converged Infrastructure)?</b><p>Integration of compute, storage, and networking into a single software-defined platform (AOS/AHV) to eliminate siloed hardware.</p></div>
+<div class="qablock"><b>How do you test for scalability in a distributed system?</b><p>Testing beyond limits, identifying bottleneck resources (CPU, Disk I/O, Network), and verifying horizontal vs vertical scaling.</p></div>
+<div class="qablock"><b>Scenario: A test failed in a K8s cluster. How do you triage?</b><p>Check pod status, describe pod for events, check container logs, verify network policies, and resource limits (OOMKill).</p></div>
 </div>
 
-<div class="card">
-<h3>3. Interview Focus Areas</h3>
-<table><tr><th>Area</th><th>Focus</th></tr>
-<tr><td>Troubleshooting</td><td>Root Cause Analysis (RCA), log analysis, distributed systems debugging.</td></tr>
-<tr><td>Systems</td><td>Hypervisor concepts (AHV), networking (VPC/SDN), storage stacks.</td></tr>
-<tr><td>Coding</td><td>Clean, maintainable code for automation, analytical problem-solving.</td></tr>
-</table>
-</div>
 <div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
 </section>
 <footer>Master Interview Preparation Guide · Software + Electronics + AI/ML · Works offline on any device</footer>

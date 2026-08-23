@@ -5969,10 +5969,16 @@ class LRUCache:
   <div class="pn">1</div>
   <div><div class="tag">DSA Patterns</div><h2>25 Essential Patterns Mastery</h2></div>
 </div>
+
 <div class="card" style="border-left: 4px solid var(--acc);">
-  <p>Reference these patterns to master LeetCode efficiently. Track your completion progress across 25 core formats (150 total questions) using our interactive hub.</p>
-  <a href="dsa_patterns.html" target="_blank" style="display:inline-block; padding:10px 20px; background:var(--acc); color:#02141f; border-radius:8px; font-weight:700; text-decoration:none;">Open DSA Mastery Hub →</a>
+  <p>Track your completion progress across 25 core patterns (150 total questions curated from 200+ MAANG+ interview experiences). Progress is saved automatically.</p>
 </div>
+<div style="font-size: 1.1rem; font-weight: 700; color: var(--acc); margin-top: 10px; margin-bottom: 20px; padding:15px; background:var(--card); border:1px solid var(--line); border-radius:12px;">
+    Progress: <span id="completedCount">0</span> / 150 Questions Completed
+</div>
+
+<div id="patternsContainer"></div>
+
 <div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
 </section>
 
@@ -6148,6 +6154,81 @@ def calculate_chunked_average(file_path, column_name, chunksize=10000):
 
 <script>
 (() => {
+  const dsaPatterns = [
+    { id: 1, name: "Sliding Window", problems: [3, 76, 209, 424, 567, 904], desc: "Use when the problem asks for a longest, shortest, or valid contiguous range." },
+    { id: 2, name: "Two Pointers", problems: [11, 15, 16, 18, 42, 167], desc: "Look for sorted arrays, pair conditions, or movement from both ends." },
+    { id: 3, name: "Fast and Slow Pointers", problems: [19, 141, 142, 160, 234, 876], desc: "Best for linked-list cycles, middle nodes, and pointer gaps." },
+    { id: 4, name: "Binary Search", problems: [33, 34, 35, 153, 162, 704], desc: "Use when the search space is sorted or partially ordered." },
+    { id: 5, name: "Binary Search on Answer", problems: [410, 774, 875, 1011, 1283, 1482], desc: "Guess an answer, test feasibility, then shrink the range." },
+    { id: 6, name: "Hashing", problems: [1, 49, 128, 217, 242, 347], desc: "Use for quick lookup, frequency counting, grouping, and duplicate checks." },
+    { id: 7, name: "Prefix Sum", problems: [303, 523, 560, 724, 930, 974], desc: "Convert repeated range-sum work into constant-time lookups." },
+    { id: 8, name: "Difference Array", problems: [370, 1094, 1109, 1893, 1943, 2381], desc: "Use when many updates affect entire ranges." },
+    { id: 9, name: "Monotonic Stack", problems: [84, 85, 496, 503, 739, 907], desc: "Look for next greater, next smaller, span, or rectangle problems." },
+    { id: 10, name: "Stack Parsing", problems: [20, 71, 150, 224, 394, 735], desc: "Useful for expressions, nested structures, paths, and collision simulation." },
+    { id: 11, name: "Queue and Deque", problems: [239, 346, 362, 622, 641, 933], desc: "Use for rolling windows, ordered processing, and recent-event tracking." },
+    { id: 12, name: "Intervals", problems: [56, 57, 252, 253, 435, 986], desc: "Sort by start or end time, then merge, count, or remove overlaps." },
+    { id: 13, name: "Heap and Top K", problems: [23, 215, 295, 347, 373, 973], desc: "Use when you repeatedly need the smallest, largest, or top K elements." },
+    { id: 14, name: "Grid and Graph BFS", problems: [127, 200, 286, 542, 752, 994], desc: "BFS is the default for shortest steps in an unweighted graph." },
+    { id: 15, name: "Backtracking", problems: [39, 46, 78, 79, 90, 131], desc: "Choose, explore, undo. Use when all valid combinations must be generated." },
+    { id: 16, name: "Tree DFS", problems: [98, 100, 104, 110, 124, 236], desc: "Decide what information each subtree should return to its parent." },
+    { id: 17, name: "Tree BFS", problems: [102, 103, 199, 515, 637, 662], desc: "Use when the answer depends on levels, width, or visible nodes." },
+    { id: 18, name: "Trie", problems: [208, 211, 212, 421, 648, 720], desc: "Use for prefixes, dictionaries, word search, and bitwise prefix matching." },
+    { id: 19, name: "Union Find", problems: [200, 261, 305, 547, 684, 721], desc: "Use for dynamic connectivity, grouping, and cycle detection." },
+    { id: 20, name: "Topological Sort", problems: [207, 210, 269, 310, 1136, 1203], desc: "Look for prerequisites, dependencies, ordering, or build sequences." },
+    { id: 21, name: "Greedy", problems: [45, 55, 134, 435, 621, 763], desc: "Make the best local choice only when you can justify why it stays safe." },
+    { id: 22, name: "1D DP", problems: [70, 139, 198, 213, 300, 322], desc: "Define the state clearly, then connect it to smaller states." },
+    { id: 23, name: "2D DP", problems: [62, 63, 64, 72, 221, 1143], desc: "Use when the state depends on two changing inputs or positions." },
+    { id: 24, name: "Knapsack and Subset DP", problems: [416, 474, 494, 518, 879, 1049], desc: "Look for choosing items under a limit, target, or capacity." },
+    { id: 25, name: "Bit Manipulation", problems: [136, 191, 231, 268, 338, 371], desc: "Learn XOR, masks, shifts, set-bit checks, and subset representation." }
+  ];
+
+  const dsaContainer = document.getElementById('patternsContainer');
+  if (dsaContainer) {
+    const savedProgress = JSON.parse(localStorage.getItem('dsa_progress') || "{}");
+    
+    // Attach update function to window so it can be called from onclick
+    window.updateDsaStats = function() {
+      const boxes = document.querySelectorAll('.dsa-chk');
+      let count = 0;
+      let newProgress = {};
+      boxes.forEach(box => {
+        if(box.checked) count++;
+        newProgress[box.dataset.idx] = box.checked;
+      });
+      document.getElementById('completedCount').textContent = count;
+      localStorage.setItem('dsa_progress', JSON.stringify(newProgress));
+    };
+
+    let initialCount = 0;
+    dsaPatterns.forEach((p, pIdx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.borderLeft = '4px solid var(--amber)';
+      
+      let html = `<h4 style="color:var(--amber);margin-top:0;">[${p.id}] ${p.name}</h4>`;
+      html += `<p style="font-size:0.9rem;color:var(--muted);font-style:italic;">→ ${p.desc}</p>`;
+      html += `<div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">`;
+      
+      p.problems.forEach((prob, probIdx) => {
+        const globalIdx = `dsa-${p.id}-${prob}`;
+        const isChecked = savedProgress[globalIdx] ? 'checked' : '';
+        if (isChecked) initialCount++;
+        html += `
+          <div style="background:var(--card2); border:1px solid var(--line); border-radius:6px; padding:6px 12px; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" class="dsa-chk" data-idx="${globalIdx}" ${isChecked} onchange="window.updateDsaStats()" style="accent-color:var(--green);cursor:pointer;">
+            <a href="https://leetcode.com/problems/${prob}" target="_blank" style="font-size:0.85rem; color:var(--txt); text-decoration:none;">LC ${prob}</a>
+          </div>
+        `;
+      });
+      
+      html += `</div>`;
+      card.innerHTML = html;
+      dsaContainer.appendChild(card);
+    });
+    
+    document.getElementById('completedCount').textContent = initialCount;
+  }
+
   const pages = Array.from(document.querySelectorAll('.page'));
   const searchInput = document.getElementById('search');
   const sideNav = document.getElementById('sideNav');

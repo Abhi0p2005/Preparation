@@ -5899,59 +5899,68 @@ def cluster_failed_logs(logs_list):
 </code></pre></p></div>
 </div>
 
-<h2 id="interview-rounds" class="company-sub-heading">6. Nutanix Interview Rounds Blueprint & Strategy</h2>
-<div class="card" style="border-left: 4px solid var(--orange);">
-<h3>Round 1: DSA (Medium - Hard)</h3>
-<ul>
-  <li><b>Focus:</b> Standard LeetCode Medium to Hard patterns. High emphasis on Graphs, Trees, System Design structures (e.g., LRU Cache), and Dynamic Programming.</li>
-  <li><b>Strategy:</b> Do not just solve; communicate time/space complexity tradeoffs aggressively. Nutanix values optimal structures (e.g., using a Trie vs HashMap for prefix searches).</li>
-</ul>
+<h2 id="interview-examples" class="company-sub-heading">7. Interview Round Examples & Solutions</h2>
+<div class="card">
+<h3>Example 1: DSA (Medium - Hard) — "Distributed Least Recently Used (LRU) Cache"</h3>
+<p><b>Problem:</b> Design a thread-safe LRU cache that can be integrated into a distributed system. It should support <code>get(key)</code> and <code>put(key, value)</code> in O(1) time.</p>
+<div class="qablock"><b>Correct Approach:</b>
+<p>Use a combination of a <b>HashMap</b> (for O(1) lookup) and a <b>Doubly Linked List</b> (to maintain ordering of usage for O(1) reordering). To handle concurrency, use a <b>Reentrant Lock</b> (read-write lock) to ensure data consistency without sacrificing read performance.</p>
+<pre><code class="language-python">from threading import RLock
+
+class Node:
+    def __init__(self, key, val):
+        self.key, self.val = key, val
+        self.prev = self.next = None
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.lock = RLock()
+        self.map = {}
+        self.head = Node(0, 0); self.tail = Node(0, 0)
+        self.head.next = self.tail; self.tail.prev = self.head
+
+    def get(self, key):
+        with self.lock:
+            if key in self.map:
+                node = self.map[key]
+                self._remove(node); self._add(node)
+                return node.val
+            return -1
+
+    def put(self, key, value):
+        with self.lock:
+            if key in self.map: self._remove(self.map[key])
+            node = Node(key, value)
+            self._add(node); self.map[key] = node
+            if len(self.map) > self.cap:
+                lru_node = self.head.next
+                self._remove(lru_node)
+                del self.map[lru_node.key]
+
+    def _add(self, node):
+        p, n = self.tail.prev, self.tail
+        p.next, node.prev, node.next, n.prev = node, p, n, node
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next, n.prev = n, p
+</code></pre></div>
 </div>
 
-<div class="card" style="border-left: 4px solid var(--danger);">
-<h3>Round 2: The Debugging Round (C/C++, Java, or Python)</h3>
-<p>This is the most notorious round. You are provided with existing, non-trivial system-level code (often mimicking OS or hypervisor logic) containing logical, concurrency, or memory bugs.</p>
-<h4>How to Master the Debugging Round:</h4>
-<ul>
-  <li><b>Understand the Objective:</b> It's rarely a simple syntax error. Look for race conditions (missing locks), memory leaks (unfreed pointers), off-by-one boundary errors in loops, deadlocks (circular waits), or improper state machine transitions.</li>
-  <li><b>The Debugging Framework:</b>
-    <ol>
-      <li><b>Read the Contract:</b> What is the function <i>supposed</i> to do in normal, edge, and error scenarios?</li>
-      <li><b>Trace a Happy Path:</b> Mentally execute the code with standard inputs. Assuming standard inputs work...</li>
-      <li><b>Inject Edge Cases:</b> Mentally execute with <i>empty arrays, null pointers, negative integers, MAX_INT bounds, or concurrent thread calls.</i></li>
-      <li><b>Isolate Variables:</b> Track state changes. Which variable dictates the loop/recursion exit? Are we improperly shadowing variables?</li>
-    </ol>
-  </li>
-  <li><b>Common OS/System Code Bugs to Hunt For:</b>
-    <ul>
-      <li><i>Concurrency:</i> Multi-threaded access to a shared hashmap without a mutex.</li>
-      <li><i>Resource Management:</i> Opening a file descriptor but returning early on an error condition without closing it (FD leak).</li>
-      <li><i>Pointer Arithmetic:</i> Iterating past the end of a buffer (Buffer Overflow).</li>
-      <li><i>Logical:</i> Incorrect boolean evaluation inside a deeply nested <code>if (A && (B || !C))</code> block governing an OS scheduler logic.</li>
-    </ul>
-  </li>
-</ul>
-<div class="qablock"><b>Where to Practice Debugging?</b><p>You cannot effectively practice this on standard LeetCode. Instead, use: <b>1.</b> LeetCode "Concurrency" section (threads/locks). <b>2.</b> Ask ChatGPT to generate "Advanced Python/C++ logical debugging challenges based on Producer-Consumer/Thread-Pool implementations." <b>3.</b> Practice tracing open-source Pull Requests that fix logical bugs.</p></div>
+<div class="card">
+<h3>Example 2: Debugging Round — "The Race Conditioner"</h3>
+<p><b>Snippet Provided:</b></p>
+<pre><code class="language-cpp">void update_counter(int* counter) {
+    int temp = *counter;
+    temp = temp + 1;
+    *counter = temp;
+}
+// Called by 10 threads simultaneously...</code></pre>
+<div class="qablock"><b>The Bug:</b><p>This is a classic <b>Read-Modify-Write (RMW) race condition</b>. The OS scheduler can swap threads between reading `*counter` into `temp` and writing `temp` back. Several threads read the same initial value, increment it independently, and overwrite each other's work.</p></div>
+<div class="qablock"><b>The Fix:</b><p>At the OS/System level, use <b>Atomic Operations</b> (e.g., `std::atomic<int>` in C++ or `__sync_fetch_and_add`) to ensure the operation succeeds as a single uninterruptible hardware instruction.</p></div>
 </div>
 
-<div class="card" style="border-left: 4px solid var(--acc);">
-<h3>Round 3+: Technical Deep Dive & Systems</h3>
-<ul>
-  <li><b>Focus:</b> Distributed systems architecture (CAP theorem constraints), hypervisor/KVM knowledge, K8s networking, and Test Automation Framework design (how to stress test a system).</li>
-  <li><b>Strategy:</b> Anchor your answers to the core Storage/AHV concepts discussed in sections 1-5 above. Be ready to design a scalable testing pipeline on a whiteboard.</li>
-</ul>
-</div>
-
-<div class="card" style="border-left: 4px solid var(--green);">
-<h3>Final Round: Behavioral (Hungry, Humble, Honest, with Heart)</h3>
-<ul>
-  <li><b>Focus:</b> Cultural fit based on Nutanix's core values.</li>
-  <li><b>Strategy:</b> Have STAR stories highlighting <b>Humility</b> (admitting a mistake in code and learning), <b>Honesty</b> (pushing back on unrealistic deadlines with data), and <b>Hunger</b> (learning an entirely new cloud-native stack rapidly).</li>
-</ul>
-</div>
-
-<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
-</section>
 
 <section class="page" id="page-cp2" data-title="Tredence Prep" data-group="Company Prep">
 <div class="page-head">

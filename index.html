@@ -5651,9 +5651,9 @@ def knn(Xtr, ytr, Xte, k=3):
 
 <div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
 </section>
-<section class="page" id="page-nutanix" data-title="Nutanix SDET Prep" data-group="Company Prep">
+<section class="page" id="page-cp1" data-title="Nutanix SDET Prep" data-group="Company Prep">
 <div class="page-head">
-  <div class="pn">99</div>
+  <div class="pn">1</div>
   <div><div class="tag">Company Prep</div><h2>Nutanix SDET Preparation</h2></div>
 </div>
 
@@ -5698,7 +5698,9 @@ def knn(Xtr, ytr, Xte, k=3):
   const topBtn = document.getElementById('topBtn');
 
   const order = [
-    'home','sw1','sw2','sw3','sw4','sw5','sw6','sw7','sw8','sw9','sw10',
+    'home',
+    'cp1',
+    'sw1','sw2','sw3','sw4','sw5','sw6','sw7','sw8','sw9','sw10',
     'sw11','sw12',
     'el1','el2','el3','el4','el5','el6','el7','el8','el9',
     'ai1','ai2','ai3','ai4','ai5','ai6','ai7','ai8'
@@ -5709,6 +5711,7 @@ def knn(Xtr, ytr, Xte, k=3):
   const titleById = id => pageMap[id] ? pageMap[id].dataset.title : 'Home';
 
   // Build sidebar nav
+  const cpIds = order.filter(id => id.startsWith('cp'));
   const swIds = order.filter(id => id.startsWith('sw'));
   const elIds = order.filter(id => id.startsWith('el'));
   const aiIds = order.filter(id => id.startsWith('ai'));
@@ -5719,7 +5722,7 @@ def knn(Xtr, ytr, Xte, k=3):
     });
     return h;
   };
-  sideNav.innerHTML = buildGroup('Software', swIds) + buildGroup('Electronics', elIds) + buildGroup('AI / ML', aiIds);
+  sideNav.innerHTML = buildGroup('Company Prep', cpIds) + buildGroup('Software', swIds) + buildGroup('Electronics', elIds) + buildGroup('AI / ML', aiIds);
 
   // Sidebar listeners
   sideNav.addEventListener('click', e => {

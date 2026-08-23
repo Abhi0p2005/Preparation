@@ -15,3 +15,5 @@
 !electronics/
 !electronics/**/*.html
 !electronics/style.css
+
+.vercel

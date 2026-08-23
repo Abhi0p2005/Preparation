@@ -5961,6 +5961,20 @@ class LRUCache:
 <div class="qablock"><b>The Fix:</b><p>At the OS/System level, use <b>Atomic Operations</b> (e.g., `std::atomic<int>` in C++ or `__sync_fetch_and_add`) to ensure the operation succeeds as a single uninterruptible hardware instruction.</p></div>
 </div>
 
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
+
+<section class="page" id="page-dsa-patterns" data-title="DSA Patterns" data-group="DSA Patterns">
+<div class="page-head">
+  <div class="pn">1</div>
+  <div><div class="tag">DSA Patterns</div><h2>25 Essential Patterns Mastery</h2></div>
+</div>
+<div class="card" style="border-left: 4px solid var(--acc);">
+  <p>Reference these patterns to master LeetCode efficiently. Track your completion progress across 25 core formats (150 total questions) using our interactive hub.</p>
+  <a href="dsa_patterns.html" target="_blank" style="display:inline-block; padding:10px 20px; background:var(--acc); color:#02141f; border-radius:8px; font-weight:700; text-decoration:none;">Open DSA Mastery Hub →</a>
+</div>
+<div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
+</section>
 
 <section class="page" id="page-cp2" data-title="Tredence Prep" data-group="Company Prep">
 <div class="page-head">
@@ -6147,6 +6161,7 @@ def calculate_chunked_average(file_path, column_name, chunksize=10000):
   const order = [
     'home',
     'cp1', 'cp2',
+    'dsa-patterns',
     'sw1','sw2','sw3','sw4','sw5','sw6','sw7','sw8','sw9','sw10',
     'sw11','sw12',
     'el1','el2','el3','el4','el5','el6','el7','el8','el9',
@@ -6159,17 +6174,19 @@ def calculate_chunked_average(file_path, column_name, chunksize=10000):
 
   // Build sidebar nav
   const cpIds = order.filter(id => id.startsWith('cp'));
+  const dsaIds = order.filter(id => id.startsWith('dsa'));
   const swIds = order.filter(id => id.startsWith('sw'));
   const elIds = order.filter(id => id.startsWith('el'));
   const aiIds = order.filter(id => id.startsWith('ai'));
   const buildGroup = (label, ids) => {
     let h = `<div class="grp-title">${label}</div>`;
     ids.forEach(id => {
-      h += `<button class="nav-btn" data-page="${id}"><span class="num">${id.replace(/^\D+/,'')}</span>${pageMap[id].dataset.title}</button>`;
+      let title = (pageMap[id] && pageMap[id].dataset.title) ? pageMap[id].dataset.title : "DSA Patterns";
+      h += `<button class="nav-btn" data-page="${id}"><span class="num">${id.replace(/^\D+/,'')}</span>${title}</button>`;
     });
     return h;
   };
-  sideNav.innerHTML = buildGroup('Company Prep', cpIds) + buildGroup('Software', swIds) + buildGroup('Electronics', elIds) + buildGroup('AI / ML', aiIds);
+  sideNav.innerHTML = buildGroup('Company Prep', cpIds) + buildGroup('DSA Patterns', dsaIds) + buildGroup('Software', swIds) + buildGroup('Electronics', elIds) + buildGroup('AI / ML', aiIds);
 
   // Sidebar listeners
   sideNav.addEventListener('click', e => {

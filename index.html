@@ -5817,153 +5817,249 @@ def knn(Xtr, ytr, Xte, k=3):
 <section class="page" id="page-cp1" data-title="Nutanix SDET Prep" data-group="Company Prep">
 <div class="page-head">
   <div class="pn">1</div>
-  <div><div class="tag">Company Prep</div><h2>Nutanix SDET Preparation</h2></div>
+  <div><div class="tag">Company Prep</div><h2>Nutanix SDET Deep Dive</h2></div>
 </div>
 
-<h2 id="cloud-native" class="company-sub-heading">1. Cloud Native & Virtualization</h2>
-<div class="card">
-<h3>1.1. Virtualization Deep Dive (Nutanix AHV, ESXi, KVM)</h3>
+<h2 id="hyperconverged-storage" class="company-sub-heading">1. Hyperconverged Infrastructure (HCI) & Nutanix Core Architecture</h2>
+<div class="card" style="border-left: 4px solid var(--acc);">
+<h3>1.1. Core Storage & Data Path Deep Dive (AOS, CVM, NDFS)</h3>
+<p>Nutanix replaces traditional SAN/NAS arrays with a fully distributed software architecture called <b>Acropolis Operating System (AOS)</b>. Understanding this storage controller layer is essential for system testing.</p>
 <ul>
-  <li><b>Hypervisors:</b> Understand Type 1 (bare-metal like AHV, ESXi, KVM) vs. Type 2 (hosted). Their role in abstracting hardware for VMs.</li>
-  <li><b>Nutanix AHV:</b> Native Nutanix hypervisor. Key features: distributed storage, self-healing, data locality, simplified management via Prism.</li>
-  <li><b>VM Lifecycle:</b> Provisioning, migration (Live Migration), snapshots (crash-consistent vs. application-consistent), backup/restore strategies.</li>
-  <li><b>Storage Concepts:</b> Distributed File System (NDFS), Storage Pools, Containers, Deduplication, Compression, Erasure Coding.</li>
+  <li><b>Controller VM (CVM):</b> Runs on every node in the cluster, consuming direct physical access to local storage controllers (SATA/NVMe pass-through via hypervisor PCIPassThrough). All CVMs communicate via 10GbE+ network interface to form a unified storage mesh.</li>
+  <li><b>Nutanix Distributed Filesystem (NDFS / DSG):</b> A distributed user-space software layer that aggregates local SSDs/HDDs across nodes into a single logical storage pool.</li>
+  <li><b>Nutanix I/O Path (Data Path):</b>
+    <ul>
+      <li><b>Active Read Path:</b> A VM starts a read API request -> hypervisor routes it to the local CVM via internal virtual switch -> local CVM serves it from local flash/SSD (data locality achieved).</li>
+      <li><b>Active Write Path:</b> A VM writes data -> parent Hypervisor redirects write to local CVM -> Local CVM logs write to local OpLog (write buffer in SSD/NVMe) AND concurrently sends replica writes over network to 1 or 2 remote CVMs' OpLogs (depends on Redundancy Factor: RF2/RF3). Once all nodes acknowledge receipt in non-volatile storage, the local CVM sends write-ack to the VM.</li>
+      <li><b>De-staging:</b> Background processes periodically drain OpLog data to the Extent Store (persistent storage tier) in parallel.</li>
+    </ul>
+  </li>
+  <li><b>Redundancy Factor (RF2 vs RF3):</b> RF2 requires a minimum of 3 nodes and mirrors data twice (tolerates 1 node node/disk failure). RF3 requires a minimum of 5 nodes and mirrors data thrice (tolerates 2 concurrent failures).</li>
+  <li><b>ILM (Information Lifecycle Management):</b> Automatically moves hot data blocks to fast SSD/NVMe tiers and cold data blocks to slower HDD tiers based on reference count and age.</li>
 </ul>
-<div class="qablock"><b>Q. How does Nutanix AHV differ from VMware ESXi?</b><p>AHV is integrated directly into the Nutanix software stack (AOS) for a converged experience, optimized for Nutanix storage. ESXi is a standalone hypervisor with its own management (vCenter) and relies on external storage or vSAN.</p></div>
-<div class="qablock"><b>Q. Explain data locality in Nutanix.</b><p>VMs access data from the local node first, minimizing network latency and improving performance. Data is only replicated across nodes for redundancy, not for active reads.</p></div>
+
+<div class="qablock"><b>Q. Trace the complete path of a write request in Nutanix from the VM to disk. What happens if a sister node crashes mid-write?</b>
+<p><b>Answer:</b> 1. VM guest OS executes write operational block -> Hypervisor captures and routes via internal vSwitch to Local CVM interface. 2. Local CVM intercept writes the block to its local OpLog (SSD write buffer). 3. Concurrently, the local CVM replicates the block to the OpLog of a remote CVM via physical switches (for RF2). 4. If the sister node crashes mid-write prior to caching the update, the connection times out. The local CVM marks that replica path as dead, switches targets to a different healthy node in the storage configuration, executes the duplicate write, receives confirmation, and only then acknowledges to the VM. This guarantees zero write loss and configuration consistency.</p></div>
+
+<div class="qablock"><b>Q. Explain metadata management in Nutanix storage. How are lookups performed at scale without bottlenecks?</b>
+<p><b>Answer:</b> Nutanix routes global metadata lookups through a highly customized, heavily optimized distributed scale-out database called <b>Medusa</b> (internally built on a modified Apache Cassandra engine). Metadata is segmented and dynamically owned across the cluster nodes using a strict consistency hash ring. To completely eliminate bottlenecks, a local in-memory lookup cache called <b>Aesop</b> resides on every CVM, storing the physical mappings of the most frequently referenced local data blocks. Only when Aesop misses does the CVM make a remote network query to the Medusa Cassandra peer holding the designated sub-split of the hash range.</p></div>
 </div>
 
-<div class="card">
-<h3>1.2. Containerization (Docker)</h3>
+<div class="card" style="border-left: 4px solid var(--acc);">
+<h3>1.2. Storage Optimization & Resiliency Techniques</h3>
 <ul>
-  <li><b>Containers vs. VMs:</b> Understand the lightweight nature, shared OS kernel, and faster startup of containers.</li>
-  <li><b>Docker Core Concepts:</b>
-    <ul>
-      <li><b>Images:</b> Immutable templates, layers, Docker Hub.</li>
-      <li><b>Containers:</b> Runnable instances of images.</li>
-      <li><b>Dockerfile:</b> Building custom images (FROM, RUN, COPY, EXPOSE, CMD/ENTRYPOINT).</li>
-      <li><b>Docker Compose:</b> Defining and running multi-container Docker applications.</li>
-    </ul>
-  </li>
-  <li><b>Docker Networking:</b> Bridge (default), Host, Overlay (for Swarm/Kubernetes) networks. How containers communicate.</li>
-  <li><b>Docker Storage:</b> Volumes (persistent data), Bind Mounts (host path mapping), tmpfs mounts.</li>
+  <li><b>Deduplication:</b> Done at two levels: 1. <i>Content Cache</i> (read dedup in DRAM/SSD); 2. <i>Disk Deduplication</i> in the Extent Store (fingerprinted batch dedup of cold data).</li>
+  <li><b>Compression:</b> Inline compression handles writes with sequential signatures. Post-process compression compresses cold data blocks in the engine after they age in the Extent Store.</li>
+  <li><b>Erasure Coding (EC-X):</b> Instead of full mirroring (RF2/RF3), EC-X computes parity strips across multiple nodes (N+1 or N+2). This reduces raw storage overhead from 100% (RF2) to ~33% while maintaining identical resilience thresholds. Done as a background process.</li>
+  <li><b>Curator:</b> A distributed MapReduce framework running on CVMs that schedules background disk cleanups, defragmentation, data rebalancing, and replication repairs when failures occur.</li>
 </ul>
-<div class="qablock"><b>Q. Describe a Dockerfile for a Python application.</b><p><code>FROM python:3.9-slim</code><br><code>WORKDIR /app</code><br><code>COPY requirements.txt .</code><br><code>RUN pip install -r requirements.txt</code><br><code>COPY . .</code><br><code>EXPOSE 8000</code><br><code>CMD ["python", "app.py"]</code></p></div>
-<div class="qablock"><b>Q. How do you persist data in Docker containers?</b><p>Using Docker Volumes (managed by Docker, preferred for data persistence) or Bind Mounts (directly link a host path, useful for dev). Volumes are more portable.</p></div>
+<div class="qablock"><b>Q. How does Curator recover a cluster to full redundancy after a physical disk drive failure?</b>
+<p><b>Answer:</b> The cluster enters a degraded state. The Curator master detects metadata discrepancies and initiates a MapReduce job across all remaining active CVMs. Instead of using a single hot-spare disk (traditional RAID bottleneck), every CVM reads a section of the surviving fragments, rebuilds the lost replication blocks in parallel, and distributes them across the remaining free space of all healthy drives in the cluster. This parallel recovery completes in minutes compared to hours for classic RAID rebuilds.</p></div>
 </div>
 
-<div class="card">
-<h3>1.3. Container Orchestration (Kubernetes)</h3>
+<h2 id="virtualization-deeper" class="company-sub-heading">2. Hypervisor Engineering & Virtualization Deep Dive (AHV focus)</h2>
+<div class="card" style="border-left: 4px solid var(--orange);">
+<h3>2.1. AHV Architecture (KVM, QEMU, Libvirt)</h3>
+<p>Nutanix Acropolis Hypervisor (AHV) is built on standard Linux Kernel-based Virtual Machine (KVM) technology but heavily modified object interfaces to communicate straight with user-space local storage.</p>
 <ul>
-  <li><b>Kubernetes Architecture:</b>
-    <ul>
-      <li><b>Control Plane (Master):</b> Kube-API Server (frontend), etcd (cluster state), Kube-Scheduler (pod placement), Kube-Controller-Manager (node, replicaSet, endpoint controllers).</li>
-      <li><b>Worker Nodes:</b> Kubelet (node agent), Kube-Proxy (network proxy), Container Runtime (Docker, containerd).</li>
-    </ul>
-  </li>
-  <li><b>Key K8s Resources:</b>
-    <ul>
-      <li><b>Pods:</b> Smallest deployable unit, one or more containers, shared network/storage.</li>
-      <li><b>Deployments:</b> Declarative updates to Pods and ReplicaSets, rollouts/rollbacks.</li>
-      <li><b>Services:</b> Abstract way to expose applications (ClusterIP, NodePort, LoadBalancer, ExternalName).</li>
-      <li><b>Ingress:</b> External access to services within the cluster (HTTP/S routing).</li>
-      <li><b>ConfigMaps & Secrets:</b> Externalizing configuration and sensitive data.</li>
-      <li><b>Persistent Volumes (PV) & Persistent Volume Claims (PVC):</b> Abstracting storage from pods.</li>
-    </ul>
-  </li>
-  <li><b>K8s Networking:</b> CNI (Container Network Interface) plugins (Calico, Flannel). Pod-to-Pod, Pod-to-Service communication.</li>
-  <li><b>Troubleshooting K8s:</b> Commands like <code>kubectl get pods -o wide</code>, <code>kubectl describe pod &lt;pod-name&gt;</code>, <code>kubectl logs &lt;pod-name&gt;</code>, <code>kubectl exec -it &lt;pod-name&gt; -- bash</code>.</li>
+  <li><b>KVM Context:</b> KVM turns the Linux kernel into a Type-1 hypervisor. It exposes `/dev/kvm` interface, allowing user-space processes to set up address spaces, register vCPUs, and run guest instructions directly on the host CPU using Intel VT-x or AMD-V virtualization extensions.</li>
+  <li><b>QEMU (Quick Emulator):</b> CPU emulator that runs in host user space. Under AHV, it handles hardware emulation for virtual devices (IDE controllers, PCI buses, graphics adapters, USB) and delegates CPU execution to `/dev/kvm`.</li>
+  <li><b>Libvirt:</b> Management daemon (`libvirtd`) and API. It provides a standardized layer for launching, configuring, migrating, and stopping VM processes. It translates XML domain configurations into QEMU CLI arguments.</li>
+  <li><b>VirtIO (Virtual I/O):</b> Standard API for highly efficient virtualization adapters. Instead of emulating legacy physical cards, AHV uses VirtIO drivers for Network, Storage, and Memory ballooning. The guest kernel is aware of the hypervisor and sends virtual interrupts directly to host memory arrays to bypass heavy hardware emulation loops.</li>
 </ul>
-<div class="qablock"><b>Q. Explain how a Kubernetes Deployment ensures high availability.</b><p>A Deployment manages ReplicaSets, which ensure a desired number of Pod replicas are running. If a Pod or Node fails, the ReplicaSet automatically creates new Pods/schedules them on healthy nodes, maintaining the application\'s availability.</p></div>
-<div class="qablock"><b>Q. What is a Service Mesh (e.g., Istio, Linkerd) and why use it with Kubernetes?</b><p>Provides a dedicated infrastructure layer for service-to-service communication, adding features like traffic management (routing, load balancing), observability (metrics, logging, tracing), security (mTLS), and reliability (retries, circuit breakers) without modifying application code.</p></div>
+
+<div class="qablock"><b>Q. Explain how VirtIO bypasses standard CPU emulation. Trace high-performance storage I/O through a VirtIO storage queue.</b>
+<p><b>Answer:</b> Normal guest controllers issue physical register writes that force VM-exits (costly CPU context switches where host must emulate physical hardware). VirtIO uses shared ring buffers in host physical memory called <b>Virtqueues</b>. The Guest OS writes data directly into the split-ring memory index and raises a lightweight virtual interrupt (Hypercall via write to a specific IO port). The host-side QEMU thread detects the dirty ring-buffer update and processes it in a user-space scheduler thread, completely bypassing hardware state registers and reducing CPU cycles per I/O operation by up to 10x.</p></div>
+
+<div class="qablock"><b>Q. Describe how Live Migration works in KVM/AHV at a system and network level.</b>
+<p><b>Answer:</b> 1. <b>Setup:</b> Target host prepares a blank VM instance matching source specs. 2. <b>Iterative Pre-copy:</b> Source hypervisor copies all memory dirty pages over the network (10GbE migration sync line) to target. 3. <b>Dirty Page Tracking:</b> As VM runs, dynamic memory updates occur. A KVM dirty page tracking bitmap marks altered slots. Source iteratively sends only the changes. 4. <b>Stop and Copy:</b> Once dirty page loops drop below a thrashing threshold (~few MBs), source VM is briefly paused (milliseconds). Final delta pages, vCPU states, and device registers are copied. 5. <b>GARP:</b> Target activates VM and issues a Gratuitous ARP (GARP) update to the physical network switch. Switch updates its MAC table, re-routing traffic instantly to the target host\'s network port.</p></div>
 </div>
 
-<h2 id="automation-testing" class="company-sub-heading">2. Automation & Testing</h2>
-<div class="card">
-<h3>2.1. Test Automation Framework Design</h3>
+<h2 id="containers-k8s" class="company-sub-heading">3. Containers & Advanced Kubernetes Testing</h2>
+<div class="card" style="border-left: 4px solid var(--green);">
+<h3>3.1. Container Runtimes & Advanced Docker Constructs</h3>
 <ul>
-  <li><b>Principles:</b> Modularity, reusability, maintainability, scalability, robustness.</li>
-  <li><b>Common Patterns:</b>
+  <li><b>Cgroups (Control Groups) vs. Namespaces:</b>
     <ul>
-      <li><b>Page Object Model (POM):</b> Separates UI interaction from test logic.</li>
-      <li><b>Data-Driven Testing:</b> Tests execute with different input data sets.</li>
-      <li><b>Keyword-Driven Testing:</b> Uses keywords to define actions.</li>
-      <li><b>Hybrid Frameworks:</b> Combines multiple approaches.</li>
+      <li><b>Namespaces:</b> Provide isolation (virtualizes what a process sees). PID: isolates processes; NET: isolates interfaces/routing tables; MNT: isolates disk mount points; IPC: isolates shared memory; UTS: isolates hostname; USER: maps root inside container to non-root outside.</li>
+      <li><b>Cgroups:</b> Provide resource configuration limits (defines what a process can use). Constrains CPU, RAM, Disk I/O blocks, Swap, Network performance.</li>
     </ul>
   </li>
-  <li><b>Test Tools & Languages:</b>
+  <li><b>Union File Systems (OverlayFS):</b> Containers are composed of read-only image layers and a single thin read-write container layer. Changes are caught on-the-fly and created in the top-most R/W layer via Copy-on-Write (CoW).</li>
+  <li><b>Docker Networking Modes:</b>
     <ul>
-      <li><b>Python:</b> Pytest, unittest, Selenium, Playwright, Requests (for API).</li>
-      <li><b>Java:</b> JUnit, TestNG, Selenium, Rest Assured (for API).</li>
-      <li><b>Scripting:</b> Bash for automation tasks and integration.</li>
-    </ul>
-  </li>
-  <li><b>API Testing:</b> Focusing on RESTful APIs – validating endpoints, response codes, payloads, authentication.</li>
-</ul>
-<div class="qablock"><b>Q. Design a test automation framework for a web application with microservices backend.</b><p>Discuss modularity (separate UI, API, database layers), use POM for UI, Requests/Rest Assured for API, integrate with CI/CD, generate comprehensive reports.</p></div>
-<div class="qablock"><b>Q. How do you handle flaky tests in an automation suite?</b><p>Identify root cause (timing issues, environment instability, poor test design), implement waits, retries, improve test isolation, better assertions, analyze logs for patterns.</p></div>
-</div>
-
-<div class="card">
-<h3>2.2. Types of Testing & Performance Engineering</h3>
-<ul>
-  <li><b>Functional Testing:</b> Unit, Integration, System, End-to-End.</li>
-  <li><b>Non-Functional Testing:</b>
-    <ul>
-      <li><b>Performance Testing:</b> Load (normal usage), Stress (beyond limits), Scalability (how system handles increased load by adding resources), Volume, Soak/Endurance testing.</li>
-      <li><b>Reliability Testing:</b> Ensuring consistent performance over time.</li>
-      <li><b>Resilience/Chaos Engineering:</b> Proactively injecting faults to find weaknesses (e.g., Netflix Chaos Monkey).</li>
-      <li><b>Security Testing:</b> Basics of vulnerability scanning, penetration testing.</li>
-    </ul>
-  </li>
-  <li><b>Performance Monitoring:</b> Tools like Prometheus, Grafana, ELK stack. Key metrics: CPU, Memory, Disk I/O, Network Throughput/Latency, Latency, Throughput, Error Rate.</li>
-  <li><b>Root Cause Analysis (RCA) in Distributed Systems:</b>
-    <ul>
-      <li>Methodologies: 5 Whys, Fishbone Diagram, Fault Tree Analysis.</li>
-      <li>Tools: Centralized logging (Splunk, ELK, Grafana Loki), Distributed Tracing (Jaeger, Zipkin), APM tools.</li>
-      <li>Techniques: Log correlation, metric spikes, anomaly detection.</li>
+      <li><code>bridge</code>: Uses virtual ethernet pair (veth) connected to host\'s `docker0` bridge. Leverages `iptables` and NAT to map container ports to host interfaces.</li>
+      <li><code>host</code>: Disables isolation; container shares host NIC, binding directly to host ports. No NAT overhead, maximum performance.</li>
+      <li><code>overlay</code>: Uses VXLAN tunnels to encapsulate cluster-mesh traffic, allowing containers on different physical hosts to communicate on a private subnet.</li>
     </ul>
   </li>
 </ul>
-<div class="qablock"><b>Q. What metrics are crucial for performance testing a distributed storage system?</b><p>IOPS (I/O Operations Per Second), Latency (read/write), Throughput (MB/s), CPU/Memory utilization per node, network bandwidth, data reduction ratios (dedupe/compression).</p></div>
-<div class="qablock"><b>Q. Describe a strategy to test a new microservice for reliability.</b><p>Start with unit/integration tests. Then, perform load/stress tests. Implement chaos experiments (killing pods, network delays). Monitor with robust logging/metrics. Ensure proper error handling and retry mechanisms.</p></div>
+<div class="qablock"><b>Q. A process inside a container crashes with "OOMKilled" exits. How do you distinguish host memory exhaustion from runtime cgroup limits?</b>
+<p><b>Answer:</b> Inspect <code>/var/log/messages</code> or run <code>dmesg -T | grep -i oom-killer</code>. Write-down the exact task name. If the log displays a memory controller limit hit with string `memory.limit_in_bytes` or `oom-kill event in /kubepods/pod...`, the container process hit its custom configured Docker/Kubernetes cgroup memory allocation limit. If the system logs trace invocation under global kernel system memory panic, the host ran out of physical swap/RAM entirely and killed processes prioritizing OOM-score weights.</p></div>
 </div>
 
-<h2 id="ai-driven-testing" class="company-sub-heading">3. AI-Driven Testing (JD Specific)</h2>
-<div class="card">
-<h3>3.1. Prompt Engineering for Test Case Generation</h3>
+<div class="card" style="border-left: 4px solid var(--green);">
+<h3>3.2. Kubernetes Testing & Networking Mechanics</h3>
+<p>Nutanix uses K8s heavily for services. SDET candidates must know deep network routing inside a cluster.</p>
 <ul>
-  <li><b>Concepts:</b> Crafting effective prompts for Large Language Models (LLMs) to generate relevant and diverse test cases.</li>
-  <li><b>Techniques:</b>
+  <li><b>CSI (Container Storage Interface) & Nutanix Volumes:</b> Dynamic Pv provisioning. A pod requests storage via PVC -> CSI controller talks to Nutanix Prism API to provision a volume -> maps it via secure iSCSI targets straight to the host node.</li>
+  <li><b>Packet Flow: Pod-to-Pod (Same Node vs. Different Nodes):</b>
     <ul>
-      <li><b>Zero-shot Prompting:</b> Asking LLM directly (e.g., "Generate test cases for login feature").</li>
-      <li><b>Few-shot Prompting:</b> Providing examples of desired test cases to guide the LLM.</li>
-      <li><b>Chain-of-Thought (CoT) Prompting:</b> Instructing LLM to think step-by-step to improve logical reasoning and test coverage.</li>
-      <li><b>Role-Playing:</b> Asking the LLM to act as a "QA Engineer" or "Security Tester".</li>
+      <li><b>Same Node:</b> Pod A -> veth0 interface -> root namespace interface (e.g. cbr0 bridge) -> veth1 -> Pod B. Network namespaces are resolved locally.</li>
+      <li><b>Different Nodes:</b> Pod A -> veth0 -> host bridge -> CNI interface (e.g. Calico/Flannel/Canal) -> encapsulate packet in VXLAN or Geneve tunnel -> Host NIC -> physical switch -> Target Host NIC -> decapsulate CNI engine -> target bridge -> target veth -> Pod B.</li>
     </ul>
   </li>
-  <li><b>Use Cases:</b> Generating functional test cases, edge cases, negative test scenarios, performance test scripts, data generation for testing.</li>
+  <li><b>Kube-Proxy Modes (IPTables vs IPVS):</b>
+    <ul>
+      <li><b>IPtables:</b> Executes sequential inspection of rule chains. Scales poorly with thousands of services (O(N) search time).</li>
+      <li><b>IPVS (IP Virtual Server):</b> Exists in kernel L4 transport space, using hash tables. Scales to millions of routing configurations with constant execution overhead O(1).</li>
+    </ul>
+  </li>
 </ul>
-<div class="qablock"><b>Q. How would you use an LLM to generate test cases for a new API endpoint?</b><p>Provide the API specification (URL, method, payload, expected response), then use few-shot prompting with examples of successful and failure test cases to generate comprehensive test scenarios.</p></div>
-<div class="qablock"><b>Q. What are the challenges of using AI for test case generation?</b><p>Hallucinations (generating invalid test cases), lack of domain-specific knowledge, difficulty in handling complex stateful scenarios, bias in generated tests, ensuring originality and coverage.</p></div>
+<div class="qablock"><b>Q. How does a DNS lookup resolve inside a Pod? Trace the connection to coredns.</b>
+<p><b>Answer:</b> 1. Internal applications read <code>/etc/resolv.conf</code> inside the pod system namespace, which directs them to the Cluster DNS service IP (typically <code>nameserver 10.96.0.10</code>). 2. Pod calls local DNS port 53. 3. Kube-proxy intercepts transport packets via iptables/IPVS rules, load-balancing requests to one of the CoreDNS pods. 4. CoreDNS searches its mapped k8s API cache. If looking up <code>mysvc.namespace.svc.cluster.local</code>, it resolves local virtual IP. If searching public records (e.g. google.com), CoreDNS acts search-forward to upstream host resolvers defined in its Corefile.</p></div>
 </div>
 
-<div class="card">
-<h3>3.2. Machine Learning for Intelligent Test Failure Triaging</h3>
+<h2 id="sdet-testing-architecture" class="company-sub-heading">4. High-Scale SDET Test Automation & Stress Infrastructure</h2>
+<div class="card" style="border-left: 4px solid var(--orange);">
+<h3>4.1. Framework Architecture from Scratch</h3>
+<p>You may be asked to design an end-to-end framework to automate both REST APIs, CLI ssh, and storage I/O simultaneously. Use this modular structure:</p>
+<pre><code>
++-----------------------------------------------------------------------------------+
+|                                 Test Runner (pytest / TestNG)                      |
++-----------------------------------------------------------------------------------+
+|      UI Layer (Playwright)  |  API Layer (Requests/HTTP)  |  SSH Client (Paramiko) |
++-----------------------------------------------------------------------------------+
+|                Page Objects | API Endpoints               | Remote CLI Executes   |
++-----------------------------------------------------------------------------------+
+|                                 Common Helpers Layer                              |
+|   - Storage Drivers (iSCSI mount utils, disk partition generators)                |
+|   - Traffic Generators (FIO, Iperf3, Locust config controllers)                  |
+|   - Cluster Assertions (checking Medusa Cassandra metadata via curl)              |
++-----------------------------------------------------------------------------------+
+|                          CI/CD Orchestration (GitLab CI, Jenkins)                 |
++-----------------------------------------------------------------------------------+
+</code></pre>
 <ul>
-  <li><b>Goal:</b> Automate the process of analyzing test failures, identifying patterns, and pinpointing potential root causes to accelerate debugging.</li>
-  <li><b>ML Techniques:</b>
+  <li><b>SSH/CLI Client Integration:</b> Using programmatic wrappers (like <code>Paramiko</code> or `SSHClient` in Python) to connect to guest VMs and hypervisor terminals, execute storage stress scripts, and scrap standard output/error codes for assertions.</li>
+  <li><b>Storage I/O Injection (FIO):</b> Simulating custom storage writes at specified block sizes (4K, 8K, 128K), write distributions (70% read, 30% write), random vs sequential patterns, and outstanding queue depths.</li>
+</ul>
+
+<div class="qablock"><b>Q. Write a robust Python test utility to establish an SSH connection, run a disk benchmark check (e.g., FIO), parse throughput, and assert performance meets limits.</b>
+<p><b>Answer:</b> Use structured parsing to handle raw output arrays safely:</p>
+<pre><code class="language-python">import paramiko
+import json
+import re
+
+def verify_disk_performance(ip, username, password, min_throughput_mb):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        ssh.connect(ip, username=username, password=password, timeout=10)
+        # Execute FIO benchmark with JSON output target and write workload
+        command = "fio --name=write_test --ioengine=libaio --rw=randwrite --bs=4k --size=50M --numjobs=1 --direct=1 --iodepth=16 --output-format=json"
+        stdin, stdout, stderr = ssh.exec_command(command)
+        exit_status = stdout.channel.recv_exit_status()
+        
+        if exit_status != 0:
+            raise RuntimeError(f"FIO error: {stderr.read().decode(\'utf-8\')}")
+            
+        raw_output = stdout.read().decode(\'utf-8\')
+        data = json.loads(raw_output)
+        
+        # Extract write throughput in KB/s and convert
+        write_bw_kb = data[\'jobs\'][0][\'write\'][\'bw\']
+        write_bw_mb = write_bw_kb / 1024.0
+        
+        print(f"Measured throughput: {write_bw_mb:.2f} MB/s")
+        assert write_bw_mb >= min_throughput_mb, f"Throughput dropped! Expected >= {min_throughput_mb}, got {write_bw_mb}"
+        
+    finally:
+        ssh.close()
+</code></pre></div>
+</div>
+
+<div class="card" style="border-left: 4px solid var(--orange);">
+<h3>4.2. Chaos & Resilience Automation</h3>
+<p>Since Nutanix is a high-availability distributed storage platform, testing must focus on failovers, splits, and disaster recovery automation.</p>
+<ul>
+  <li><b>Split-Brain Mitigation:</b> What happens when the network fails and node 1 & 2 cannot contact node 3 & 4. How does the system make decisions? It uses a quorum-based model. Testing verifies that the system segment with less than 50% nodes blocks storage updates automatically to avoid database divergence.</li>
+  <li><b>Simulating Network Partitions:</b>
     <ul>
-      <li><b>Anomaly Detection:</b> Using algorithms (e.g., Isolation Forest, One-Class SVM) to identify unusual test results or performance deviations.</li>
-      <li><b>Clustering:</b> Grouping similar test failures based on error messages, stack traces, or logs (e.g., K-Means, DBSCAN) to find common underlying issues.</li>
-      <li><b>Classification:</b> Training models (e.g., Decision Trees, Random Forests, Neural Networks) to classify test failures into predefined categories (e.g., network issue, code bug, environment config, flaky test).</li>
+      <li>Using <code>iptables</code>: Add filter chains (e.g., <code>iptables -A INPUT -p tcp --dport 2009 -j DROP</code>) to simulate drop actions for storage metadata synchronizations.</li>
+      <li>Using TC (Traffic Control): Artifically delay, drop, or duplicate packets (e.g., <code>tc qdisc add dev eth0 root netem delay 100ms 10ms loss 10%</code>) to verify how APIs recover.</li>
     </ul>
   </li>
-  <li><b>Data Sources:</b> Test logs, application logs, system metrics (CPU, memory, network), CI/CD pipeline data, git commit messages.</li>
-  <li><b>Feature Engineering:</b> Extracting relevant features from raw data (e.g., N-grams from error messages, frequency of specific log patterns, correlation with code changes).</li>
 </ul>
-<div class="qablock"><b>Q. How can ML help distinguish between a flaky test and a real bug?</b><p>Train a classifier using features like historical pass/fail rates, time of day, specific error patterns, associated code changes, and environment details. Flaky tests often show intermittent failures without consistent code changes.</p></div>
-<div class="qablock"><b>Q. Describe a pipeline for automated test failure triaging using ML.</b><p>Collect test results & logs -> Extract features -> Train ML model (e.g., a classifier) on labeled data -> Deploy model -> New failures are predicted by model -> Results are presented to engineers, potentially with confidence scores and suggested fixes.</p></div>
+<div class="qablock"><b>Q. You need to write an API recovery automation test that verifies cluster health during a network failure. How would you structure this flow?</b>
+<p><b>Answer:</b> 1. **Baseline Validation:** Query cluster REST API and assert state is healthy. 2. **Workload Start:** Launch a background threads executing continuous reads/writes to a target virtual disk using FIO. 3. **Chaos injection:** Use SSH client to target CVM-2 and inject 100% network drop rules on port 2009 (Medusa storage port) via IPTables. 4. **Degraded State Verification:** Verify cluster API shifts status to "Degraded". Verify storage I/O process does not crash (traffic must transparently route metadata updates to other surviving nodes). 5. **Teardown & Heal:** Clean the IPTables rules. Wait. Verify that Cassandra/Medusa database triggers automatic re-synch, re-balances metadata dirty pages, and returns the cluster index to "Healthy" status. Confirm zero storage errors.</p></div>
+</div>
+
+<h2 id="ai-ml-sdet" class="company-sub-heading">5. AI/ML & Prompt Engineering for SDET Automation</h2>
+<div class="card" style="border-left: 4px solid var(--green);">
+<h3>5.1. Prompt Engineering Framework for E2E Test Strategy Generation</h3>
+<p>For high-coverage complex products, SDETs leverage prompt patterns with LLMs to automatically generate execution blueprints.</p>
+<ul>
+  <li><b>System Prompt Role Definition:</b> Restricting LLM execution space (e.g., "Act as an expert SDET with 15+ years experience in distributed storage systems and virtualization architectures").</li>
+  <li><b>Few-Shot System Specs Injection:</b> Providing exact schema files or API payload maps inside prompt definitions.</li>
+  <li><b>Generating Complex Edge Cases:</b> Asking LLMs for high-entropy crash scenarios (e.g., "provide a combination of API inputs & physical hardware failures that could cause a database read timeout").</li>
+</ul>
+<div class="qablock"><b>Q. Draft a comprehensive prompt that directs an LLM to generate a test plan for a Kubernetes CSI Volume driver integration feature.</b>
+<p><b>Answer:</b> Use clear structuring constraints. Here is the optimized prompt structure:
+<pre><code>
+You are an expert Principal SDET. Generate a production-grade test strategy document for a Kubernetes CSI plugin.
+Context: The plugin manages block storage provisioning on a distributed Acropolis storage array.
+The plugin supports dynamic volume creation, volume expansion, and volume snapshot features.
+
+Input JSON schema:
+[Provide actual plugin volume config schema here...]
+
+Please generate:
+1. Exact functional test cases (including volume mounts, dynamic size updates, multi-pod access modes).
+2. 5 high-entropy edge cases (e.g., node disconnection during volume attach, storage pools exceeding quotas during provisioning).
+3. Draft a basic pytest shell architecture using Paramiko to verify configuration changes.
+Format output strictly as markdown. Do not summarize or provide introductory preamble text.
+</code></pre></p></div>
+</div>
+
+<div class="card" style="border-left: 4px solid var(--green);">
+<h3>5.2. ML Failure Clustering & Triaging Pipelines</h3>
+<p>Applying supervised and unsupervised machine learning algorithms to thousands of daily test output log runs.</p>
+<ul>
+  <li><b>Feature Extractions:</b> Cleaning stdout of long logs -> extracting error structures, exception classes (`NullPointerException`, `TimeoutException`) -> using TF-IDF (Term Frequency-Inverse Document Frequency) vectors or BERT Embeddings to generate input parameters.</li>
+  <li><b>Failure Aggregation:</b> Clustering log vector representations via DBSCAN (Density-Based Spatial Clustering of Applications with Noise). DBSCAN is excellent because you do not have to define the number of clusters (K) in advance. It automatically identifies anomalies (clusters of size 1) and clusters unique error signatures together.</li>
+  <li><b>Classification:</b> Training a Multi-Class Classifier (e.g. Random Forest) on manually labeled historic test runs to assign category buckets (e.g. "Known infrastructure flake", "New backend bug", "Auth token expiration").</li>
+</ul>
+
+<div class="qablock"><b>Q. Sketch the implementation details of a Python pipeline that automatically fetches test logs, runs TF-IDF vectorization, and clusters runtime exceptions to identify new bugs.</b>
+<p><b>Answer:</b> Use the following processing structure:
+<pre><code class="language-python">from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import DBSCAN
+import numpy as np
+
+def cluster_failed_logs(logs_list):
+    # Logs list contains raw stacktraces from test executions
+    # Step 1: Vectorize logs using TF-IDF, removing standard code identifiers/line numbers dynamically
+    # Use sublinear TF scaling to compress repeating traces
+    vectorizer = TfidfVectorizer(stop_words=\'english\', sublinear_tf=True, max_features=1000)
+    X = vectorizer.fit_transform(logs_list)
+
+    # Step 2: Apply DBSCAN clustering. 
+    # eps defines maximum distance between 2 samples to stay in same neighborhood.
+    # min_samples is set to 2; single occurrences are marked as noise (-1)
+    db = DBSCAN(eps=0.5, min_samples=2, metric=\'cosine\')
+    labels = db.fit_predict(X)
+
+    # Create mapping of clusters
+    output = {}
+    for idx, label in enumerate(labels):
+        if label not in output:
+            output[label] = []
+        output[label].append(idx)
+        
+    # Return grouped index dict. Noise labeled \'-1\' contains potential unique new bugs!
+    return output
+</code></pre></p></div>
 </div>
 
 <div class="page-nav"><button class="prev"><span class="lbl">← Prev</span><span class="ptitle"></span></button><button class="next"><span class="lbl">Next →</span><span class="ntitle"></span></button></div>
